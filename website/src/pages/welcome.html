@@ -8,7 +8,7 @@ description: Techlog is coming soon. We build Techlog using Techlog, and we are 
     <div>
       <p class="eyebrow">Coming soon</p>
       <h1 style="max-width:none">Welcome. We're glad you're here.</h1>
-      <p class="lead">Techlog is coming soon. There is nothing to sign in to yet, and we would rather tell you that plainly than show you a demo that pretends to be a product.</p>
+      <p class="lead">Techlog is coming soon. There is nothing to sign in to yet, and we would rather tell you that plainly than show you a demo that pretends to be a product. You can run a basic server yourself, on your own machine; the steps are <a href="#run">below</a>.</p>
     </div>
     <figure class="figure" style="margin:0"><img src="{{root}}assets/img/dogfood-loop.svg" alt="Our work on Techlog is recorded as Techlog events, and those events shape what we build next." width="480" height="240"></figure>
   </div>
@@ -38,6 +38,22 @@ description: Techlog is coming soon. We build Techlog using Techlog, and we are 
         <tr><td>The Techlog platform you could sign in to</td><td><span class="badge badge-future">Coming soon</span></td></tr>
       </tbody>
     </table></div>
+  </div>
+</section>
+
+<section class="section" id="run">
+  <div class="container" style="max-width:820px">
+    <p class="eyebrow">Try it now</p>
+    <h2>Run the server on your machine</h2>
+    <p class="lead">A basic Techlog server runs locally: an event API, MCP tools for AI agents, and a read-only web UI, in one program. It has no authentication and no signatures, so keep it on your own machine or a trusted network. It is not the platform that is coming soon.</p>
+    <p>From the root of the repository, with Go 1.27 or later and <code>make</code> installed:</p>
+    {{code bash getting-started/run-server.sh}}
+    <p>Open <code>http://localhost:8080</code> to browse the example story in the UI. To let Claude record and read events, connect it to the same server:</p>
+    {{code bash mcp-connect.sh}}
+    <div class="btn-row">
+      <a class="btn btn-grey" href="{{root}}docs/server.html">Run the server</a>
+      <a class="btn btn-ghost" href="{{root}}docs/getting-started.html">Getting started →</a>
+    </div>
   </div>
 </section>
 

@@ -31,3 +31,25 @@ test('landing: the panes sit side by side on wide screens and are height-capped'
 test('landing: the example text does not call the shipped tool a proposal', () => {
   assert.doesNotMatch(how, /tools shown are a proposal/i);
 });
+
+const welcome = readFileSync('.test-out/landing/welcome.html', 'utf8');
+
+test('welcome: explains how to run the server and connect Claude', () => {
+  assert.match(welcome, /Run the server on your machine/);
+  assert.match(welcome, /make seed/);
+  assert.match(welcome, /make run/);
+  assert.match(welcome, /claude mcp add --transport http techlog http:\/\/localhost:8080\/mcp/);
+  assert.match(welcome, /localhost:8080/);
+  assert.match(welcome, /href="docs\/server\.html"/, 'links to the Run the server page');
+  assert.match(welcome, /no authentication/i, 'says plainly what the server does not do');
+});
+
+test('welcome: the commands come from the same file as Getting Started', () => {
+  const gs = readFileSync('src/examples/getting-started/run-server.sh', 'utf8').trim();
+  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  assert.ok(welcome.includes(esc(gs)), 'run-server.sh is embedded verbatim');
+});
+
+test('welcome: the opening does not claim there is nothing to run', () => {
+  assert.match(welcome, /run a basic server yourself|run the basic server yourself/i);
+});
