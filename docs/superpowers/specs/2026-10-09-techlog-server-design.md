@@ -84,7 +84,7 @@ backend runs; the SQLite backend runs it on an in-memory database.
 
 ### Run
 
-`techlog serve [--addr :8080] [--db techlog.db] [--store sqlite]` serves:
+`techlog serve [--addr :8080] [--db share/techlog.db] [--store sqlite]` serves:
 
 - `/` the web UI
 - `/api/v1/*` the HTTP API
@@ -206,7 +206,13 @@ The UI never writes.
 
 - Structured logging with `log/slog`.
 - Graceful shutdown on SIGINT and SIGTERM.
-- Defaults: `:8080` bound to `localhost`, `./techlog.db`.
+- Defaults: `:8080` bound to `localhost`, `./share/techlog.db`.
+- `share/` at the repository root holds all runtime data the server needs: the
+  SQLite database and its WAL/SHM files, and any future local state. It is listed
+  in `.gitignore`, so nothing in it is committed. The server creates the
+  directory on start if it is missing. Relative `--db` paths resolve against the
+  working directory, so run the server from the repository root, or pass an
+  absolute path.
 
 ## 10. Testing
 

@@ -6,6 +6,9 @@ website/.superpowers/
 # dependencies
 node_modules/
 
+# techlog runtime data (sqlite db, WAL files)
+share/
+
 # local tooling
 .claude/settings.local.json
 .DS_Store
