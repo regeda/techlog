@@ -47,3 +47,29 @@ func TestSkillExamplesAreValid(t *testing.T) {
 		}
 	}
 }
+
+// `localhost` can resolve to IPv6 and reach another process on the same port,
+// while the server listens on IPv4 only. The skill's commands must name
+// 127.0.0.1, and it must tell the reader how to check who answers.
+func TestSkillUsesTheLoopbackAddress(t *testing.T) {
+	b, err := os.ReadFile(skillPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := string(b)
+	for _, want := range []string{
+		"http://127.0.0.1:8080/mcp",
+		"http://127.0.0.1:8080/api/v1/events",
+		"http://127.0.0.1:8080/api/v1/systems",
+		"lsof -nP -iTCP:8080",
+		"`event.id`",
+		"make flush",
+	} {
+		if !strings.Contains(s, want) {
+			t.Errorf("SKILL.md should contain %q", want)
+		}
+	}
+	if strings.Contains(s, "http://localhost:8080") {
+		t.Error("commands in SKILL.md must use 127.0.0.1; the text may name localhost only to explain why")
+	}
+}

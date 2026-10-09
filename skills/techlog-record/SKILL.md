@@ -12,10 +12,20 @@ Techlog is an append-only log of engineering events. Each event says what happen
 The tools come from the Techlog MCP server. If `techlog_record_event` is not available, ask the user to connect it:
 
 ```bash
-claude mcp add --transport http techlog http://localhost:8080/mcp
+claude mcp add --transport http techlog http://127.0.0.1:8080/mcp
 ```
 
 The server starts with `techlog serve`. If you cannot use MCP, use the HTTP fallback at the end.
+
+Use `127.0.0.1`, not `localhost`, in every URL. The server listens on IPv4 only, but `localhost` can resolve to IPv6 first, and then the request reaches whatever else holds port 8080 (a static site preview, for example). That fails with an HTML error page instead of JSON.
+
+To check that you are talking to Techlog, request the list of systems. The answer must be a JSON object such as `{"systems": ["promo-api"]}`:
+
+```bash
+curl -s http://127.0.0.1:8080/api/v1/systems
+```
+
+If you get HTML, or nothing, see who holds the port with `lsof -nP -iTCP:8080 -sTCP:LISTEN`, and ask the user to start `techlog serve` or to move the other process.
 
 ## Before you record
 
@@ -49,7 +59,7 @@ Call `techlog_record_event` with `event` set to an object with these fields. Do 
 
 - `schema_version`: `"0.1-draft"`
 - `type`, `status`: from the table above
-- `time`: when it happened, RFC 3339 with a zone, for example `2026-03-12T13:38:00Z`
+- `time`: when it happened, RFC 3339 with a zone, for example `2026-03-12T13:38:00Z`. Leave it out for something that has just happened, and the server stamps the time of recording. For past work, use a time you can read from a source, such as a git commit time (`git log --format=%aI`). Never invent precision: if a time is approximate, say so when you report to the user.
 - `actor`: `{"kind": "ai_agent", "id": "agent:claude-code", "on_behalf_of": "user:<who asked>"}`. Leave `on_behalf_of` out if you do not know who it is.
 - `subject`: `{"system": "...", "component": "..."}`; `component` and `environment` are optional
 - `summary`: one plain sentence, at most 280 characters, that makes sense without context
@@ -57,7 +67,9 @@ Call `techlog_record_event` with `event` set to an object with these fields. Do 
 - `sources` (where it came from) and `evidence` (supporting artifacts), each `{"kind": "...", "ref": "..."}`, when you have them. Evidence is a reference: the artifact stays in the tool that owns it.
 - `provenance`: `{"recorded_by": "agent:claude-code", "method": "agent_submitted"}`
 
-The result carries the new `id`. Use it to link later events.
+The result carries the new `id`: at `id` in the structured result of the MCP tool, and at `event.id` in the HTTP response. Use it to link later events.
+
+To record several related events, such as the story of a piece of work, record the earliest first. A link needs its target to exist, so each event can link only to events that already have an id. Check the order against the table above (problem, proposal, decision, change, verification, release).
 
 ## Links and honesty
 
@@ -119,15 +131,15 @@ Do not retry a rejected event unchanged.
 ## Rules
 
 - One event per fact. A change that shipped and a test that passed are two events.
-- Events are immutable. To correct one, record a new event; optionally add a link to it with `techlog_link_events`.
+- Events are immutable. To correct one, record a new event; optionally add a link to it with `techlog_link_events`. A wrong event cannot be removed: the only way to clear the database is `make flush`, which the user runs, so check every fact before you record it.
 - Read before you write: an event that duplicates one already in the history is noise.
 
 ## When MCP is not connected
 
 ```bash
-curl -s -X POST http://localhost:8080/api/v1/events \
+curl -s -X POST http://127.0.0.1:8080/api/v1/events \
   -H 'content-type: application/json' \
   -d '{"schema_version":"0.1-draft","type":"decision.made","time":"2026-03-10T14:05:00Z","actor":{"kind":"ai_agent","id":"agent:claude-code"},"subject":{"system":"promo-api"},"status":"recorded","summary":"Approved the proposal","provenance":{"recorded_by":"agent:claude-code","method":"agent_submitted"}}'
 ```
 
-A 422 response lists the problems in `error.details`, the same as above. To search: `curl 'http://localhost:8080/api/v1/events?q=spin&system=promo-api'`.
+A 422 response lists the problems in `error.details`, the same as above. To search: `curl 'http://127.0.0.1:8080/api/v1/events?q=spin&system=promo-api'`.
