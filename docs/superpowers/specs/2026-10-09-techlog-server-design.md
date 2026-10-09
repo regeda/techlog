@@ -84,7 +84,7 @@ backend runs; the SQLite backend runs it on an in-memory database.
 
 ### Run
 
-`techlog serve [--addr :8080] [--db share/techlog.db] [--store sqlite]` serves:
+`techlog serve [--addr localhost:8080] [--db share/techlog.db] [--store sqlite]` serves:
 
 - `/` the web UI
 - `/api/v1/*` the HTTP API
@@ -206,7 +206,7 @@ The UI never writes.
 
 - Structured logging with `log/slog`.
 - Graceful shutdown on SIGINT and SIGTERM.
-- Defaults: `:8080` bound to `localhost`, `./share/techlog.db`.
+- Defaults: `localhost:8080`, `./share/techlog.db`.
 - `share/` at the repository root holds all runtime data the server needs: the
   SQLite database and its WAL/SHM files, and any future local state. It is listed
   in `.gitignore`, so nothing in it is committed. The server creates the
@@ -224,3 +224,18 @@ The UI never writes.
 - Schema drift test: embedded schema equals the website copy.
 - Smoke test: start the server, record an event over MCP, read it back over HTTP
   and in the UI.
+
+## 11. Implementation amendments
+
+Decisions made while writing the implementation plan. They refine the sections above.
+
+- **Default address.** The default `--addr` is `localhost:8080`. A bare `:8080` listens on all interfaces, which contradicts "binds to localhost by default"; pass `--addr :8080` to expose the server.
+- **Store interface.** Adds `Systems(ctx) ([]string, error)` for `GET /systems` and the UI filters. `Filter` has `Ascending bool`; the default order is newest first.
+- **Contract suite location.** `internal/store/storetest`, an importable package, so every backend's tests can call it.
+- **IDs.** `evt_` + 8 base-36 characters of the creation time in milliseconds + 4 random base-36 characters. On an id collision the service retries with a new id.
+- **Links.** The `links` primary key is `(source, target, rel, basis)`. Adding an identical link twice is a no-op. Adding the same link with the other basis stores a second row, so a hypothesis can later be corroborated by a confirmed link without editing anything.
+- **Event reads** return the event with `links` merged from the links table. `GET /events/{id}` also returns separate `outgoing` and `incoming` link lists, which carry `rationale`.
+- **Link validation errors** from `link_events` and `POST /links` use the same `invalid_event` code and `details` shape.
+- **MCP inputs.** `query` on `techlog_search_events` is optional. `basis` on `techlog_link_events` is optional and defaults to `confirmed`, except for `caused_by`, where it is required.
+- **History** returns the latest N events in chronological order.
+- **Seed data and test helpers.** `internal/seed` embeds the Spring Spin story. `internal/testutil` holds shared test helpers.
