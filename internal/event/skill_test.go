@@ -48,28 +48,20 @@ func TestSkillExamplesAreValid(t *testing.T) {
 	}
 }
 
-// `localhost` can resolve to IPv6 and reach another process on the same port,
-// while the server listens on IPv4 only. The skill's commands must name
-// 127.0.0.1, and it must tell the reader how to check who answers.
-func TestSkillUsesTheLoopbackAddress(t *testing.T) {
+// The skill works through MCP only and assumes a running server: it must not
+// carry HTTP calls or server lifecycle instructions.
+func TestSkillUsesMCPOnlyAndIgnoresServerLifecycle(t *testing.T) {
 	b, err := os.ReadFile(skillPath)
 	if err != nil {
 		t.Fatal(err)
 	}
 	s := string(b)
-	for _, want := range []string{
-		"http://127.0.0.1:8080/mcp",
-		"http://127.0.0.1:8080/api/v1/events",
-		"http://127.0.0.1:8080/api/v1/systems",
-		"lsof -nP -iTCP:8080",
-		"`event.id`",
-		"make flush",
-	} {
-		if !strings.Contains(s, want) {
-			t.Errorf("SKILL.md should contain %q", want)
-		}
+	if !strings.Contains(s, "claude mcp add --transport http techlog") {
+		t.Error("SKILL.md should tell the user how to configure the MCP server")
 	}
-	if strings.Contains(s, "http://localhost:8080") {
-		t.Error("commands in SKILL.md must use 127.0.0.1; the text may name localhost only to explain why")
+	for _, banned := range []string{"curl", "/api/v1", "event.id", "localhost", "127.0.0.1", "lsof", "techlog serve", "make flush", "make reset"} {
+		if strings.Contains(s, banned) {
+			t.Errorf("SKILL.md must not contain %q: it uses MCP only and does not manage the server", banned)
+		}
 	}
 }

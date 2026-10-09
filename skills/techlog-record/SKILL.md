@@ -9,23 +9,15 @@ Techlog is an append-only log of engineering events. Each event says what happen
 
 ## Connect
 
-The tools come from the Techlog MCP server. If `techlog_record_event` is not available, ask the user to connect it:
+Use only the Techlog MCP tools: `techlog_search_events`, `techlog_get_system_history`, `techlog_get_event`, `techlog_record_event`, `techlog_link_events`. Assume a Techlog server is running and reachable through them. Do not reach it any other way, and never record events anywhere else.
+
+If the tools are not available, or a call fails with a connection error, the MCP connection is not configured. Stop and ask the user to configure it, for example:
 
 ```bash
-claude mcp add --transport http techlog http://127.0.0.1:8080/mcp
+claude mcp add --transport http techlog <techlog-server-url>/mcp
 ```
 
-The server starts with `techlog serve`. If you cannot use MCP, use the HTTP fallback at the end.
-
-Use `127.0.0.1`, not `localhost`, in every URL. The server listens on IPv4 only, but `localhost` can resolve to IPv6 first, and then the request reaches whatever else holds port 8080 (a static site preview, for example). That fails with an HTML error page instead of JSON.
-
-To check that you are talking to Techlog, request the list of systems. The answer must be a JSON object such as `{"systems": ["promo-api"]}`:
-
-```bash
-curl -s http://127.0.0.1:8080/api/v1/systems
-```
-
-If you get HTML, or nothing, see who holds the port with `lsof -nP -iTCP:8080 -sTCP:LISTEN`, and ask the user to start `techlog serve` or to move the other process.
+then to reconnect with `/mcp` or restart Claude Code. Say plainly that you cannot record until it works, and wait. Do not try to start, stop or repair the server yourself.
 
 ## Before you record
 
@@ -67,7 +59,7 @@ Call `techlog_record_event` with `event` set to an object with these fields. Do 
 - `sources` (where it came from) and `evidence` (supporting artifacts), each `{"kind": "...", "ref": "..."}`, when you have them. Evidence is a reference: the artifact stays in the tool that owns it.
 - `provenance`: `{"recorded_by": "agent:claude-code", "method": "agent_submitted"}`
 
-The result carries the new `id`: at `id` in the structured result of the MCP tool, and at `event.id` in the HTTP response. Use it to link later events.
+The result carries the new `id` in its structured result. Use it to link later events.
 
 To record several related events, such as the story of a piece of work, record the earliest first. A link needs its target to exist, so each event can link only to events that already have an id. Check the order against the table above (problem, proposal, decision, change, verification, release).
 
@@ -131,15 +123,19 @@ Do not retry a rejected event unchanged.
 ## Rules
 
 - One event per fact. A change that shipped and a test that passed are two events.
-- Events are immutable. To correct one, record a new event; optionally add a link to it with `techlog_link_events`. A wrong event cannot be removed: the only way to clear the database is `make flush`, which the user runs, so check every fact before you record it.
+- Events are immutable. To correct one, record a new event; optionally add a link to it with `techlog_link_events`. A wrong event cannot be removed, so check every fact before you record it.
 - Read before you write: an event that duplicates one already in the history is noise.
 
-## When MCP is not connected
+## With superpowers
 
-```bash
-curl -s -X POST http://127.0.0.1:8080/api/v1/events \
-  -H 'content-type: application/json' \
-  -d '{"schema_version":"0.1-draft","type":"decision.made","time":"2026-03-10T14:05:00Z","actor":{"kind":"ai_agent","id":"agent:claude-code"},"subject":{"system":"promo-api"},"status":"recorded","summary":"Approved the proposal","provenance":{"recorded_by":"agent:claude-code","method":"agent_submitted"}}'
-```
+The superpowers skills run the engineering workflow; this skill records what comes out of it. Record at the end of a stage, once, after the user has approved or the result is confirmed:
 
-A 422 response lists the problems in `error.details`, the same as above. To search: `curl 'http://127.0.0.1:8080/api/v1/events?q=spin&system=promo-api'`.
+| Superpowers stage | Record | Evidence or source |
+|---|---|---|
+| `brainstorming`: design or spec written | `proposal.recorded` | `{"kind": "spec", "ref": "docs/superpowers/specs/<file>.md"}` |
+| `brainstorming`: user approves the design | `decision.made`, linked `decides` to the proposal | the same spec |
+| `systematic-debugging`: root cause found | `investigation.completed` | log, trace or test that shows it |
+| `verification-before-completion`: checks ran | `verification.completed` (`verified` or `failed`) | the command run |
+| `finishing-a-development-branch`: merged | `change.implemented`, linked `implements` to the decision | `{"kind": "commit", "ref": "<sha>"}` |
+
+Plans and in-progress edits are not events. Search first, so the new event links to the proposal or decision already recorded.
