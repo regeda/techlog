@@ -43,16 +43,13 @@ description: Let AI write the code and keep the progress in Techlog. Reviews sto
     <div class="how-text">
       <span class="badge badge-proposed">Open standard · draft 0.1</span>
       <h3>The event is plain JSON.</h3>
-      <p>Any agent or tool can write it, and any tool can read it. A small required core, typed links marked <em>confirmed</em> or <em>hypothesis</em>, and a record of who produced it. Below, a <code>techlog_record_event</code> call as the local server handles it, with the ids of the example story.</p>
+      <p>Any agent or tool can write it, and any tool can read it. A small required core, typed links marked <em>confirmed</em> or <em>hypothesis</em>, and a record of who produced it. Below, a <code>techlog_record_event</code> call with the ids of the example story, abridged to the fields that matter.</p>
       <div class="btn-row">
         <a class="btn btn-grey" href="{{root}}docs/event-model.html">Event model</a>
         <a class="btn btn-ghost" href="{{root}}docs/standard.html">Read the standard →</a>
       </div>
     </div>
-    <div class="panes" role="group" aria-label="Example MCP request and response">
-      <figure class="pane"><figcaption>Request</figcaption>{{code json mcp-record-event.json#request}}</figure>
-      <figure class="pane"><figcaption>Response</figcaption>{{code json mcp-record-event.json#response}}</figure>
-    </div>
+    <figure class="pane"><figcaption>Request, abridged</figcaption>{{code json mcp-request-brief.json}}</figure>
   </div>
 </section>
 

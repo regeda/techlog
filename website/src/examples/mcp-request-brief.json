@@ -1,0 +1,21 @@
+{
+  "jsonrpc": "2.0",
+  "id": 7,
+  "method": "tools/call",
+  "params": {
+    "name": "techlog_record_event",
+    "arguments": {
+      "event": {
+        "idempotency_key": "seed-spring-spin-004",
+        "type": "proposal.recorded",
+        "actor": { "kind": "ai_agent", "id": "agent:code-assistant" },
+        "subject": { "system": "promo-api", "component": "spin-service" },
+        "status": "proposed",
+        "summary": "Spin-to-win: one spin per new account, server-side draw",
+        "links": [
+          { "rel": "motivated_by", "target": "evt_01J9K2A0P002", "basis": "confirmed" }
+        ]
+      }
+    }
+  }
+}

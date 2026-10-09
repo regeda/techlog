@@ -43,12 +43,10 @@
 @media (max-width: 520px) { .pipe { grid-template-columns: 1fr; } }
 .how-text { max-width: 70ch; margin-block: var(--s-6) var(--s-4); }
 .how-text h3 { margin: var(--s-2) 0; }
-.panes { display: grid; gap: var(--s-4); grid-template-columns: minmax(0, 1fr); }
-@media (min-width: 900px) { .panes { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
 .pane { margin: 0; min-width: 0; }
 .pane figcaption { margin-bottom: var(--s-2); font: 600 var(--fs-xs) var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-2); }
 .pane .codeblock { margin: 0; }
-.panes .pane pre { max-height: 24rem; overflow: auto; }
+.pane pre { max-height: 26rem; overflow: auto; }
 
 /* connectors */
 .market { display: grid; gap: var(--s-4); grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }

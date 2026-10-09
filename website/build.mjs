@@ -116,6 +116,58 @@ function readExamplePart(ctx, file, path, from) {
   return formatJson(part);
 }
 
+// highlightJson wraps JSON tokens in spans that css colours from the design
+// tokens. It works on the raw text and escapes each piece, so the markup is safe.
+const JSON_TOKEN = /("(?:[^"\\]|\\.)*")(\s*:)?|\b(?:true|false|null)\b|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|[{}[\],:]/g;
+export function highlightJson(text) {
+  let out = '';
+  let last = 0;
+  for (const m of text.matchAll(JSON_TOKEN)) {
+    out += esc(text.slice(last, m.index));
+    last = m.index + m[0].length;
+    if (m[1] !== undefined) {
+      out += `<span class="${m[2] ? 'tk-key' : 'tk-str'}">${esc(m[1])}</span>${m[2] ? `<span class="tk-pun">${esc(m[2])}</span>` : ''}`;
+    } else if (/^[{}[\],:]$/.test(m[0])) out += `<span class="tk-pun">${m[0]}</span>`;
+    else out += `<span class="${/^[tfn]/.test(m[0]) ? 'tk-lit' : 'tk-num'}">${m[0]}</span>`;
+  }
+  return out + esc(text.slice(last));
+}
+
+// highlightCode colours the sample languages with a small ordered tokenizer:
+// comments, strings, numbers, keywords, and shell variables. Anything it does
+// not recognise stays plain text. Like highlightJson it escapes every piece.
+const SLASH_COMMENT = String.raw`\/\/[^\n]*`;
+const LANGS = {
+  bash: { comment: String.raw`(?<![\w$])#[^\n]*`, string: String.raw`"(?:[^"\\]|\\.)*"|'[^']*'`, variable: String.raw`\$\{[^}\n]*\}|\$\w+`,
+    kw: 'set export if then fi for in do done while echo' },
+  python: { comment: String.raw`#[^\n]*`, string: String.raw`"""[\s\S]*?"""|"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'`,
+    kw: 'import from def return with as for in if else None True False' },
+  typescript: { comment: SLASH_COMMENT, string: String.raw`"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|` + '`(?:[^`\\\\]|\\\\.)*`',
+    kw: 'const let async function await return throw new if as for of true false null undefined string number unknown Promise' },
+  go: { comment: SLASH_COMMENT, string: String.raw`"(?:[^"\\\n]|\\.)*"|` + '`[^`]*`',
+    kw: 'package import func var return if else for range defer struct map any string true false nil' },
+  java: { comment: SLASH_COMMENT, string: String.raw`"""[\s\S]*?"""|"(?:[^"\\\n]|\\.)*"`,
+    kw: 'import class public static final void throws new return if true false null' },
+};
+for (const l of Object.values(LANGS)) {
+  l.re = new RegExp(
+    `(${l.comment})|(${l.string})|(${l.variable ?? '(?!)'})|(\\b(?:${l.kw.split(' ').join('|')})\\b)|(\\b\\d+(?:\\.\\d+)?\\b)`, 'g');
+}
+const CODE_CLASS = ['tk-com', 'tk-str', 'tk-var', 'tk-kw', 'tk-num'];
+export function highlightCode(lang, text) {
+  if (lang === 'json') return highlightJson(text);
+  const l = LANGS[lang];
+  if (!l) return esc(text);
+  let out = '';
+  let last = 0;
+  for (const m of text.matchAll(l.re)) {
+    out += esc(text.slice(last, m.index));
+    last = m.index + m[0].length;
+    out += `<span class="${CODE_CLASS[m.findIndex((g, i) => i > 0 && g !== undefined) - 1]}">${esc(m[0])}</span>`;
+  }
+  return out + esc(text.slice(last));
+}
+
 function render(template, vars, ctx) {
   let out = template.replace(/\{\{>\s*([\w-]+)\s*\}\}/g, (_, name) => {
     if (!(name in ctx.partials)) throw new Error(`${vars.__file}: missing partial "${name}"`);
@@ -127,7 +179,7 @@ function render(template, vars, ctx) {
   });
   out = out.replace(/\{\{code\s+(\w+)\s+([^\s}#]+)(?:#([\w.]+))?\s*\}\}/g, (_, lang, file, path) =>
     `<div class="codeblock" data-lang="${lang}"><button class="copy" type="button" aria-label="Copy code">Copy</button>` +
-    `<pre><code class="language-${lang}">${esc(path ? readExamplePart(ctx, file, path, vars.__file) : readExample(ctx, file, vars.__file))}</code></pre></div>`);
+    `<pre><code class="language-${lang}">${((t) => highlightCode(lang, t))(path ? readExamplePart(ctx, file, path, vars.__file) : readExample(ctx, file, vars.__file))}</code></pre></div>`);
   out = out.replace(/\{\{json-script\s+([\w-]+)\s+([^\s}]+)\s*\}\}/g, (_, id, file) => {
     const data = JSON.stringify(JSON.parse(readExample(ctx, file, vars.__file))).replace(/</g, '\\u003c');
     return `<script type="application/json" id="${id}">${data}</script>`;

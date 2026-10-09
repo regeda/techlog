@@ -70,6 +70,14 @@
 .codeblock pre { margin: 0; padding: var(--s-4) var(--s-5); overflow-x: auto; font-size: .82rem; line-height: 1.6; color: var(--text-0); }
 .codeblock::before { content: attr(data-lang); position: absolute; top: 6px; left: var(--s-4); font: 600 10px/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--text-2); }
 .codeblock pre { padding-top: var(--s-6); }
+.tk-key { color: var(--info); }
+.tk-str { color: var(--ok); }
+.tk-num { color: var(--orange); }
+.tk-lit { color: var(--hyp); }
+.tk-pun { color: var(--text-2); }
+.tk-kw { color: var(--hyp); }
+.tk-com { color: var(--text-2); font-style: italic; }
+.tk-var { color: var(--gold); }
 .codeblock .copy { position: absolute; top: 6px; right: 8px; background: var(--bg-3); color: var(--text-1); border: 1px solid var(--line-strong); border-radius: var(--r-1); font: 600 11px/1 var(--font-mono); padding: 5px 8px; cursor: pointer; }
 .codeblock .copy:hover { color: var(--text-0); border-color: var(--accent); }
 pre.mermaid { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--r-2); padding: var(--s-5); overflow-x: auto; color: var(--text-1); font-size: .8rem; margin: 0 0 var(--s-5); }
