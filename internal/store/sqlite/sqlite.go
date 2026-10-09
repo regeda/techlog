@@ -160,12 +160,15 @@ func (s *Store) Insert(ctx context.Context, e event.Event) error {
 		return err
 	}
 	_, err = tx.ExecContext(ctx,
-		`INSERT INTO events (id, type, time, status, system, component, actor_kind, actor_id, summary, body)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO events (id, type, time, status, system, component, actor_kind, actor_id, idempotency_key, summary, body)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		e.ID, e.Type, t.UTC().Format(timeLayout), e.Status, e.Subject.System, e.Subject.Component,
-		e.Actor.Kind, e.Actor.ID, e.Summary, string(body))
+		e.Actor.Kind, e.Actor.ID, e.IdempotencyKey, e.Summary, string(body))
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			if strings.Contains(err.Error(), "events.idempotency_key") {
+				return duplicateOf(ctx, tx, e)
+			}
 			return store.ErrConflict
 		}
 		return err
@@ -181,6 +184,18 @@ func (s *Store) Insert(ctx context.Context, e event.Event) error {
 		}
 	}
 	return tx.Commit()
+}
+
+// duplicateOf looks up the event that already holds e's (actor, key) pair.
+func duplicateOf(ctx context.Context, q querier, e event.Event) error {
+	var id string
+	err := q.QueryRowContext(ctx,
+		`SELECT id FROM events WHERE actor_id = ? AND idempotency_key = ?`,
+		e.Actor.ID, e.IdempotencyKey).Scan(&id)
+	if err != nil {
+		return fmt.Errorf("find the event holding idempotency key: %w", err)
+	}
+	return &store.DuplicateError{ExistingID: id}
 }
 
 func (s *Store) AddLink(ctx context.Context, l event.Link) error {

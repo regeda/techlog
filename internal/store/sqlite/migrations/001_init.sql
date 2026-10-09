@@ -7,8 +7,10 @@ CREATE TABLE events (
     component  TEXT NOT NULL DEFAULT '',
     actor_kind TEXT NOT NULL,
     actor_id   TEXT NOT NULL,
+    idempotency_key TEXT NOT NULL,
     summary    TEXT NOT NULL DEFAULT '',
-    body       TEXT NOT NULL             -- the full event JSON; the source of truth for reads
+    body       TEXT NOT NULL,            -- the full event JSON; the source of truth for reads
+    UNIQUE (actor_id, idempotency_key)
 );
 CREATE INDEX events_time        ON events (time);
 CREATE INDEX events_system_time ON events (system, time);

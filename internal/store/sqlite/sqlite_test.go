@@ -76,7 +76,7 @@ func TestTwoHandlesOnOneFileDoNotLockEachOther(t *testing.T) {
 
 	mk := func(id string, links ...event.LinkRef) event.Event {
 		return event.Event{
-			SchemaVersion: event.SchemaVersion, ID: id, Type: "problem.reported",
+			SchemaVersion: event.SchemaVersion, ID: id, IdempotencyKey: "key-" + id, Type: "problem.reported",
 			Time: "2026-03-10T09:00:00Z", Actor: event.Actor{Kind: "human", ID: "user:a"},
 			Subject: event.Subject{System: "alpha"}, Status: "recorded", Links: links,
 			Provenance: event.Provenance{RecordedBy: "user:a", Method: "human_entered"},

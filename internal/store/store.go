@@ -15,7 +15,20 @@ var (
 	ErrNotFound = errors.New("not found")
 	// ErrConflict means an event with that id already exists.
 	ErrConflict = errors.New("conflict")
+	// ErrDuplicate means the same actor already recorded an event with that
+	// idempotency key. Insert returns a *DuplicateError that matches it.
+	ErrDuplicate = errors.New("duplicate idempotency key")
 )
+
+// DuplicateError is returned by Insert when (actor id, idempotency key) is
+// already stored. ExistingID is the event that holds the key.
+type DuplicateError struct{ ExistingID string }
+
+func (e *DuplicateError) Error() string {
+	return "duplicate idempotency key: already recorded as " + e.ExistingID
+}
+
+func (e *DuplicateError) Is(target error) bool { return target == ErrDuplicate }
 
 // Filter selects events. Zero values mean "no constraint", except Limit, where
 // a value <= 0 means 100, and Offset, where a value <= 0 means 0. Results are
@@ -35,8 +48,9 @@ type Filter struct {
 // update or delete.
 type Store interface {
 	// Insert stores an event and the links in e.Links. It returns ErrConflict
-	// if the id exists and ErrNotFound if a link target does not exist; in
-	// both cases nothing is stored.
+	// if the id exists, ErrDuplicate (as a *DuplicateError) if the actor
+	// already used the idempotency key, and ErrNotFound if a link target does
+	// not exist; in every case nothing is stored.
 	Insert(ctx context.Context, e event.Event) error
 	// AddLink stores a link between two existing events. Adding an identical
 	// link again is a no-op. It returns ErrNotFound if either end is missing.

@@ -25,18 +25,23 @@ var ctx = context.Background()
 func Run(t *testing.T, newStore func(t *testing.T) store.Store) {
 	t.Helper()
 	cases := map[string]func(*testing.T, store.Store){
-		"InsertGetRoundTrip":    insertGetRoundTrip,
-		"GetMissing":            getMissing,
-		"InsertDuplicate":       insertDuplicate,
-		"InsertWithLinks":       insertWithLinks,
-		"InsertDanglingLink":    insertDanglingLink,
-		"AddLink":               addLink,
-		"SearchFilters":         searchFilters,
-		"SearchOffset":          searchOffset,
-		"SearchTextPunctuation": searchTextPunctuation,
-		"Systems":               systems,
-		"TimeOffsets":           timeOffsets,
-		"ConcurrentInserts":     concurrentInserts,
+		"InsertGetRoundTrip":     insertGetRoundTrip,
+		"GetMissing":             getMissing,
+		"InsertDuplicate":        insertDuplicate,
+		"InsertDuplicateKey":     insertDuplicateKey,
+		"KeyScopeIsPerActor":     keyScopeIsPerActor,
+		"KeysAreOpaque":          keysAreOpaque,
+		"DuplicateLeavesNoTrace": duplicateLeavesNoTrace,
+		"ConcurrentSameKey":      concurrentSameKey,
+		"InsertWithLinks":        insertWithLinks,
+		"InsertDanglingLink":     insertDanglingLink,
+		"AddLink":                addLink,
+		"SearchFilters":          searchFilters,
+		"SearchOffset":           searchOffset,
+		"SearchTextPunctuation":  searchTextPunctuation,
+		"Systems":                systems,
+		"TimeOffsets":            timeOffsets,
+		"ConcurrentInserts":      concurrentInserts,
 	}
 	for name, fn := range cases {
 		t.Run(name, func(t *testing.T) { fn(t, newStore(t)) })
@@ -45,16 +50,17 @@ func Run(t *testing.T, newStore func(t *testing.T) store.Store) {
 
 func mk(id, typ, system, ts, summary string, links ...event.LinkRef) event.Event {
 	return event.Event{
-		SchemaVersion: event.SchemaVersion,
-		ID:            id,
-		Type:          typ,
-		Time:          ts,
-		Actor:         event.Actor{Kind: "human", ID: "user:a"},
-		Subject:       event.Subject{System: system},
-		Status:        "recorded",
-		Summary:       summary,
-		Links:         links,
-		Provenance:    event.Provenance{RecordedBy: "user:a", Method: "human_entered"},
+		SchemaVersion:  event.SchemaVersion,
+		ID:             id,
+		Type:           typ,
+		Time:           ts,
+		Actor:          event.Actor{Kind: "human", ID: "user:a"},
+		IdempotencyKey: "key-" + id,
+		Subject:        event.Subject{System: system},
+		Status:         "recorded",
+		Summary:        summary,
+		Links:          links,
+		Provenance:     event.Provenance{RecordedBy: "user:a", Method: "human_entered"},
 	}
 }
 
@@ -130,7 +136,9 @@ func getMissing(t *testing.T, s store.Store) {
 func insertDuplicate(t *testing.T, s store.Store) {
 	e := mk("evt_00000000000A", "problem.reported", "alpha", "2026-03-10T09:00:00Z", "first")
 	insert(t, s, e)
-	if err := s.Insert(ctx, e); !errors.Is(err, store.ErrConflict) {
+	dup := e
+	dup.IdempotencyKey = "another-key" // same id, different key: only the id collides
+	if err := s.Insert(ctx, dup); !errors.Is(err, store.ErrConflict) {
 		t.Fatalf("got %v, want ErrConflict", err)
 	}
 }
@@ -331,5 +339,97 @@ func concurrentInserts(t *testing.T, s store.Store) {
 	}
 	if got := search(t, s, store.Filter{Limit: 100}); len(got) != n {
 		t.Fatalf("stored %d events, want %d", len(got), n)
+	}
+}
+
+func insertDuplicateKey(t *testing.T, s store.Store) {
+	a := mk("evt_00000000000A", "problem.reported", "alpha", "2026-03-10T09:00:00Z", "first")
+	a.IdempotencyKey = "deploy-4411"
+	insert(t, s, a)
+	b := mk("evt_00000000000B", "problem.reported", "alpha", "2026-03-10T10:00:00Z", "retry")
+	b.IdempotencyKey = "deploy-4411"
+	err := s.Insert(ctx, b)
+	if !errors.Is(err, store.ErrDuplicate) {
+		t.Fatalf("got %v, want ErrDuplicate", err)
+	}
+	if errors.Is(err, store.ErrConflict) {
+		t.Fatal("a key duplicate must not look like an id conflict: the service retries those")
+	}
+	var dup *store.DuplicateError
+	if !errors.As(err, &dup) || dup.ExistingID != a.ID {
+		t.Fatalf("got %#v, want DuplicateError{ExistingID: %s}", err, a.ID)
+	}
+	if _, err := s.Get(ctx, b.ID); !errors.Is(err, store.ErrNotFound) {
+		t.Fatalf("the rejected event must not be stored, Get = %v", err)
+	}
+}
+
+func keyScopeIsPerActor(t *testing.T, s store.Store) {
+	a := mk("evt_00000000000A", "problem.reported", "alpha", "2026-03-10T09:00:00Z", "a")
+	a.IdempotencyKey = "shared"
+	b := mk("evt_00000000000B", "problem.reported", "alpha", "2026-03-10T10:00:00Z", "b")
+	b.IdempotencyKey = "shared"
+	b.Actor = event.Actor{Kind: "human", ID: "user:b"} // another actor: same key is fine
+	c := mk("evt_00000000000C", "problem.reported", "alpha", "2026-03-10T11:00:00Z", "c")
+	c.IdempotencyKey = "different" // same actor, another key: fine
+	insert(t, s, a, b, c)
+}
+
+func keysAreOpaque(t *testing.T, s store.Store) {
+	for i, key := range []string{"k", "K", "k ", " k"} {
+		e := mk(fmt.Sprintf("evt_O%011d", i), "problem.reported", "alpha", "2026-03-10T09:00:00Z", "o")
+		e.IdempotencyKey = key
+		insert(t, s, e) // none of these may collide with another
+	}
+}
+
+func duplicateLeavesNoTrace(t *testing.T, s store.Store) {
+	a := mk("evt_00000000000A", "problem.reported", "alpha", "2026-03-10T09:00:00Z", "first")
+	a.IdempotencyKey = "k"
+	insert(t, s, a)
+	b := mk("evt_00000000000B", "proposal.recorded", "alpha", "2026-03-10T10:00:00Z", "zebracorn",
+		ref("motivated_by", a.ID, "confirmed"))
+	b.IdempotencyKey = "k"
+	if err := s.Insert(ctx, b); !errors.Is(err, store.ErrDuplicate) {
+		t.Fatalf("got %v, want ErrDuplicate", err)
+	}
+	expectIDs(t, "search finds nothing for the rejected event", search(t, s, store.Filter{Text: "zebracorn"}))
+	links, err := s.Links(ctx, a.ID)
+	if err != nil || len(links) != 0 {
+		t.Fatalf("links of the first event = %v, %v; want none", links, err)
+	}
+}
+
+func concurrentSameKey(t *testing.T, s store.Store) {
+	const n = 20
+	var wg sync.WaitGroup
+	errs := make(chan error, n)
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			e := mk(fmt.Sprintf("evt_K%011d", i), "problem.reported", "alpha", "2026-03-10T09:00:00Z", "k")
+			e.IdempotencyKey = "same-for-all"
+			errs <- s.Insert(ctx, e)
+		}(i)
+	}
+	wg.Wait()
+	close(errs)
+	var stored, dups int
+	for err := range errs {
+		switch {
+		case err == nil:
+			stored++
+		case errors.Is(err, store.ErrDuplicate):
+			dups++
+		default:
+			t.Errorf("unexpected error: %v", err)
+		}
+	}
+	if stored != 1 || dups != n-1 {
+		t.Fatalf("stored %d, duplicates %d; want 1 and %d", stored, dups, n-1)
+	}
+	if got := search(t, s, store.Filter{Limit: 100}); len(got) != 1 {
+		t.Fatalf("%d events in the store, want 1", len(got))
 	}
 }

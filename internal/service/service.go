@@ -249,7 +249,7 @@ func (s *Service) Get(ctx context.Context, id string) (Detail, error) {
 }
 
 // Import stores events that already carry ids (used to load the seed story). It
-// validates them like Record but keeps their ids, and skips ids that exist.
+// validates them like Record but keeps their ids, and skips ids and idempotency keys that exist.
 // Documents must be ordered so every link target comes before its source.
 func (s *Service) Import(ctx context.Context, docs []map[string]any) (inserted, skipped int, err error) {
 	for _, raw := range docs {
@@ -262,7 +262,7 @@ func (s *Service) Import(ctx context.Context, docs []map[string]any) (inserted, 
 			return inserted, skipped, err
 		}
 		switch err := s.store.Insert(ctx, ev); {
-		case errors.Is(err, store.ErrConflict):
+		case errors.Is(err, store.ErrConflict), errors.Is(err, store.ErrDuplicate):
 			skipped++
 		case err != nil:
 			return inserted, skipped, err

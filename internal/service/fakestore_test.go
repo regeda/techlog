@@ -40,6 +40,11 @@ func (f *fakeStore) Insert(_ context.Context, e event.Event) error {
 	if _, ok := f.events[e.ID]; ok {
 		return store.ErrConflict
 	}
+	for _, other := range f.events {
+		if other.Actor.ID == e.Actor.ID && other.IdempotencyKey == e.IdempotencyKey {
+			return &store.DuplicateError{ExistingID: other.ID}
+		}
+	}
 	for _, l := range e.Links {
 		if _, ok := f.events[l.Target]; !ok {
 			return store.ErrNotFound

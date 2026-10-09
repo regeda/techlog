@@ -255,3 +255,14 @@ func TestImportKeepsIDsAndSkipsExisting(t *testing.T) {
 		t.Fatalf("got %v", err)
 	}
 }
+
+func TestImportSkipsDuplicateKey(t *testing.T) {
+	svc, _ := newService(t)
+	a := importDoc("evt_00000000000A", "2026-03-10T09:00:00Z")
+	b := importDoc("evt_00000000000B", "2026-03-10T10:00:00Z")
+	a["idempotency_key"], b["idempotency_key"] = "same", "same"
+	inserted, skipped, err := svc.Import(ctx, []map[string]any{a, b})
+	if err != nil || inserted != 1 || skipped != 1 {
+		t.Fatalf("import = %d, %d, %v; want 1, 1, nil", inserted, skipped, err)
+	}
+}
