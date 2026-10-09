@@ -1,0 +1,955 @@
+[
+  {
+    "schema_version": "0.1-draft",
+    "id": "evt_01J9K2A0P001",
+    "type": "problem.reported",
+    "time": "2026-03-09T14:00:00Z",
+    "actor": {
+      "kind": "human",
+      "id": "user:t.nguyen"
+    },
+    "subject": {
+      "system": "support-desk",
+      "component": "inbox"
+    },
+    "status": "recorded",
+    "summary": "New visitors keep asking support for a first-order offer; seven tickets this week",
+    "sources": [
+      {
+        "kind": "ticket",
+        "ref": "SUP-790"
+      }
+    ],
+    "evidence": [
+      {
+        "kind": "ticket.cluster",
+        "ref": "support://clusters/first-order-offer"
+      }
+    ],
+    "provenance": {
+      "recorded_by": "user:t.nguyen",
+      "method": "human_entered"
+    }
+  },
+  {
+    "schema_version": "0.1-draft",
+    "id": "evt_01J9K2A0P002",
+    "type": "problem.reported",
+    "time": "2026-03-10T09:00:00Z",
+    "actor": {
+      "kind": "human",
+      "id": "user:l.berg"
+    },
+    "subject": {
+      "system": "spring-spin",
+      "component": "campaign"
+    },
+    "status": "recorded",
+    "summary": "New-client sign-ups have been flat for three weeks; request a seasonal offer that turns first visits into registrations",
+    "sources": [
+      {
+        "kind": "ticket",
+        "ref": "MKT-310"
+      }
+    ],
+    "evidence": [
+      {
+        "kind": "dashboard",
+        "ref": "analytics://signups/weekly"
+      }
+    ],
+    "links": [
+      {
+        "rel": "relates_to",
+        "target": "evt_01J9K2A0P001",
+        "basis": "confirmed"
+      }
+    ],
+    "provenance": {
+      "recorded_by": "user:l.berg",
+      "method": "human_entered"
+    }
+  },
+  {
+    "schema_version": "0.1-draft",
+    "id": "evt_01J9K2A0P003",
+    "type": "investigation.completed",
+    "time": "2026-03-10T10:20:00Z",
+    "actor": {
+      "kind": "ai_agent",
+      "id": "agent:research-assistant",
+      "on_behalf_of": "user:a.novak"
+    },
+    "subject": {
+      "system": "promo-api",
+      "component": "discounts"
+    },
+    "status": "recorded",
+    "summary": "A discount game is feasible on the existing checkout; risks are code stacking with current promotions and repeated spins by one person",
+    "evidence": [
+      {
+        "kind": "code.ref",
+        "ref": "promo-api@main:discounts/stacking.go#L41"
+      },
+      {
+        "kind": "doc",
+        "ref": "wiki://promo/stacking-rules"
+      }
+    ],
+    "links": [
+      {
+        "rel": "investigates",
+        "target": "evt_01J9K2A0P002",
+        "basis": "confirmed"
+      }
+    ],
+    "provenance": {
+      "recorded_by": "agent:research-assistant",
+      "method": "agent_submitted",
+      "confidence": "asserted"
+    }
+  },
+  {
+    "schema_version": "0.1-draft",
+    "id": "evt_01J9K2A0P004",
+    "type": "proposal.recorded",
+    "time": "2026-03-10T11:30:00Z",
+    "actor": {
+      "kind": "ai_agent",
+      "id": "agent:code-assistant",
+      "on_behalf_of": "user:a.novak"
+    },
+    "subject": {
+      "system": "promo-api",
+      "component": "spin-service"
+    },
+    "status": "proposed",
+    "summary": "Spin-to-win: one spin per new account, server-side draw, discount capped at 20%, never stacked with other promotions",
+    "links": [
+      {
+        "rel": "motivated_by",
+        "target": "evt_01J9K2A0P002",
+        "basis": "confirmed"
+      },
+      {
+        "rel": "relates_to",
+        "target": "evt_01J9K2A0P003",
+        "basis": "confirmed"
+      }
+    ],
+    "provenance": {
+      "recorded_by": "agent:code-assistant",
+      "method": "agent_submitted",
+      "confidence": "asserted"
+    },
+    "extensions": {
+      "org.techlog.proposal": {
+        "alternatives_considered": [
+          {
+            "option": "Client-side draw",
+            "rejected_because": "the result could be tampered with"
+          },
+          {
+            "option": "Unlimited spins",
+            "rejected_because": "invites abuse and deep discounts"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "schema_version": "0.1-draft",
+    "id": "evt_01J9K2A0P005",
+    "type": "decision.made",
+    "time": "2026-03-10T15:00:00Z",
+    "actor": {
+      "kind": "human",
+      "id": "user:l.berg"
+    },
+    "subject": {
+      "system": "spring-spin",
+      "component": "campaign"
+    },
+    "status": "recorded",
+    "summary": "Approved with finance: 20% cap, two-week window, new accounts only",
+    "evidence": [
+      {
+        "kind": "approval",
+        "ref": "approval://appr_5120"
+      }
+    ],
+    "links": [
+      {
+        "rel": "decides",
+        "target": "evt_01J9K2A0P004",
+        "basis": "confirmed"
+      }
+    ],
+    "provenance": {
+      "recorded_by": "user:l.berg",
+      "method": "human_entered"
+    }
+  },
+  {
+    "schema_version": "0.1-draft",
+    "id": "evt_01J9K2A0P006",
+    "type": "change.implemented",
+    "time": "2026-03-11T10:12:00Z",
+    "actor": {
+      "kind": "ai_agent",
+      "id": "agent:code-assistant",
+      "on_behalf_of": "user:a.novak"
+    },
+    "subject": {
+      "system": "promo-api",
+      "component": "spin-service"
+    },
+    "status": "recorded",
+    "summary": "Spin endpoint with server-side draw, 20% cap, and one spin per new account; reviewed and merged",
+    "sources": [
+      {
+        "kind": "git.pr",
+        "ref": "promo-api#412"
+      },
+      {
+        "kind": "git.commit",
+        "ref": "promo-api@9c3e7ab"
+      }
+    ],
+    "links": [
+      {
+        "rel": "implements",
+        "target": "evt_01J9K2A0P004",
+        "basis": "confirmed"
+      },
+      {
+        "rel": "relates_to",
+        "target": "evt_01J9K2A0P005",
+        "basis": "confirmed"
+      }
+    ],
+    "provenance": {
+      "recorded_by": "collector:git",
+      "method": "collected"
+    }
+  },
+  {
+    "schema_version": "0.1-draft",
+    "id": "evt_01J9K2A0P007",
+    "type": "verification.completed",
+    "time": "2026-03-11T11:05:00Z",
+    "actor": {
+      "kind": "system",
+      "id": "ci:pipeline"
+    },
+    "subject": {
+      "system": "promo-api",
+      "component": "spin-service"
+    },
+    "status": "verified",
+    "summary": "Unit, integration, and abuse tests passed: repeat spins are rejected and the cap is enforced",
+    "evidence": [
+      {
+        "kind": "test.report",
+        "ref": "ci://run/90412",
+        "digest": "sha256:7b1e4d9a2c6f08e35a9d1b7c4e2f6a8091d3c5b7e9f0a2c4d6e8b0a1c3e5f7d9"
+      }
+    ],
+    "links": [
+      {
+        "rel": "verifies",
+        "target": "evt_01J9K2A0P006",
+        "basis": "confirmed"
+      }
+    ],
+    "provenance": {
+      "recorded_by": "collector:ci",
+      "method": "collected"
+    }
+  },
+  {
+    "schema_version": "0.1-draft",
+    "id": "evt_01J9K2A0P008",
+    "type": "verification.completed",
+    "time": "2026-03-11T16:40:00Z",
+    "actor": {
+      "kind": "system",
+      "id": "loadtest:pipeline"
+    },
+    "subject": {
+      "system": "promo-api",
+      "environment": "staging"
+    },
+    "status": "verified",
+    "summary": "Load test at three times the expected spin volume: checkout latency stayed within budget",
+    "evidence": [
+      {
+        "kind": "test.report",
+        "ref": "ci://run/90431",
+        "digest": "sha256:a41c8e07d3b9f256e0c4a7b18d5f3e92c60b4a9d7e1f8305c2b6d4e9a0f17c38"
+      }
+    ],
+    "links": [
+      {
+        "rel": "verifies",
+        "target": "evt_01J9K2A0P006",
+        "basis": "confirmed"
+      }
+    ],
+    "provenance": {
+      "recorded_by": "collector:ci",
+      "method": "collected"
+    }
+  },
+  {
+    "schema_version": "0.1-draft",
+    "id": "evt_01J9K2A0P009",
+    "type": "action.tracked",
+    "time": "2026-03-12T10:30:00Z",
+    "actor": {
+      "kind": "human",
+      "id": "user:t.nguyen"
+    },
+    "subject": {
+      "system": "support-desk",
+      "component": "inbox"
+    },
+    "status": "recorded",
+    "summary": "Support briefed on the offer: answer macros are ready and the escalation path to on-call is agreed",
+    "links": [
+      {
+        "rel": "relates_to",
+        "target": "evt_01J9K2A0P005",
+        "basis": "confirmed"
+      }
+    ],
+    "provenance": {
+      "recorded_by": "user:t.nguyen",
+      "method": "human_entered"
+    }
+  },
+  {
+    "schema_version": "0.1-draft",
+    "id": "evt_01J9K2A0P010",
+    "type": "release.deployed",
+    "time": "2026-03-12T13:20:00Z",
+    "actor": {
+      "kind": "system",
+      "id": "deploy:pipeline"
+    },
+    "subject": {
+      "system": "promo-api",
+      "environment": "production"
+    },
+    "status": "in_progress",
+    "summary": "Version 3.8.0 released as a canary to 5% of traffic",
+    "sources": [
+      {
+        "kind": "deploy",
+        "ref": "deploy://promo-api/3.8.0/canary-1"
+      }
+    ],
+    "evidence": [
+      {
+        "kind": "rollback.plan",
+        "ref": "techlog://plans/rbp_01J9K2A0P0R8"
+      }
+    ],
+    "links": [
+      {
+        "rel": "releases",
+        "target": "evt_01J9K2A0P006",
+        "basis": "confirmed"
+      }
+    ],
+    "provenance": {
+      "recorded_by": "collector:deploy",
+      "method": "collected"
+    }
+  },
+  {
+    "schema_version": "0.1-draft",
+    "id": "evt_01J9K2A0P011",
+    "type": "incident.opened",
+    "time": "2026-03-12T13:38:00Z",
+    "actor": {
+      "kind": "system",
+      "id": "alert:error-rate-monitor"
+    },
+    "subject": {
+      "system": "promo-api",
+      "component": "spin-service",
+      "environment": "production"
+    },
+    "status": "open",
+    "summary": "5xx ratio on the spin endpoint reached 6.2% on the canary, above the 1.0% rollback threshold for 3 minutes",
+    "evidence": [
+      {
+        "kind": "alert",
+        "ref": "alert://promo-api/high-error-rate/a-5521"
+      },
+      {
+        "kind": "metric.query",
+        "ref": "metrics://promo-api/http_5xx_ratio?canary=true"
+      }
+    ],
+    "links": [
+      {
+        "rel": "observed_after",
+        "target": "evt_01J9K2A0P010",
+        "basis": "confirmed"
+      },
+      {
+        "rel": "caused_by",
+        "target": "evt_01J9K2A0P006",
+        "basis": "hypothesis"
+      }
+    ],
+    "provenance": {
+      "recorded_by": "collector:alerting",
+      "method": "collected"
+    },
+    "extensions": {
+      "org.techlog.hypothesis": {
+        "statement": "the new spin endpoint may fail under production traffic patterns",
+        "status": "unconfirmed",
+        "next_step": "Replay canary traffic against the spin service and inspect the failing requests"
+      }
+    }
+  },
+  {
+    "schema_version": "0.1-draft",
+    "id": "evt_01J9K2A0P012",
+    "type": "rollback.executed",
+    "time": "2026-03-12T13:46:00Z",
+    "actor": {
+      "kind": "human",
+      "id": "user:s.lindqvist"
+    },
+    "subject": {
+      "system": "promo-api",
+      "environment": "production"
+    },
+    "status": "recorded",
+    "summary": "Approved rollback plan activated; canary traffic returned to 3.7.2",
+    "evidence": [
+      {
+        "kind": "rollback.plan",
+        "ref": "techlog://plans/rbp_01J9K2A0P0R8"
+      },
+      {
+        "kind": "approval",
+        "ref": "approval://appr_5188"
+      }
+    ],
+    "links": [
+      {
+        "rel": "reverts",
+        "target": "evt_01J9K2A0P010",
+        "basis": "confirmed"
+      },
+      {
+        "rel": "mitigates",
+        "target": "evt_01J9K2A0P011",
+        "basis": "confirmed"
+      }
+    ],
+    "provenance": {
+      "recorded_by": "collector:deploy",
+      "method": "collected"
+    }
+  },
+  {
+    "schema_version": "0.1-draft",
+    "id": "evt_01J9K2A0P013",
+    "type": "recovery.verified",
+    "time": "2026-03-12T13:58:00Z",
+    "actor": {
+      "kind": "system",
+      "id": "monitor:slo"
+    },
+    "subject": {
+      "system": "promo-api",
+      "component": "spin-service",
+      "environment": "production"
+    },
+    "status": "verified",
+    "summary": "5xx ratio back under 0.2% for 10 minutes; checkout was not affected",
+    "evidence": [
+      {
+        "kind": "metric.query",
+        "ref": "metrics://promo-api/http_5xx_ratio?window=10m"
+      }
+    ],
+    "links": [
+      {
+        "rel": "verifies",
+        "target": "evt_01J9K2A0P012",
+        "basis": "confirmed"
+      }
+    ],
+    "provenance": {
+      "recorded_by": "collector:monitoring",
+      "method": "collected",
+      "confidence": "corroborated"
+    }
+  },
+  {
+    "schema_version": "0.1-draft",
+    "id": "evt_01J9K2A0P014",
+    "type": "decision.made",
+    "time": "2026-03-12T14:10:00Z",
+    "actor": {
+      "kind": "human",
+      "id": "user:l.berg"
+    },
+    "subject": {
+      "system": "spring-spin",
+      "component": "campaign"
+    },
+    "status": "recorded",
+    "summary": "Hold the campaign go-live until the release passes its gates again",
+    "links": [
+      {
+        "rel": "relates_to",
+        "target": "evt_01J9K2A0P011",
+        "basis": "confirmed"
+      }
+    ],
+    "provenance": {
+      "recorded_by": "user:l.berg",
+      "method": "human_entered"
+    }
+  },
+  {
+    "schema_version": "0.1-draft",
+    "id": "evt_01J9K2A0P015",
+    "type": "investigation.completed",
+    "time": "2026-03-12T15:10:00Z",
+    "actor": {
+      "kind": "ai_agent",
+      "id": "agent:triage-assistant",
+      "on_behalf_of": "user:s.lindqvist"
+    },
+    "subject": {
+      "system": "promo-api",
+      "component": "spin-service",
+      "environment": "production"
+    },
+    "status": "recorded",
+    "summary": "Root cause confirmed: retries from mobile clients sent duplicate spins that contended for the draw lock; spin requests need an idempotency key",
+    "evidence": [
+      {
+        "kind": "trace",
+        "ref": "trace://tr_9d21"
+      },
+      {
+        "kind": "code.ref",
+        "ref": "promo-api@9c3e7ab:spin/draw.go#L57"
+      }
+    ],
+    "links": [
+      {
+        "rel": "investigates",
+        "target": "evt_01J9K2A0P011",
+        "basis": "confirmed"
+      },
+      {
+        "rel": "caused_by",
+        "target": "evt_01J9K2A0P006",
+        "basis": "confirmed"
+      }
+    ],
+    "provenance": {
+      "recorded_by": "agent:triage-assistant",
+      "method": "agent_submitted",
+      "confidence": "corroborated"
+    }
+  },
+  {
+    "schema_version": "0.1-draft",
+    "id": "evt_01J9K2A0P016",
+    "type": "change.implemented",
+    "time": "2026-03-13T09:40:00Z",
+    "actor": {
+      "kind": "ai_agent",
+      "id": "agent:code-assistant",
+      "on_behalf_of": "user:a.novak"
+    },
+    "subject": {
+      "system": "promo-api",
+      "component": "spin-service"
+    },
+    "status": "recorded",
+    "summary": "Idempotency key added to spin requests; retries no longer contend for the draw lock",
+    "sources": [
+      {
+        "kind": "git.pr",
+        "ref": "promo-api#418"
+      }
+    ],
+    "links": [
+      {
+        "rel": "follows_up",
+        "target": "evt_01J9K2A0P011",
+        "basis": "confirmed"
+      },
+      {
+        "rel": "relates_to",
+        "target": "evt_01J9K2A0P015",
+        "basis": "confirmed"
+      }
+    ],
+    "provenance": {
+      "recorded_by": "collector:git",
+      "method": "collected"
+    }
+  },
+  {
+    "schema_version": "0.1-draft",
+    "id": "evt_01J9K2A0P017",
+    "type": "verification.completed",
+    "time": "2026-03-13T10:20:00Z",
+    "actor": {
+      "kind": "system",
+      "id": "ci:pipeline"
+    },
+    "subject": {
+      "system": "promo-api",
+      "component": "spin-service"
+    },
+    "status": "verified",
+    "summary": "Recorded canary traffic replayed: no duplicate draws, error rate flat",
+    "evidence": [
+      {
+        "kind": "test.report",
+        "ref": "ci://run/90577",
+        "digest": "sha256:5e92b0c7a4d81f36e9a2c5b8d1f40a73b6e3d9c2f5a8071e4b7d0c3a6f92e581"
+      }
+    ],
+    "links": [
+      {
+        "rel": "verifies",
+        "target": "evt_01J9K2A0P016",
+        "basis": "confirmed"
+      }
+    ],
+    "provenance": {
+      "recorded_by": "collector:ci",
+      "method": "collected"
+    }
+  },
+  {
+    "schema_version": "0.1-draft",
+    "id": "evt_01J9K2A0P018",
+    "type": "release.deployed",
+    "time": "2026-03-13T13:00:00Z",
+    "actor": {
+      "kind": "system",
+      "id": "deploy:pipeline"
+    },
+    "subject": {
+      "system": "promo-api",
+      "environment": "production"
+    },
+    "status": "verified",
+    "summary": "Version 3.8.1 passed the canary gates and was promoted to 100% of traffic",
+    "sources": [
+      {
+        "kind": "deploy",
+        "ref": "deploy://promo-api/3.8.1/full"
+      }
+    ],
+    "evidence": [
+      {
+        "kind": "rollback.plan",
+        "ref": "techlog://plans/rbp_01J9K2A0P0R8"
+      }
+    ],
+    "links": [
+      {
+        "rel": "releases",
+        "target": "evt_01J9K2A0P016",
+        "basis": "confirmed"
+      }
+    ],
+    "provenance": {
+      "recorded_by": "collector:deploy",
+      "method": "collected"
+    }
+  },
+  {
+    "schema_version": "0.1-draft",
+    "id": "evt_01J9K2A0P019",
+    "type": "release.deployed",
+    "time": "2026-03-14T08:00:00Z",
+    "actor": {
+      "kind": "human",
+      "id": "user:l.berg"
+    },
+    "subject": {
+      "system": "spring-spin",
+      "component": "campaign"
+    },
+    "status": "in_progress",
+    "summary": "Spring Spin went live with email, an app banner, and social posts",
+    "links": [
+      {
+        "rel": "relates_to",
+        "target": "evt_01J9K2A0P018",
+        "basis": "confirmed"
+      },
+      {
+        "rel": "relates_to",
+        "target": "evt_01J9K2A0P014",
+        "basis": "confirmed"
+      }
+    ],
+    "provenance": {
+      "recorded_by": "user:l.berg",
+      "method": "human_entered"
+    }
+  },
+  {
+    "schema_version": "0.1-draft",
+    "id": "evt_01J9K2A0P020",
+    "type": "problem.reported",
+    "time": "2026-03-14T11:15:00Z",
+    "actor": {
+      "kind": "human",
+      "id": "user:t.nguyen"
+    },
+    "subject": {
+      "system": "support-desk",
+      "component": "spin-tickets"
+    },
+    "status": "recorded",
+    "summary": "Several new clients report that the spin result is not shown on older mobile browsers, so they never see their code",
+    "sources": [
+      {
+        "kind": "ticket",
+        "ref": "SUP-884"
+      },
+      {
+        "kind": "ticket",
+        "ref": "SUP-889"
+      }
+    ],
+    "evidence": [
+      {
+        "kind": "ticket.cluster",
+        "ref": "support://clusters/spin-result-missing"
+      }
+    ],
+    "links": [
+      {
+        "rel": "observed_after",
+        "target": "evt_01J9K2A0P019",
+        "basis": "confirmed"
+      },
+      {
+        "rel": "caused_by",
+        "target": "evt_01J9K2A0P016",
+        "basis": "hypothesis"
+      }
+    ],
+    "provenance": {
+      "recorded_by": "user:t.nguyen",
+      "method": "human_entered"
+    }
+  },
+  {
+    "schema_version": "0.1-draft",
+    "id": "evt_01J9K2A0P021",
+    "type": "investigation.completed",
+    "time": "2026-03-14T11:50:00Z",
+    "actor": {
+      "kind": "ai_agent",
+      "id": "agent:triage-assistant",
+      "on_behalf_of": "user:s.lindqvist"
+    },
+    "subject": {
+      "system": "promo-api",
+      "component": "spin-service",
+      "environment": "production"
+    },
+    "status": "recorded",
+    "summary": "The result panel needs a clipboard API that older browsers lack; draws and discounts are stored correctly and only the display is affected",
+    "evidence": [
+      {
+        "kind": "trace",
+        "ref": "trace://tr_b407"
+      },
+      {
+        "kind": "code.ref",
+        "ref": "promo-api@main:web/result-panel.ts#L22"
+      }
+    ],
+    "links": [
+      {
+        "rel": "investigates",
+        "target": "evt_01J9K2A0P020",
+        "basis": "confirmed"
+      },
+      {
+        "rel": "caused_by",
+        "target": "evt_01J9K2A0P016",
+        "basis": "confirmed"
+      }
+    ],
+    "provenance": {
+      "recorded_by": "agent:triage-assistant",
+      "method": "agent_submitted",
+      "confidence": "corroborated"
+    }
+  },
+  {
+    "schema_version": "0.1-draft",
+    "id": "evt_01J9K2A0P022",
+    "type": "mitigation.applied",
+    "time": "2026-03-14T12:25:00Z",
+    "actor": {
+      "kind": "human",
+      "id": "user:s.lindqvist"
+    },
+    "subject": {
+      "system": "promo-api",
+      "component": "spin-service",
+      "environment": "production"
+    },
+    "status": "mitigated",
+    "summary": "Feature flag switched the old result panel back on for older browsers; codes are shown again",
+    "evidence": [
+      {
+        "kind": "flag.change",
+        "ref": "flags://promo-api/spin-result-fallback"
+      }
+    ],
+    "links": [
+      {
+        "rel": "mitigates",
+        "target": "evt_01J9K2A0P020",
+        "basis": "confirmed"
+      }
+    ],
+    "provenance": {
+      "recorded_by": "collector:flags",
+      "method": "collected"
+    }
+  },
+  {
+    "schema_version": "0.1-draft",
+    "id": "evt_01J9K2A0P023",
+    "type": "recovery.verified",
+    "time": "2026-03-14T13:30:00Z",
+    "actor": {
+      "kind": "human",
+      "id": "user:t.nguyen"
+    },
+    "subject": {
+      "system": "support-desk",
+      "component": "spin-tickets"
+    },
+    "status": "verified",
+    "summary": "No new tickets in 60 minutes; affected clients were sent their codes by email",
+    "links": [
+      {
+        "rel": "verifies",
+        "target": "evt_01J9K2A0P022",
+        "basis": "confirmed"
+      }
+    ],
+    "provenance": {
+      "recorded_by": "user:t.nguyen",
+      "method": "human_entered"
+    }
+  },
+  {
+    "schema_version": "0.1-draft",
+    "id": "evt_01J9K2A0P024",
+    "type": "action.tracked",
+    "time": "2026-03-15T09:00:00Z",
+    "actor": {
+      "kind": "human",
+      "id": "user:l.berg"
+    },
+    "subject": {
+      "system": "spring-spin",
+      "component": "campaign"
+    },
+    "status": "in_progress",
+    "summary": "Follow-ups: fix the result panel for older browsers, add a browser check before go-live, and send an apology code to affected clients",
+    "links": [
+      {
+        "rel": "follows_up",
+        "target": "evt_01J9K2A0P020",
+        "basis": "confirmed"
+      }
+    ],
+    "provenance": {
+      "recorded_by": "user:l.berg",
+      "method": "human_entered"
+    },
+    "extensions": {
+      "org.techlog.actions": [
+        {
+          "title": "Result panel works without the clipboard API",
+          "kind": "permanent_fix",
+          "owner": "team:promo",
+          "due": "2026-03-17"
+        },
+        {
+          "title": "Browser-matrix check before any campaign go-live",
+          "kind": "prevention",
+          "owner": "team:marketing-ops",
+          "due": "2026-03-20"
+        },
+        {
+          "title": "Apology code for affected new clients",
+          "kind": "customer_care",
+          "owner": "team:support",
+          "due": "2026-03-16"
+        }
+      ]
+    }
+  },
+  {
+    "schema_version": "0.1-draft",
+    "id": "evt_01J9K2A0P025",
+    "type": "change.implemented",
+    "time": "2026-03-16T10:05:00Z",
+    "actor": {
+      "kind": "ai_agent",
+      "id": "agent:code-assistant",
+      "on_behalf_of": "user:a.novak"
+    },
+    "subject": {
+      "system": "promo-api",
+      "component": "spin-service"
+    },
+    "status": "recorded",
+    "summary": "Result panel no longer needs the clipboard API; the fallback flag is retired",
+    "sources": [
+      {
+        "kind": "git.pr",
+        "ref": "promo-api#431"
+      }
+    ],
+    "links": [
+      {
+        "rel": "follows_up",
+        "target": "evt_01J9K2A0P024",
+        "basis": "confirmed"
+      },
+      {
+        "rel": "relates_to",
+        "target": "evt_01J9K2A0P021",
+        "basis": "confirmed"
+      }
+    ],
+    "provenance": {
+      "recorded_by": "collector:git",
+      "method": "collected"
+    }
+  }
+]
