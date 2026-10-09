@@ -235,3 +235,34 @@ func TestSystemHistory(t *testing.T) {
 		t.Errorf("unknown system must not be an error: %s", text(none))
 	}
 }
+
+func TestRecordDuplicateKeyNamesExistingEvent(t *testing.T) {
+	cs := connect(t)
+	d := testutil.Doc("alpha", "problem.reported", "x")
+	d["idempotency_key"] = "deploy-4411"
+	id := recordOK(t, cs, d)
+
+	res := call(t, cs, "techlog_record_event", map[string]any{"event": d})
+	if !res.IsError {
+		t.Fatal("expected isError for a repeated idempotency key")
+	}
+	got := text(res)
+	for _, want := range []string{id, "Already recorded", "deploy-4411", "Do not retry"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("text %q does not contain %q", got, want)
+		}
+	}
+}
+
+func TestRecordToolDescriptionMentionsKey(t *testing.T) {
+	cs := connect(t)
+	res, err := cs.ListTools(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, tool := range res.Tools {
+		if tool.Name == "techlog_record_event" && !strings.Contains(tool.Description, "idempotency_key") {
+			t.Errorf("description does not mention idempotency_key: %q", tool.Description)
+		}
+	}
+}

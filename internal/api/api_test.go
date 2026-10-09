@@ -310,3 +310,66 @@ func TestUnknownRoute(t *testing.T) {
 		t.Fatalf("status %d code %q", rec.Code, code)
 	}
 }
+
+func TestRecordDuplicateKeyIs409(t *testing.T) {
+	h, _ := setup(t)
+	d := testutil.Doc("alpha", "problem.reported", "hello")
+	d["idempotency_key"] = "deploy-4411"
+	first := do(h, "POST", "/api/v1/events", d)
+	if first.Code != http.StatusCreated {
+		t.Fatalf("first: status %d: %s", first.Code, first.Body)
+	}
+	firstID := decode(t, first)["event"].(map[string]any)["id"].(string)
+
+	rec := do(h, "POST", "/api/v1/events", d)
+	if rec.Code != http.StatusConflict {
+		t.Fatalf("status %d: %s", rec.Code, rec.Body)
+	}
+	e := decode(t, rec)["error"].(map[string]any)
+	if e["code"] != "duplicate_event" || e["existing_id"] != firstID {
+		t.Errorf("error = %v, want code duplicate_event and existing_id %s", e, firstID)
+	}
+	if msg, _ := e["message"].(string); !strings.Contains(msg, `"deploy-4411"`) || !strings.Contains(msg, firstID) {
+		t.Errorf("message = %q", msg)
+	}
+	if _, has := decode(t, do(h, "POST", "/api/v1/events", testutil.Doc("alpha", "problem.reported", "x")))["error"]; has {
+		t.Error("an event with a fresh key must still be accepted")
+	}
+}
+
+func TestRecordSameKeyDifferentActorIs201(t *testing.T) {
+	h, _ := setup(t)
+	a := testutil.Doc("alpha", "problem.reported", "a")
+	a["idempotency_key"] = "shared"
+	b := testutil.Doc("alpha", "problem.reported", "b")
+	b["idempotency_key"] = "shared"
+	b["actor"] = map[string]any{"kind": "human", "id": "user:other"}
+	for _, d := range []map[string]any{a, b} {
+		if rec := do(h, "POST", "/api/v1/events", d); rec.Code != http.StatusCreated {
+			t.Fatalf("status %d: %s", rec.Code, rec.Body)
+		}
+	}
+}
+
+func TestRecordKeyValidation(t *testing.T) {
+	h, _ := setup(t)
+	missing := testutil.Doc("alpha", "problem.reported", "hello")
+	delete(missing, "idempotency_key")
+	empty := testutil.Doc("alpha", "problem.reported", "hello")
+	empty["idempotency_key"] = ""
+	for name, tc := range map[string]struct {
+		doc  map[string]any
+		path string
+	}{"missing": {missing, "/"}, "empty": {empty, "/idempotency_key"}} {
+		t.Run(name, func(t *testing.T) {
+			rec := do(h, "POST", "/api/v1/events", tc.doc)
+			if rec.Code != http.StatusUnprocessableEntity {
+				t.Fatalf("status %d: %s", rec.Code, rec.Body)
+			}
+			code, paths := errorOf(t, rec)
+			if code != "invalid_event" || !slices.Contains(paths, tc.path) {
+				t.Errorf("code=%q paths=%v, want a problem at %q", code, paths, tc.path)
+			}
+		})
+	}
+}

@@ -38,7 +38,7 @@ func New(svc *service.Service) *mcp.Server {
 	}, t.getEvent)
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "techlog_record_event",
-		Description: "Record a structured Techlog event (draft 0.1). Do not supply an id: the server assigns it. Events are immutable; record a correction as a new event. On a validation error the result lists the field paths to fix.",
+		Description: "Record a structured Techlog event (draft 0.1). Do not supply an id: the server assigns it. idempotency_key is required and unique per actor: use one stable key per logical event and reuse it when retrying; a duplicate is rejected and names the existing event. Events are immutable; record a correction as a new event. On a validation error the result lists the field paths to fix.",
 	}, t.recordEvent)
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "techlog_link_events",
@@ -76,7 +76,7 @@ type getIn struct {
 }
 
 type recordIn struct {
-	Event map[string]any `json:"event" jsonschema:"the event without an id: type, time, actor, subject, status, provenance, and optionally summary, sources, evidence, links, extensions"`
+	Event map[string]any `json:"event" jsonschema:"the event without an id: type, time, actor, subject, status, provenance, idempotency_key, and optionally summary, sources, evidence, links, extensions"`
 }
 
 type linkIn struct {
@@ -191,7 +191,12 @@ func errorResult(err error) *mcp.CallToolResult {
 func describe(err error) string {
 	var invalid *service.InvalidError
 	var bad *service.BadRequestError
+	var dup *service.DuplicateError
 	switch {
+	case errors.As(err, &dup):
+		return fmt.Sprintf("Already recorded: idempotency_key %q for actor %q is event %s. "+
+			"Do not retry; link to %s if later events follow from it.",
+			dup.Key, dup.ActorID, dup.ExistingID, dup.ExistingID)
 	case errors.As(err, &invalid):
 		var b strings.Builder
 		b.WriteString("Rejected. Fix these problems and call the tool again:")

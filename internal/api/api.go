@@ -132,9 +132,10 @@ func decodeObject(w http.ResponseWriter, r *http.Request) (map[string]any, error
 
 type errorBody struct {
 	Error struct {
-		Code    string          `json:"code"`
-		Message string          `json:"message"`
-		Details []event.Problem `json:"details,omitempty"`
+		Code       string          `json:"code"`
+		Message    string          `json:"message"`
+		ExistingID string          `json:"existing_id,omitempty"`
+		Details    []event.Problem `json:"details,omitempty"`
 	} `json:"error"`
 }
 
@@ -148,11 +149,16 @@ func writeError(w http.ResponseWriter, status int, code, message string, details
 func fail(w http.ResponseWriter, r *http.Request, err error) {
 	var invalid *service.InvalidError
 	var bad *service.BadRequestError
+	var dup *service.DuplicateError
 	switch {
 	case errors.As(err, &invalid):
 		writeError(w, http.StatusUnprocessableEntity, "invalid_event", "validation failed", invalid.Problems)
 	case errors.As(err, &bad):
 		writeError(w, http.StatusBadRequest, "bad_request", bad.Msg, nil)
+	case errors.As(err, &dup):
+		var b errorBody
+		b.Error.Code, b.Error.Message, b.Error.ExistingID = "duplicate_event", dup.Error(), dup.ExistingID
+		writeJSON(w, http.StatusConflict, b)
 	case errors.Is(err, store.ErrNotFound):
 		writeError(w, http.StatusNotFound, "not_found", err.Error(), nil)
 	default:

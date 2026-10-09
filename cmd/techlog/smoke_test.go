@@ -73,6 +73,12 @@ func TestSmoke(t *testing.T) {
 		t.Fatalf("structuredContent %s: %v", raw, err)
 	}
 
+	again, err := cs.CallTool(ctx, &mcp.CallToolParams{Name: "techlog_record_event", Arguments: map[string]any{"event": doc}})
+	if err != nil || !again.IsError {
+		t.Fatalf("recording the same event twice must be rejected: err=%v result=%+v", err, again)
+	}
+	mustHave(t, "duplicate result", again.Content[0].(*mcp.TextContent).Text, rec.ID)
+
 	mustHave(t, "API event", httpGet(t, ts.URL+"/api/v1/events/"+rec.ID), `"outgoing"`, "evt_01J9K2A0P011", "agent_submitted")
 	mustHave(t, "API search", httpGet(t, ts.URL+"/api/v1/events?q=smoke"), rec.ID)
 	mustHave(t, "UI event page", httpGet(t, ts.URL+"/events/"+rec.ID), "Smoke test decision", "evt_01J9K2A0P011")

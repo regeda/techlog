@@ -9,6 +9,7 @@
   <dt>System</dt><dd><a href="/systems/{{pathEscape .Event.Subject.System}}">{{.Event.Subject.System}}</a>{{if .Event.Subject.Component}} / {{.Event.Subject.Component}}{{end}}{{if .Event.Subject.Environment}} ({{.Event.Subject.Environment}}){{end}}</dd>
   <dt>Actor</dt><dd>{{.Event.Actor.ID}} <span class="muted">({{.Event.Actor.Kind}}{{if .Event.Actor.OnBehalfOf}}, on behalf of {{.Event.Actor.OnBehalfOf}}{{end}})</span></dd>
   <dt>Provenance</dt><dd>{{.Event.Provenance.Method}} by {{.Event.Provenance.RecordedBy}}{{if .Event.Provenance.Confidence}} ({{.Event.Provenance.Confidence}}){{end}}</dd>
+  <dt>Idempotency key</dt><dd><code>{{.Event.IdempotencyKey}}</code></dd>
 </dl>
 <h2>Links from this event</h2>
 {{template "linkrows" .Outgoing}}

@@ -252,3 +252,11 @@ func TestBranding(t *testing.T) {
 		}
 	}
 }
+
+func TestEventPageShowsKey(t *testing.T) {
+	h, svc := setup(t)
+	d := testutil.Doc("alpha", "problem.reported", "keyed")
+	d["idempotency_key"] = "deploy-4411"
+	id := record(t, svc, d)
+	mustContain(t, get(h, "/events/"+id), "Idempotency key", "<code>deploy-4411</code>")
+}
