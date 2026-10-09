@@ -50,7 +50,9 @@ func New(st store.Store, opts ...Option) (*Service, error) {
 
 // Record stores a new event. doc is the event without an id (a supplied id is
 // ignored). method is the provenance method to use when doc has none. The
-// event is validated against the JSON Schema, then link targets are checked.
+// event is validated against the JSON Schema, then link targets are checked; a
+// second event with the same actor and idempotency_key is rejected with a
+// *DuplicateError.
 func (s *Service) Record(ctx context.Context, doc map[string]any, method string) (event.Event, error) {
 	doc, err := event.Normalize(doc)
 	if err != nil {
@@ -77,6 +79,10 @@ func (s *Service) Record(ctx context.Context, doc map[string]any, method string)
 			return event.Event{}, idErr
 		}
 		ev.ID = newID
+	}
+	var dup *store.DuplicateError
+	if errors.As(err, &dup) {
+		return event.Event{}, &DuplicateError{Key: ev.IdempotencyKey, ActorID: ev.Actor.ID, ExistingID: dup.ExistingID}
 	}
 	if err != nil {
 		return event.Event{}, err

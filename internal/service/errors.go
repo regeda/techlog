@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/regeda/techlog/internal/event"
@@ -26,3 +27,16 @@ type BadRequestError struct {
 }
 
 func (e *BadRequestError) Error() string { return e.Msg }
+
+// DuplicateError reports that the actor already recorded an event with this
+// idempotency key. ExistingID is that event.
+type DuplicateError struct {
+	Key        string
+	ActorID    string
+	ExistingID string
+}
+
+func (e *DuplicateError) Error() string {
+	return fmt.Sprintf("duplicate: idempotency_key %q for actor %q was already recorded as %s",
+		e.Key, e.ActorID, e.ExistingID)
+}

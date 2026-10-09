@@ -5,6 +5,7 @@ import (
 	"errors"
 	"regexp"
 	"slices"
+	"strings"
 	"testing"
 	"time"
 
@@ -264,5 +265,78 @@ func TestImportSkipsDuplicateKey(t *testing.T) {
 	inserted, skipped, err := svc.Import(ctx, []map[string]any{a, b})
 	if err != nil || inserted != 1 || skipped != 1 {
 		t.Fatalf("import = %d, %d, %v; want 1, 1, nil", inserted, skipped, err)
+	}
+}
+
+func TestRecordRejectsDuplicateKey(t *testing.T) {
+	svc, fs := newService(t)
+	d := testutil.Doc("alpha", "problem.reported", "first")
+	d["idempotency_key"] = "deploy-4411"
+	first := record(t, svc, d)
+	before := fs.inserts
+
+	_, err := svc.Record(ctx, d, service.MethodHuman)
+	var dup *service.DuplicateError
+	if !errors.As(err, &dup) {
+		t.Fatalf("got %v, want a DuplicateError", err)
+	}
+	if dup.ExistingID != first.ID || dup.Key != "deploy-4411" || dup.ActorID != "user:test" {
+		t.Errorf("DuplicateError = %+v", dup)
+	}
+	if want := `duplicate: idempotency_key "deploy-4411" for actor "user:test" was already recorded as ` + first.ID; dup.Error() != want {
+		t.Errorf("message = %q, want %q", dup.Error(), want)
+	}
+	if fs.inserts != before+1 {
+		t.Errorf("a duplicate must be tried once, not retried: %d inserts", fs.inserts-before)
+	}
+	if len(fs.events) != 1 {
+		t.Errorf("%d events stored, want 1", len(fs.events))
+	}
+}
+
+func TestRecordSameKeyDifferentActor(t *testing.T) {
+	svc, _ := newService(t)
+	a := testutil.Doc("alpha", "problem.reported", "a")
+	a["idempotency_key"] = "shared"
+	b := testutil.Doc("alpha", "problem.reported", "b")
+	b["idempotency_key"] = "shared"
+	b["actor"] = map[string]any{"kind": "human", "id": "user:other"}
+	record(t, svc, a)
+	record(t, svc, b)
+}
+
+func TestRecordRequiresKey(t *testing.T) {
+	svc, fs := newService(t)
+	for name, tc := range map[string]struct {
+		mutate func(d map[string]any)
+		path   string
+	}{
+		"missing": {func(d map[string]any) { delete(d, "idempotency_key") }, "/"},
+		"empty":   {func(d map[string]any) { d["idempotency_key"] = "" }, "/idempotency_key"},
+		"long":    {func(d map[string]any) { d["idempotency_key"] = strings.Repeat("k", 129) }, "/idempotency_key"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			d := testutil.Doc("alpha", "problem.reported", "x")
+			tc.mutate(d)
+			_, err := svc.Record(ctx, d, service.MethodHuman)
+			if !slices.Contains(problemPaths(err), tc.path) {
+				t.Fatalf("got %v (paths %v), want a problem at %q", err, problemPaths(err), tc.path)
+			}
+		})
+	}
+	if fs.inserts != 0 {
+		t.Error("an event without a valid key must not reach the store")
+	}
+}
+
+func TestRecordValidationBeatsDuplicate(t *testing.T) {
+	svc, _ := newService(t)
+	d := testutil.Doc("alpha", "problem.reported", "first")
+	d["idempotency_key"] = "k"
+	record(t, svc, d)
+	d["actor"].(map[string]any)["kind"] = "robot" // now invalid AND a duplicate
+	_, err := svc.Record(ctx, d, service.MethodHuman)
+	if !slices.Contains(problemPaths(err), "/actor/kind") {
+		t.Fatalf("got %v, want a validation error, not a duplicate", err)
 	}
 }
