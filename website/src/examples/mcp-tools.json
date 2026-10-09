@@ -1,0 +1,85 @@
+[
+  {
+    "name": "techlog.search_events",
+    "description": "Search engineering events by free text, type, system, and time range.",
+    "inputSchema": {
+      "type": "object",
+      "required": ["query"],
+      "properties": {
+        "query": { "type": "string" },
+        "system": { "type": "string" },
+        "types": { "type": "array", "items": { "type": "string" } },
+        "since": { "type": "string", "format": "date-time" },
+        "until": { "type": "string", "format": "date-time" },
+        "limit": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
+      }
+    }
+  },
+  {
+    "name": "techlog.get_system_history",
+    "description": "Retrieve the chronological event history for one system, optionally with relationships.",
+    "inputSchema": {
+      "type": "object",
+      "required": ["system"],
+      "properties": {
+        "system": { "type": "string" },
+        "since": { "type": "string", "format": "date-time" },
+        "limit": { "type": "integer", "minimum": 1, "maximum": 200, "default": 50 },
+        "include_links": { "type": "boolean", "default": true }
+      }
+    }
+  },
+  {
+    "name": "techlog.record_event",
+    "description": "Record a structured event. The recorder assigns the id; the caller supplies every other required field.",
+    "inputSchema": {
+      "type": "object",
+      "required": ["event"],
+      "properties": { "event": { "type": "object", "description": "A Techlog event without an id." } }
+    }
+  },
+  {
+    "name": "techlog.link_events",
+    "description": "Link two events. Causal links must state whether they are confirmed or a hypothesis.",
+    "inputSchema": {
+      "type": "object",
+      "required": ["source", "target", "rel", "basis"],
+      "properties": {
+        "source": { "type": "string" },
+        "target": { "type": "string" },
+        "rel": { "type": "string" },
+        "basis": { "enum": ["confirmed", "hypothesis"] },
+        "rationale": { "type": "string" }
+      }
+    }
+  },
+  {
+    "name": "techlog.create_rollback_plan",
+    "description": "Prepare a rollback plan for an upgrade. The plan starts as a draft and needs review before it counts as evidence.",
+    "inputSchema": {
+      "type": "object",
+      "required": ["system", "current_version", "target_version", "strategy"],
+      "properties": {
+        "system": { "type": "string" },
+        "current_version": { "type": "string" },
+        "target_version": { "type": "string" },
+        "strategy": { "enum": ["canary", "in_place"] },
+        "change_event": { "type": "string" }
+      }
+    }
+  },
+  {
+    "name": "techlog.submit_evidence",
+    "description": "Attach an evidence reference, optionally with a content digest, to an existing event.",
+    "inputSchema": {
+      "type": "object",
+      "required": ["event_id", "kind", "ref"],
+      "properties": {
+        "event_id": { "type": "string" },
+        "kind": { "type": "string" },
+        "ref": { "type": "string" },
+        "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      }
+    }
+  }
+]

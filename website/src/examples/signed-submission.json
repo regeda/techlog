@@ -1,0 +1,18 @@
+{
+  "event": {
+    "schema_version": "0.1-draft",
+    "type": "change.implemented",
+    "time": "2026-03-11T10:12:00Z",
+    "actor": { "kind": "ai_agent", "id": "agent:code-assistant", "on_behalf_of": "user:a.novak" },
+    "subject": { "system": "promo-api", "component": "spin-service" },
+    "status": "recorded",
+    "summary": "Spin endpoint with server-side draw, 20% cap, and one spin per new account",
+    "provenance": { "recorded_by": "agent:code-assistant", "method": "agent_submitted" }
+  },
+  "signature": {
+    "key_id": "key:agent:code-assistant:2026-01",
+    "algorithm": "ed25519",
+    "canonicalization": "jcs",
+    "value": "ILLUSTRATIVE-VALUE-not-a-real-signature"
+  }
+}

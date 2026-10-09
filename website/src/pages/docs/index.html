@@ -1,0 +1,90 @@
+---
+title: Overview
+description: What Techlog is, the problem it addresses, its core concepts, and what exists today. A proposed open standard and a planned platform.
+layout: docs
+section: Start
+order: 1
+nav: Overview
+---
+<h1>Overview</h1>
+<div class="page-meta"><span class="badge badge-proposed">Proposed · draft 0.1</span><span class="badge badge-simulated">Illustrative examples</span></div>
+
+<p class="lead">Techlog keeps a structured, searchable, evidence-linked stream of the events that matter in software engineering, so a change can be followed from the problem that started it to what it did in production.</p>
+
+<h2 id="problem">The problem</h2>
+<p>AI agents and engineers now produce changes faster than the workflows built to explain them. Pull requests, tickets, commits, CI/CD pipelines, observability platforms, and incident tools each hold part of the story, and nobody holds all of it. Reviews become the bottleneck because the reviewer has to rebuild the context from scratch.</p>
+<p>Teams need to know:</p>
+<ul>
+  <li>What changed, and why.</li>
+  <li>Which problem or requirement motivated the change.</li>
+  <li>Which alternatives and technical decisions were considered.</li>
+  <li>How the change was implemented and verified.</li>
+  <li>Which deployment introduced it.</li>
+  <li>What happened in production afterward.</li>
+  <li>How incidents were mitigated and resolved.</li>
+  <li>Whether corrective actions prevent recurrence.</li>
+  <li>Whether policies were followed.</li>
+</ul>
+
+<h2 id="vision">The vision</h2>
+<p class="mono">Problem → Proposal → Decision → Implementation → Verification → Release → Production → Incident → Remediation → Follow-up</p>
+<p>Techlog is proposed to collect events from the tools you already use, let AI agents contribute structured events of their own, and connect the evidence needed to understand and verify a change. The record is meant to be useful to humans and to agents alike.</p>
+
+<h2 id="concepts">Core concepts</h2>
+<dl>
+  <dt>Event</dt><dd>An immutable, structured record of something meaningful, such as a decision, a release, or an incident. Later events change the state of the story; they do not rewrite earlier ones.</dd>
+  <dt>Actor</dt><dd>Who produced the event: a human, an AI agent, or a system.</dd>
+  <dt>Link</dt><dd>A typed relationship between events, marked <em>confirmed</em> or <em>hypothesis</em>.</dd>
+  <dt>Evidence</dt><dd>References to artifacts such as test reports or alerts, optionally with a content digest. Techlog stores references, not the artifacts.</dd>
+  <dt>Provenance</dt><dd>How the event came to be recorded: collected from a tool, submitted by an agent, or entered by a person.</dd>
+  <dt>Status</dt><dd>The state of the thing the event describes at the moment it was recorded.</dd>
+  <dt>Policy</dt><dd>Conditions over events and evidence, such as "a production upgrade needs a reviewed rollback plan".</dd>
+</dl>
+<p>All of them are specified in the <a href="event-model.html">event model</a>.</p>
+
+<h2 id="audience">Who it is for</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Role</th><th>What they get</th></tr></thead>
+  <tbody>
+    <tr><td>Engineering leaders</td><td>A traceable account of why changes were made and how they behaved in production.</td></tr>
+    <tr><td>Developers and reviewers</td><td>Context attached to every change, so reviews start from the story rather than the diff alone.</td></tr>
+    <tr><td>AI-agent and tool builders</td><td>A common, documented way to read engineering history and to record decisions, evidence, and plans.</td></tr>
+    <tr><td>Reliability and on-call engineers</td><td>Incidents linked to the releases and changes behind them, with rollback plans and recovery checks.</td></tr>
+    <tr><td>Security and compliance teams</td><td>Evidence and approvals linked to the operations they apply to, and a record of how policies were evaluated.</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="standard-and-platform">Standard and platform</h2>
+<p>There are two separate things here. The open standard is a proposal anyone can review and implement. The Techlog platform is a planned commercial product built on it.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Open standard (proposed)</th><th>Techlog platform (commercial, planned)</th></tr></thead>
+  <tbody>
+    <tr><td>Event schema and extension rules</td><td>Engineering change intelligence</td></tr>
+    <tr><td>Lifecycle relationships</td><td>Reliability engineering and incident management</td></tr>
+    <tr><td>Evidence and provenance</td><td>MCP integrations for AI agents</td></tr>
+    <tr><td>Policy and assurance concepts</td><td>Assisted upgrade and rollback planning</td></tr>
+    <tr><td>API and MCP bindings</td><td>Configurable workflows and enterprise policy enforcement</td></tr>
+    <tr><td>Versioning and conformance tests</td><td>Compliance evidence</td></tr>
+  </tbody>
+</table></div>
+<p>The platform complements GitHub and GitLab, observability, incident-management, and GRC tools. It does not replace them. Independent implementations of the standard should be possible.</p>
+
+<h2 id="today">What exists today</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Item</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>This documentation and website</td><td><span class="badge badge-exists">Exists</span></td></tr>
+    <tr><td>Event model, draft 0.1</td><td><span class="badge badge-proposed">Proposed</span></td></tr>
+    <tr><td>MCP interface</td><td><span class="badge badge-proposed">Proposed</span></td></tr>
+    <tr><td>Walkthrough demo on the home page</td><td><span class="badge badge-simulated">Simulated example</span></td></tr>
+    <tr><td>Hosted platform</td><td><span class="badge badge-future">Coming soon</span></td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="next">Where to go next</h2>
+<ul>
+  <li><a href="getting-started.html">Getting started</a>: record your first event in five languages.</li>
+  <li><a href="event-model.html">Event model</a>: the fields, types, and links.</li>
+  <li><a href="deep-dive.html">Technical deep-dive</a>: the exact semantics.</li>
+</ul>
+<nav class="pager" aria-label="Pager"><span></span><a href="getting-started.html">Getting started →</a></nav>

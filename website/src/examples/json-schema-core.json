@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://techlog.example.invalid/schema/0.1-draft/event.json",
+  "title": "Techlog Event (proposed, draft 0.1)",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "id",
+    "type",
+    "time",
+    "actor",
+    "subject",
+    "status",
+    "provenance"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "0.1-draft"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^evt_[0-9A-Z]{12}$"
+    },
+    "type": {
+      "enum": [
+        "problem.reported",
+        "investigation.completed",
+        "proposal.recorded",
+        "decision.made",
+        "change.implemented",
+        "verification.completed",
+        "release.deployed",
+        "incident.opened",
+        "mitigation.applied",
+        "rollback.executed",
+        "recovery.verified",
+        "postmortem.published",
+        "action.tracked"
+      ]
+    },
+    "time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "actor": {
+      "$ref": "#/$defs/actor"
+    },
+    "subject": {
+      "$ref": "#/$defs/subject"
+    },
+    "status": {
+      "enum": [
+        "proposed",
+        "recorded",
+        "in_progress",
+        "verified",
+        "failed",
+        "open",
+        "mitigated",
+        "resolved",
+        "superseded"
+      ]
+    },
+    "summary": {
+      "type": "string",
+      "maxLength": 280
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/source"
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/link"
+      }
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    },
+    "extensions": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z0-9]+(\\.[a-z0-9-]+)+$"
+      }
+    }
+  },
+  "$defs": {
+    "actor": {
+      "type": "object",
+      "required": [
+        "kind",
+        "id"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "human",
+            "ai_agent",
+            "system"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "on_behalf_of": {
+          "type": "string"
+        }
+      }
+    },
+    "subject": {
+      "type": "object",
+      "required": [
+        "system"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "system": {
+          "type": "string"
+        },
+        "component": {
+          "type": "string"
+        },
+        "environment": {
+          "type": "string"
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "kind",
+        "ref"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "ref": {
+          "type": "string"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "required": [
+        "kind",
+        "ref"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "ref": {
+          "type": "string"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "link": {
+      "type": "object",
+      "required": [
+        "rel",
+        "target",
+        "basis"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "rel": {
+          "enum": [
+            "motivated_by",
+            "investigates",
+            "decides",
+            "implements",
+            "verifies",
+            "releases",
+            "observed_after",
+            "mitigates",
+            "reverts",
+            "resolves",
+            "follows_up",
+            "caused_by",
+            "relates_to"
+          ]
+        },
+        "target": {
+          "type": "string",
+          "pattern": "^evt_[0-9A-Z]{12}$"
+        },
+        "basis": {
+          "enum": [
+            "confirmed",
+            "hypothesis"
+          ]
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "recorded_by",
+        "method"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "recorded_by": {
+          "type": "string"
+        },
+        "method": {
+          "enum": [
+            "collected",
+            "agent_submitted",
+            "human_entered",
+            "derived"
+          ]
+        },
+        "confidence": {
+          "enum": [
+            "asserted",
+            "corroborated"
+          ]
+        }
+      }
+    }
+  }
+}

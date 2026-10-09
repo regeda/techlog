@@ -1,0 +1,70 @@
+---
+title: Architecture
+description: The proposed Techlog architecture: ingestion, validation, event store, workflow and policy engines, the query API, and the MCP server.
+layout: docs
+section: Concepts
+order: 3
+nav: Architecture
+---
+<h1>Architecture</h1>
+<div class="page-meta"><span class="badge badge-proposed">Proposed design</span><span class="badge badge-simulated">Illustrative examples</span></div>
+
+<h2 id="overview">Overview</h2>
+<p>Techlog is designed around one event store and one API. Collectors and AI agents write events through the same validation path, workflows and policies read from the store, and every client (the MCP server, the query API, a UI) reads the same data. Nothing below is implemented; this page describes the intended design.</p>
+<pre class="mermaid">flowchart TB
+  SRC[External tools]
+  AG[AI agents]
+  subgraph TL[Techlog]
+    MCP[MCP server]
+    ING[Event ingestion and schema validation]
+    STORE[(Event store and evidence references)]
+    API[Query API]
+    WF[Workflow engine]
+    POL[Policy evaluation]
+    AUD[Audit records]
+  end
+  DEP[CI/CD and deployment systems]
+  SRC ~~~ AG
+  SRC -- collectors, webhooks --> ING
+  AG --> MCP --> ING
+  ING --> STORE
+  STORE --> API
+  STORE --> WF --> POL --> AUD
+  POL -. outcome .-> DEP</pre>
+<p>External tools are Git hosting, issue trackers, CI/CD, observability, and incident tools. Read the diagram top to bottom: events come in from tools and agents, are validated and stored, and are then read by the query API and the workflow and policy engines. The MCP server also reads through the query API; that line is left out to keep the picture clear.</p>
+<p>Every section below describes a proposed design.</p>
+
+<h2 id="ingestion">Event ingestion</h2>
+<p>Collectors and webhooks turn activity in external tools into events. Ingestion is idempotent by source reference, so a webhook delivered twice records one event. Every event is validated against the schema before it is written, and an invalid event is rejected with a structured error.</p>
+
+<h2 id="schema">Event schema</h2>
+<p>The schema is the contract between everything else. See the <a href="event-model.html">event model</a>.</p>
+
+<h2 id="relationships">Lifecycle relationships</h2>
+<p>Links are stored with the event that makes the claim. Inbound links are derived, so a release can show every incident observed after it without any event being edited. See the <a href="lifecycle.html">lifecycle model</a>.</p>
+
+<h2 id="evidence">Evidence storage and references</h2>
+<p>Techlog stores references and digests, not artifacts. A test report stays in the CI system, a dashboard stays in the observability tool, and the owning tool decides how long they live and who may read them. The event holds the reference and, optionally, the digest recorded at collection time.</p>
+
+<h2 id="workflow">Workflow engine</h2>
+<p>A workflow reacts to events: a trigger matches, state is kept, and the next step runs, such as asking for an approval or opening a follow-up action. State lives in events, so a workflow can be rebuilt from the store.</p>
+
+<h2 id="policy">Policy evaluation</h2>
+<p>A policy takes events and evidence as input and produces an outcome: compliant, missing evidence, approval required, or blocked. Evaluating a policy and enforcing it are separate. Enforcement needs an integration with the system that performs the operation. See <a href="policy.html">workflow and policy</a>.</p>
+
+<h2 id="mcp">MCP server</h2>
+<p>The MCP server exposes tools, resources, and prompts over the same ingestion path and query API, so an agent gets the same validation and the same permissions as any other client. See <a href="mcp.html">MCP integration</a>.</p>
+
+<h2 id="integrations">External integrations</h2>
+<p>Collectors that only read from a tool come first. Integrations that write back, such as a status check on a deployment, come later and are authorized separately, with their own threat model.</p>
+
+<h2 id="status">Status</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Part</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>Event schema and examples</td><td><span class="badge badge-proposed">Proposed design</span></td></tr>
+    <tr><td>Walkthrough on the home page</td><td><span class="badge badge-simulated">Simulated on this site</span></td></tr>
+    <tr><td>Ingestion, store, workflow and policy engines, MCP server</td><td><span class="badge badge-future">Not implemented</span></td></tr>
+  </tbody>
+</table></div>
+<nav class="pager" aria-label="Pager"><a href="lifecycle.html">← Lifecycle model</a><a href="mcp.html">MCP integration →</a></nav>

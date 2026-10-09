@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en" data-root="{{root}}">
+<head>
+{{> head}}
+</head>
+<body>
+{{> header}}
+<div class="docs">
+  <aside class="docs-side">
+    <div class="doc-search" role="search">
+      <label class="visually-hidden" for="doc-search">Search documentation</label>
+      <input id="doc-search" type="search" placeholder="Search docs" autocomplete="off">
+      <ul id="doc-search-results" aria-live="polite"></ul>
+    </div>
+    {{sidebar}}
+  </aside>
+  <main id="main" class="prose">
+{{content}}
+  </main>
+  {{toc}}
+</div>
+{{> footer}}
+<script src="{{root}}assets/search-index.js"></script>
+<script src="{{root}}assets/js/search.js"></script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+---
+title: Getting Started
+description: Record a proposal, attach test evidence, and read system history with the proposed Techlog API, in Python, TypeScript, Go, Java, and curl.
+layout: docs
+section: Start
+order: 2
+nav: Getting started
+---
+<h1>Getting Started</h1>
+<div class="page-meta"><span class="badge badge-proposed">Proposed · draft 0.1</span><span class="badge badge-simulated">Illustrative examples</span></div>
+<div class="callout callout-warn"><p><strong>Illustrative API.</strong> The calls below show the proposed shape of the Techlog API. No hosted endpoint exists, and <code>techlog.example.invalid</code> is a reserved name that cannot resolve. Running these samples as-is will fail by design. They also omit the event signature that the proposed API requires by default; see <a href="security.html#signatures">signed events</a>.</p></div>
+
+<h2 id="what">What you will do</h2>
+<ol>
+  <li>Record a proposal that is linked to the problem that motivated it.</li>
+  <li>Attach the test report as evidence.</li>
+  <li>Read the recent history of the system.</li>
+</ol>
+<p>The samples use the Spring Spin story: a service called <code>promo-api</code> and a discount game for new clients.</p>
+
+<h2 id="first-event">A first event</h2>
+<p>This is the smallest valid event. Every field here is required. The <a href="event-model.html#required">event model</a> explains each one.</p>
+{{code json event-minimal.json}}
+
+<h2 id="language">Choose your language</h2>
+<div class="tabs" data-tabs>
+<div role="tablist" aria-label="Language"><button role="tab" id="tab-python" aria-controls="panel-python" aria-selected="true" type="button">Python</button><button role="tab" id="tab-typescript" aria-controls="panel-typescript" aria-selected="false" type="button">TypeScript</button><button role="tab" id="tab-go" aria-controls="panel-go" aria-selected="false" type="button">Go</button><button role="tab" id="tab-java" aria-controls="panel-java" aria-selected="false" type="button">Java</button><button role="tab" id="tab-curl" aria-controls="panel-curl" aria-selected="false" type="button">curl</button></div>
+<div role="tabpanel" id="panel-python" aria-labelledby="tab-python">
+<p class="muted">Python 3.9+, standard library only.</p>
+{{code python getting-started/quickstart.py}}
+</div>
+<div role="tabpanel" id="panel-typescript" aria-labelledby="tab-typescript" hidden>
+<p class="muted">Node 18+ with the built-in <code>fetch</code>, run as an ES module.</p>
+{{code typescript getting-started/quickstart.ts}}
+</div>
+<div role="tabpanel" id="panel-go" aria-labelledby="tab-go" hidden>
+<p class="muted">Go 1.21+, standard library only.</p>
+{{code go getting-started/quickstart.go}}
+</div>
+<div role="tabpanel" id="panel-java" aria-labelledby="tab-java" hidden>
+<p class="muted">Java 17+, JDK only. Prints the raw JSON responses.</p>
+{{code java getting-started/Quickstart.java}}
+</div>
+<div role="tabpanel" id="panel-curl" aria-labelledby="tab-curl" hidden>
+<p class="muted">curl and bash.</p>
+{{code bash getting-started/quickstart.sh}}
+</div>
+</div>
+
+<h2 id="calls">What the calls do</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Method</th><th>Path</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><code>POST</code></td><td><code>/v0/events</code></td><td>Record an event. The recorder assigns the <code>id</code> and returns it.</td></tr>
+    <tr><td><code>POST</code></td><td><code>/v0/events/{id}/evidence</code></td><td>Attach an evidence reference to an event.</td></tr>
+    <tr><td><code>GET</code></td><td><code>/v0/systems/{system}/history</code></td><td>Read the recent events of one system.</td></tr>
+  </tbody>
+</table></div>
+<p>Every call sends <code>Authorization: Bearer $TECHLOG_TOKEN</code>.</p>
+
+<h2 id="local-vs-production">Local simulation vs production integration</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Local simulation (this repository)</th><th>Production integration (proposed)</th></tr></thead>
+  <tbody>
+    <tr><td>A static site with no network access. The walkthrough on the home page replays seeded events. Nothing is stored.</td><td>Collectors, an event API, an MCP server, and policy evaluation. Not available yet.</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="run-site">Run this site locally</h2>
+<p>These are the only commands you can run today:</p>
+{{code bash getting-started/run-site.sh}}
+
+<h2 id="next">Next steps</h2>
+<ul>
+  <li><a href="event-model.html">Event model</a></li>
+  <li><a href="mcp.html">MCP integration</a></li>
+  <li><a href="deep-dive.html">Technical deep-dive</a></li>
+</ul>
+<nav class="pager" aria-label="Pager"><a href="index.html">← Overview</a><a href="event-model.html">Event model →</a></nav>

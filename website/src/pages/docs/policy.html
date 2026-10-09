@@ -1,0 +1,62 @@
+---
+title: Workflow and Policy Engine
+description: How Techlog policies are proposed to ask for evidence and approvals, and the difference between collecting, evaluating, and enforcing.
+layout: docs
+section: Operate
+order: 2
+nav: Workflow and policy
+---
+<h1>Workflow and Policy Engine</h1>
+<div class="page-meta"><span class="badge badge-proposed">Proposed · draft 0.1</span><span class="badge badge-simulated">Illustrative examples</span></div>
+
+<h2 id="concepts">Concepts</h2>
+<p>A policy has a <strong>trigger</strong> (the operation it applies to), <strong>conditions</strong> (when it applies), <strong>required evidence</strong>, <strong>approvals</strong>, <strong>exceptions</strong>, an <strong>escalation</strong> path, <strong>enforcement integrations</strong>, and <strong>audit records</strong> of how it was evaluated.</p>
+
+<h2 id="stages">Collect, evaluate, enforce</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Step</th><th>What happens</th></tr></thead>
+  <tbody>
+    <tr><td>Collect</td><td>Evidence is gathered from existing tools and linked to events. Nothing is decided.</td></tr>
+    <tr><td>Evaluate</td><td>The evidence is checked against the policy and an outcome is reported.</td></tr>
+    <tr><td>Enforce</td><td>An operation is stopped technically, by an integration with the system that performs it.</td></tr>
+  </tbody>
+</table></div>
+<div class="callout callout-warn"><p><strong>Evaluating is not enforcing.</strong> Techlog evaluating a policy does not stop anything unless an enforcement integration acts on the outcome.</p></div>
+
+<h2 id="outcomes">Outcomes</h2>
+<p>Examples use the production-upgrade policy below.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Outcome</th><th>Meaning</th><th>Example</th></tr></thead>
+  <tbody>
+    <tr><td>Compliant</td><td>Every requirement is met.</td><td>An approved rollback plan, verified tests, and the owner's approval are all present.</td></tr>
+    <tr><td>Missing evidence</td><td>Required evidence is absent or not yet in the required status.</td><td>The rollback plan is still a draft.</td></tr>
+    <tr><td>Approval required</td><td>Evidence is complete, but a required approval has not been given.</td><td>No service-owner approval yet.</td></tr>
+    <tr><td>Blocked by policy</td><td>The policy says the operation must not proceed as it stands.</td><td>Evidence is missing and <code>on_unmet</code> is <code>block</code>.</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="example">Example policy</h2>
+{{code json policy.json}}
+<ul>
+  <li><code>trigger</code>: applies to a <code>production.upgrade</code> of <code>promo-api</code>.</li>
+  <li><code>conditions</code>: only when the environment is <code>production</code>.</li>
+  <li><code>requires.evidence</code>: an approved rollback plan and a verified test report.</li>
+  <li><code>requires.approvals</code>: one approval from the <code>service-owner</code> role.</li>
+  <li><code>on_unmet</code>: the outcome when a requirement is missing is <code>block</code>.</li>
+  <li><code>exceptions</code>: a risk acceptance by an engineering director, expiring after seven days.</li>
+  <li><code>escalation</code>: after 30 minutes, go to the on-call lead.</li>
+  <li><code>enforcement.mode</code>: <code>evaluate_only</code>. Techlog reports the outcome; the deployment system decides what to do with it.</li>
+</ul>
+
+<h2 id="exceptions">Exceptions and risk acceptance</h2>
+<p>A named role may accept a risk for a limited time. The acceptance is recorded as an event, with the approver, the reason, and an expiry, and it stops applying when it expires.</p>
+
+<h2 id="escalation">Escalation</h2>
+<p>If an outcome stays unresolved past the configured time, it is escalated to a role, so an approval request does not wait unseen.</p>
+
+<h2 id="enforcement">Enforcement integrations</h2>
+<p>Proposed examples are a status check on a deployment pipeline and an admission gate. Each needs its own authorization and its own threat model, and none exists yet.</p>
+
+<h2 id="audit">Audit records</h2>
+<p>Every evaluation is recorded with its inputs and its outcome, so it is possible to see later why an operation was allowed or held.</p>
+<nav class="pager" aria-label="Pager"><a href="reliability.html">← Reliability</a><a href="security.html">Security and trust →</a></nav>

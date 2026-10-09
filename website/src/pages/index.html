@@ -1,0 +1,88 @@
+---
+title: Forget pull requests
+description: Let AI write the code and keep the progress in Techlog. Reviews stop being the bottleneck because every change carries its reasons and evidence. A proposed open standard.
+---
+<section class="hero" id="top">
+  <div class="grid-bg" aria-hidden="true"></div>
+  <div class="container">
+    <h1>Forget Pull Requests. <span class="shout">Focus on Engineering Progress.</span></h1>
+    <div class="hero-row">
+      <p class="lead">Long reviews and endless discussions are the bottleneck. Do your work with AI, bring the progress to Techlog, and let every change explain itself.</p>
+      <div class="btn-row">
+        <a class="btn btn-primary" href="{{root}}welcome.html">Try Techlog</a>
+        <a class="btn btn-grey" href="{{root}}docs/index.html">Read the docs</a>
+      </div>
+    </div>
+    <div class="cs dm" id="demo" role="region" aria-label="Techlog walkthrough, simulated. Use Prev and Next to step through."></div>
+    {{json-script demo-data demo-steps.json}}
+    <noscript><p class="callout callout-note">The walkthrough needs JavaScript. The same story is described in the <a href="{{root}}docs/lifecycle.html">lifecycle documentation</a>.</p></noscript>
+    <script src="{{root}}assets/js/demo-core.js"></script>
+    <script src="{{root}}assets/js/demo.js"></script>
+    <div class="trust-strip">
+      <span class="badge badge-proposed">Proposed standard · draft 0.1</span>
+      <span class="badge badge-simulated">Fictional, simulated data</span>
+      <span class="badge badge-future">No hosted service yet</span>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="how">
+  <div class="container">
+    <div class="section-head">
+      <p class="eyebrow">How it works</p>
+      <h2>An agent reports progress. Techlog connects it.</h2>
+      <p class="lead">API first: every step is a call, and the website is just another client.</p>
+    </div>
+    <ol class="pipe" aria-label="Pipeline">
+      <li><span class="pipe-n">1</span><h3>Agent sends</h3><p>An MCP request: <code>techlog.record_event</code>.</p></li>
+      <li><span class="pipe-n">2</span><h3>Techlog reviews</h3><p>Checks the event against the schema and its evidence.</p></li>
+      <li><span class="pipe-n">3</span><h3>Finds connections</h3><p>Links it to the problem, decision, tests, and release.</p></li>
+      <li><span class="pipe-n">4</span><h3>Stores, serves</h3><p>One event store, read by API, MCP, and the UI.</p></li>
+    </ol>
+    <div class="split how-split">
+      <div>
+        <span class="badge badge-proposed">Open standard · draft 0.1</span>
+        <h3>The event is plain JSON.</h3>
+        <p>Any agent or tool can write it, and any tool can read it. A small required core, typed links marked <em>confirmed</em> or <em>hypothesis</em>, and a record of who produced it. The tools shown are a proposal, not a finished interface.</p>
+        <div class="btn-row">
+          <a class="btn btn-grey" href="{{root}}docs/event-model.html">Event model</a>
+          <a class="btn btn-ghost" href="{{root}}docs/standard.html">Read the standard →</a>
+        </div>
+      </div>
+      <div>{{code json mcp-record-event.json}}</div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="connectors">
+  <div class="container">
+    <div class="section-head">
+      <p class="eyebrow">Available connectors</p>
+      <h2>Connect the tools you already use.</h2>
+      <span class="badge badge-proposed">Proposed · none available yet</span>
+    </div>
+    <div class="market">
+      <article class="card mk-card">
+        <div class="mk-head"><span class="mk-tile" aria-hidden="true">GH</span><div><h3>GitHub</h3><p class="mk-cat">Source and CI</p></div></div>
+        <p>Pull requests, commits, and workflow runs become linked events.</p>
+      </article>
+      <article class="card mk-card">
+        <div class="mk-head"><span class="mk-tile" aria-hidden="true">SL</span><div><h3>Slack</h3><p class="mk-cat">Collaboration</p></div></div>
+        <p>Decisions and approvals from chat stop disappearing.</p>
+      </article>
+      <article class="card mk-card">
+        <div class="mk-head"><span class="mk-tile" aria-hidden="true">AT</span><div><h3>Atlassian</h3><p class="mk-cat">Jira, Confluence, Service Management</p></div></div>
+        <p>Issues, incidents, and write-ups join the same story.</p>
+      </article>
+      <article class="card mk-card mk-own">
+        <div class="mk-head"><span class="mk-tile mk-tile-plus" aria-hidden="true">+</span><div><h3>Your tool</h3><p class="mk-cat">Anything that writes an event</p></div></div>
+        <p>The event model is open, so no permission is needed.</p>
+      </article>
+    </div>
+    <div class="btn-row connectors-cta">
+      <a class="btn btn-secondary" href="{{root}}welcome.html#design-partner">Ask for a connector</a>
+      <a class="btn btn-ghost" href="{{root}}docs/mcp.html">Build your own →</a>
+    </div>
+    <p class="muted market-note">GitHub, Slack, Atlassian, Jira, and Confluence are trademarks of their owners, named only to show what a connector would link to. No partnership or availability is implied.</p>
+  </div>
+</section>

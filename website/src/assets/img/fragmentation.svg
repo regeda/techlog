@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 320" role="img" aria-labelledby="t d">
+  <title id="t">Six tools, one story</title>
+  <desc id="d">Repositories, pull requests, issue trackers, AI agents, CI/CD and monitoring each hold a fragment. Techlog events link the fragments into one chain from problem to follow-up.</desc>
+  <g font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13" text-anchor="middle">
+    <g fill="#252526" stroke="#505050">
+      <rect x="20" y="30" width="140" height="48" rx="8"/><rect x="170" y="30" width="140" height="48" rx="8"/><rect x="320" y="30" width="140" height="48" rx="8"/>
+      <rect x="500" y="30" width="140" height="48" rx="8"/><rect x="650" y="30" width="140" height="48" rx="8"/><rect x="800" y="30" width="140" height="48" rx="8"/>
+    </g>
+    <g fill="#c0c0c0"><text x="90" y="59">Repositories</text><text x="240" y="59">Pull requests</text><text x="390" y="59">Issue trackers</text><text x="570" y="59">AI agents</text><text x="720" y="59">CI/CD</text><text x="870" y="59">Monitoring</text></g>
+    <g stroke="#505050" stroke-dasharray="3 4" fill="none">
+      <path d="M90 108 V180"/><path d="M240 108 V180"/><path d="M390 108 V180"/><path d="M570 108 V180"/><path d="M720 108 V180"/><path d="M870 108 V180"/>
+    </g>
+    <g fill="#8f8f8f" font-size="11"><text x="90" y="100">what changed</text><text x="240" y="100">review talk</text><text x="390" y="100">the request</text><text x="570" y="100">prompt + diff</text><text x="720" y="100">tests ran</text><text x="870" y="100">it broke</text></g>
+  </g>
+  <rect x="20" y="180" width="920" height="110" rx="12" fill="#2d2d30" stroke="#2dd4bf" stroke-opacity=".5"/>
+  <text x="40" y="206" font-family="ui-monospace, Menlo, monospace" font-size="11" fill="#2dd4bf" letter-spacing="1.5">TECHLOG EVENT CHAIN</text>
+  <line x1="70" y1="248" x2="890" y2="248" stroke="#2dd4bf" stroke-width="1.5"/>
+  <g font-family="ui-monospace, Menlo, monospace" font-size="11" fill="#c0c0c0" text-anchor="middle">
+    <circle cx="90" cy="248" r="6" fill="#2dd4bf"/><text x="90" y="274">problem</text>
+    <circle cx="240" cy="248" r="6" fill="#2dd4bf"/><text x="240" y="274">proposal</text>
+    <circle cx="390" cy="248" r="6" fill="#2dd4bf"/><text x="390" y="274">change</text>
+    <circle cx="570" cy="248" r="6" fill="#2dd4bf"/><text x="570" y="274">release</text>
+    <circle cx="720" cy="248" r="6" fill="#f87171"/><text x="720" y="274">incident</text>
+    <circle cx="870" cy="248" r="6" fill="#fbbf24"/><text x="870" y="274">rollback</text>
+  </g>
+</svg>

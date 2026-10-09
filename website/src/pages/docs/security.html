@@ -1,0 +1,84 @@
+---
+title: Security and Trust Model
+description: The proposed Techlog security model: identity, permissions, isolation, provenance, integrity, retention, and what is not claimed.
+layout: docs
+section: Operate
+order: 3
+nav: Security and trust
+---
+<h1>Security and Trust Model</h1>
+<div class="page-meta"><span class="badge badge-proposed">Proposed model</span><span class="badge badge-simulated">Illustrative</span></div>
+<div class="callout callout-proposed"><p><strong>Proposed model.</strong> Everything on this page describes intent. Each section ends with what is not claimed.</p></div>
+
+<h2 id="identity">Identity</h2>
+<p>Humans, AI agents, and systems are distinct actor kinds. An agent acts <code>on_behalf_of</code> a human, so responsibility stays with a person. <em>Not claimed:</em> a specific authentication mechanism.</p>
+
+<h2 id="signatures">Signed events</h2>
+<p>By default, every event record must be supplied with a signature. The signature validates that the submitter controls the key registered for the actor, and so who owns the change. An event without a valid signature is rejected.</p>
+<h3>How it works</h3>
+<ol>
+  <li>The submitter signs the canonical form of the event with its <strong>private key</strong>, which never leaves the submitter.</li>
+  <li>The signature travels beside the event in a detached envelope, so the event itself is unchanged: <code>{ "event": …, "signature": { "key_id", "algorithm", "canonicalization", "value" } }</code>.</li>
+  <li>Techlog looks up <code>key_id</code> in its <strong>public key store</strong>, checks that the key is registered to <code>actor.id</code> and is not expired or revoked, and verifies the signature.</li>
+  <li>If any step fails, the event is not recorded, and the caller gets a structured error such as <code>signature_missing</code>, <code>signature_invalid</code>, <code>key_unknown</code>, or <code>key_revoked</code>.</li>
+</ol>
+{{code json signed-submission.json}}
+<p>The signature value above is a placeholder, not a real signature. Other examples in these docs leave the envelope out for brevity.</p>
+<h3>Techlog holds public keys only</h3>
+<p>Techlog has access to a public key store for validation and nothing else. It never holds, generates, or escrows private keys, so it cannot sign on anyone's behalf. Each actor, human, agent, or collector, registers its own public keys. An agent acting <code>on_behalf_of</code> a person signs with its own key, and a person's approval is signed with the person's key.</p>
+<h3>Proposed defaults</h3>
+<ul>
+  <li><strong>Algorithm:</strong> Ed25519 is proposed. Which other algorithms to allow is an open question.</li>
+  <li><strong>Canonicalization:</strong> JSON Canonicalization Scheme (JCS), so the same event always yields the same bytes.</li>
+  <li><strong>Rotation:</strong> a new key is registered before the old one is retired. Retired keys stay in the store so older events can still be verified.</li>
+  <li><strong>Revocation:</strong> a revoked key stops being accepted for new events. How earlier events signed with it are treated is an open question.</li>
+</ul>
+<h3>Disabling signatures for testing</h3>
+<p>Signature checking can be turned off, intended for testing. It is a per-tenant setting that is on by default. When it is off, unsigned events are accepted and are clearly marked as unsigned wherever they are shown, and a policy can still require signed events. It should not be used for production data.</p>
+<h3>What is not claimed</h3>
+<ul>
+  <li>A valid signature shows that someone holding the private key produced the event. It does not show that what the event says is true.</li>
+  <li>A stolen or leaked private key can sign events until it is revoked.</li>
+  <li>No hosted public key store exists, and no particular key-management or certificate scheme is chosen.</li>
+</ul>
+
+<h2 id="permissions">Permissions</h2>
+<p>Least privilege. Reading history, recording events, and approving are separate permissions, and having one does not imply another. <em>Not claimed:</em> a finished permission model.</p>
+
+<h2 id="tenants">Tenant isolation</h2>
+<p>The design goal is that tenants never share event stores or query results. This needs a concrete implementation and independent review. <em>Not claimed:</em> that isolation exists today.</p>
+
+<h2 id="provenance">Source provenance</h2>
+<p>Every event says who recorded it (<code>recorded_by</code>), how (<code>method</code>: <code>collected</code>, <code>agent_submitted</code>, <code>human_entered</code>, or <code>derived</code>), and with what <code>confidence</code> (<code>asserted</code> or <code>corroborated</code>). A reader can weigh a collected event differently from an agent's assertion.</p>
+
+<h2 id="integrity">Event integrity</h2>
+<p>Proposed: append-only storage, content digests on evidence, and hash-chaining as a possible later option.</p>
+<p>Techlog does not claim tamper-proof records without a concrete implementation and a threat model.<!--audit-ok--></p>
+
+<h2 id="retention">Retention</h2>
+<p>Retention is meant to be configurable, with legal-hold considerations. <em>Not claimed:</em> any specific retention period.</p>
+
+<h2 id="sensitive">Sensitive data</h2>
+<p>Do not put secrets in events. Evidence is a reference, not a copy of the payload. Redaction is meant to happen at ingestion, before anything is written.</p>
+
+<h2 id="ai-content">AI-generated content</h2>
+<p>Content produced by an agent is labeled by actor kind. It is never auto-approved, and a human approval boundary applies before it counts as a decision.</p>
+
+<h2 id="approvals">Approval boundaries</h2>
+<p>Who may approve what is configured per policy. The actor who submitted a change cannot approve it (separation of duties).</p>
+
+<h2 id="compliance">Compliance</h2>
+<p>Techlog can help produce evidence. It does not by itself make an organization compliant.<!--audit-ok--></p>
+
+<h2 id="threat-model">Threat model status</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Area</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>Signatures and key management</td><td><span class="badge badge-future">Not yet written</span></td></tr>
+    <tr><td>Identity and permissions</td><td><span class="badge badge-future">Not yet written</span></td></tr>
+    <tr><td>Tenant isolation</td><td><span class="badge badge-future">Not yet written</span></td></tr>
+    <tr><td>Event integrity and evidence</td><td><span class="badge badge-future">Not yet written</span></td></tr>
+    <tr><td>Agent submission and approval</td><td><span class="badge badge-future">Not yet written</span></td></tr>
+  </tbody>
+</table></div>
+<nav class="pager" aria-label="Pager"><a href="policy.html">← Workflow and policy</a><a href="standard.html">Open standard →</a></nav>

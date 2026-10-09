@@ -1,0 +1,26 @@
+*, *::before, *::after { box-sizing: border-box; }
+html { color-scheme: light; -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 72px; }
+body { margin: 0; background: var(--bg-0); color: var(--text-1); font: var(--fs-md)/1.65 var(--font-sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; padding-top: var(--header-h-full); }
+h1, h2, h3, h4 { color: var(--text-0); line-height: 1.2; margin: 0 0 var(--s-4); letter-spacing: -.02em; font-weight: 800; }
+h1 { font-size: var(--fs-4xl); font-weight: 850; letter-spacing: -.03em; } h2 { font-size: var(--fs-2xl); } h3 { font-size: var(--fs-xl); font-weight: 750; } h4 { font-size: var(--fs-lg); font-weight: 750; }
+p { margin: 0 0 var(--s-4); }
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { color: var(--accent-hover); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: var(--r-1); }
+img, svg { max-width: 100%; height: auto; }
+code, kbd, pre, samp { font-family: var(--font-mono); }
+:not(pre) > code { font-size: .9em; background: var(--bg-3); border: 1px solid var(--line); border-radius: var(--r-1); padding: .1em .35em; color: var(--text-0); overflow-wrap: anywhere; }
+.skip-link { position: absolute; left: var(--s-4); top: -100px; background: var(--accent); color: var(--accent-ink); padding: var(--s-2) var(--s-4); border-radius: var(--r-2); z-index: 100; }
+.skip-link:focus { top: var(--s-4); }
+.container { width: min(100% - 2 * var(--s-4), var(--maxw)); margin-inline: auto; }
+.section { padding-block: var(--s-8); }
+.section + .section { border-top: 1px solid var(--line); }
+.eyebrow { font: 600 var(--fs-xs)/1.5 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: var(--s-3); }
+.lead { font-size: var(--fs-lg); color: var(--text-1); max-width: 62ch; }
+.mono { font-family: var(--font-mono); }
+.muted { color: var(--text-2); }
+.grid-bg { position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px); background-size: 48px 48px; opacity: .3; -webkit-mask-image: radial-gradient(ellipse at 50% 0%, #000 0%, transparent 70%); mask-image: radial-gradient(ellipse at 50% 0%, #000 0%, transparent 70%); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

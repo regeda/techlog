@@ -1,0 +1,127 @@
+{
+  "title": "Spring Spin: a seasonal discount game to win new clients",
+  "note": "Fictional, simulated data for illustration.",
+  "tags": [
+    {
+      "id": "engineering",
+      "label": "Engineering"
+    },
+    {
+      "id": "production",
+      "label": "Production"
+    },
+    {
+      "id": "marketing",
+      "label": "Marketing"
+    },
+    {
+      "id": "support",
+      "label": "Support"
+    }
+  ],
+  "tags_of": {
+    "evt_01J9K2A0P001": [
+      "support"
+    ],
+    "evt_01J9K2A0P002": [
+      "marketing"
+    ],
+    "evt_01J9K2A0P003": [
+      "engineering"
+    ],
+    "evt_01J9K2A0P004": [
+      "engineering"
+    ],
+    "evt_01J9K2A0P005": [
+      "marketing"
+    ],
+    "evt_01J9K2A0P006": [
+      "engineering"
+    ],
+    "evt_01J9K2A0P007": [
+      "engineering"
+    ],
+    "evt_01J9K2A0P008": [
+      "production",
+      "engineering"
+    ],
+    "evt_01J9K2A0P009": [
+      "support",
+      "marketing"
+    ],
+    "evt_01J9K2A0P010": [
+      "engineering",
+      "production"
+    ],
+    "evt_01J9K2A0P011": [
+      "production"
+    ],
+    "evt_01J9K2A0P012": [
+      "production"
+    ],
+    "evt_01J9K2A0P013": [
+      "production"
+    ],
+    "evt_01J9K2A0P014": [
+      "marketing"
+    ],
+    "evt_01J9K2A0P015": [
+      "production",
+      "engineering"
+    ],
+    "evt_01J9K2A0P016": [
+      "engineering"
+    ],
+    "evt_01J9K2A0P017": [
+      "engineering"
+    ],
+    "evt_01J9K2A0P018": [
+      "production",
+      "engineering"
+    ],
+    "evt_01J9K2A0P019": [
+      "marketing"
+    ],
+    "evt_01J9K2A0P020": [
+      "support"
+    ],
+    "evt_01J9K2A0P021": [
+      "production",
+      "engineering"
+    ],
+    "evt_01J9K2A0P022": [
+      "production",
+      "support"
+    ],
+    "evt_01J9K2A0P023": [
+      "support"
+    ],
+    "evt_01J9K2A0P024": [
+      "marketing",
+      "support"
+    ],
+    "evt_01J9K2A0P025": [
+      "engineering"
+    ]
+  },
+  "golden": {
+    "title": "The golden path",
+    "blurb": "The fourteen events that tell the story: a goal, a safe build, a canary incident and rollback, a launch, and a fix that sticks.",
+    "steps": [
+      "evt_01J9K2A0P002",
+      "evt_01J9K2A0P004",
+      "evt_01J9K2A0P005",
+      "evt_01J9K2A0P006",
+      "evt_01J9K2A0P007",
+      "evt_01J9K2A0P010",
+      "evt_01J9K2A0P011",
+      "evt_01J9K2A0P012",
+      "evt_01J9K2A0P015",
+      "evt_01J9K2A0P018",
+      "evt_01J9K2A0P019",
+      "evt_01J9K2A0P020",
+      "evt_01J9K2A0P022",
+      "evt_01J9K2A0P024"
+    ]
+  }
+}

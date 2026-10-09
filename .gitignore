@@ -1,0 +1,11 @@
+# website build output and scratch
+website/site/
+website/.test-out/
+website/.superpowers/
+
+# dependencies
+node_modules/
+
+# local tooling
+.claude/settings.local.json
+.DS_Store

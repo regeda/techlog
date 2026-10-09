@@ -1,0 +1,64 @@
+---
+title: Open Standard Proposal
+description: The proposed Techlog open standard: scope, principles, versioning, extension model, conformance plans, and how to contribute.
+layout: docs
+section: Reference
+order: 1
+nav: Open standard
+---
+<h1>Open Standard Proposal</h1>
+<div class="page-meta"><span class="badge badge-proposed">Proposed · draft 0.1</span><span class="badge badge-simulated">Illustrative examples</span></div>
+
+<h2 id="status">Status</h2>
+<div class="callout callout-proposed"><p><strong>This is a proposal.</strong> It is draft 0.1, it is not an established standard, and it is open to contribution. The ambition is a vendor-neutral model that compatible tools can share. That has not been achieved.</p></div>
+
+<h2 id="scope">Scope</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>In scope</th><th>Out of scope</th></tr></thead>
+  <tbody>
+    <tr><td>Event schema</td><td>User interfaces</td></tr>
+    <tr><td>Lifecycle relationships</td><td>Storage engines</td></tr>
+    <tr><td>Evidence and provenance</td><td>Vendor workflows</td></tr>
+    <tr><td>Policy and assurance concepts</td><td></td></tr>
+    <tr><td>API and MCP bindings</td><td></td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="principles">Design principles</h2>
+<ul>
+  <li><strong>Small core.</strong> Require only what every event needs.</li>
+  <li><strong>Additive evolution.</strong> Grow by adding, not by changing meaning.</li>
+  <li><strong>Evidence by reference.</strong> Point to artifacts; do not copy them.</li>
+  <li><strong>Vendor neutrality.</strong> No required proprietary field.</li>
+  <li><strong>Humans and agents are both first-class.</strong></li>
+  <li><strong>Honest provenance.</strong> Say how each event came to be.</li>
+</ul>
+
+<h2 id="versioning">Versioning</h2>
+<p><code>schema_version</code> is a string. Draft versions (<code>0.x-draft</code>) may break between releases. After 1.0, minor versions are additive with deprecation windows, and consumers ignore unknown fields and extensions as the rules allow. See the <a href="deep-dive.html#versioning">deep-dive</a>.</p>
+
+<h2 id="interoperability">Interoperability goals</h2>
+<p>An event written by one tool should be readable by another without a private agreement. A second, independent implementation should be possible from the documents alone.</p>
+
+<h2 id="extensions">Extension model</h2>
+<p>Extensions use namespaced keys. A registry of well-known extensions is a future step; it does not exist yet.</p>
+
+<h2 id="conformance">Conformance testing</h2>
+<p>Planned: a suite of JSON test vectors and a validator, with separate conformance levels for producers and consumers. Nothing is implemented yet.</p>
+
+<h2 id="lock-in">Avoiding vendor lock-in</h2>
+<p>The schema is open, no proprietary field is required, events export as plain JSON, and independent implementations are welcome.</p>
+
+<h2 id="contribute">Contribute</h2>
+<p>The most useful help right now:</p>
+<ul>
+  <li>Review the draft and tell us where it is wrong.</li>
+  <li>Propose use cases we have not covered.</li>
+  <li>Build a second implementation.</li>
+  <li>Write conformance vectors.</li>
+</ul>
+<p>Public repositories and discussion channels are not open yet. If you want to take part, use the design-partner section of the <a href="../welcome.html#design-partner">Welcome page</a>.</p>
+
+<h2 id="governance">Future governance</h2>
+<p>The intent is to move to a neutral home with open decision-making once there is more than one implementer. No commitment has been made.</p>
+<nav class="pager" aria-label="Pager"><a href="security.html">← Security and trust</a><a href="deep-dive.html">Technical deep-dive →</a></nav>

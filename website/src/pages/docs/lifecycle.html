@@ -1,0 +1,78 @@
+---
+title: Lifecycle Model
+description: How Techlog connects a problem to its proposal, decision, implementation, release, incidents, and follow-ups, with confirmed and hypothesis links.
+layout: docs
+section: Concepts
+order: 2
+nav: Lifecycle model
+---
+<h1>Lifecycle Model</h1>
+<div class="page-meta"><span class="badge badge-proposed">Proposed · draft 0.1</span><span class="badge badge-simulated">Illustrative examples</span></div>
+
+<h2 id="chain">The chain</h2>
+<p>A change usually travels from a problem to a follow-up. Each stage is recorded as one or more events, and each event links back to the one before it. A stage can be skipped (a hotfix may have no proposal), and a story can loop (an incident may lead to a new change).</p>
+<pre class="mermaid">flowchart LR
+  subgraph BUILD[Build and ship]
+    direction TB
+    P[Problem] --> PR[Proposal] --> D[Decision] --> I[Implementation] --> V[Verification] --> R[Release]
+  end
+  subgraph RUN[Run and learn]
+    direction TB
+    PROD[Production] --> INC[Incident] --> M[Mitigation / rollback] --> REM[Remediation] --> F[Follow-up]
+  end
+  BUILD == release reaches production ==> RUN</pre>
+<p>Two loops close the circle. An incident can point back to the implementation that is suspected of causing it, and a follow-up action can prevent the next release from repeating the failure.</p>
+
+<h2 id="stages">Stages</h2>
+<h3>Problems</h3>
+<p>Records a need, defect, or request. Typical type: <code>problem.reported</code>. It is usually the start of a story, so it has few links, or a <code>relates_to</code> link to a similar report. Recorded by a person, or collected from an issue tracker.</p>
+<h3>Proposals</h3>
+<p>Records a proposed solution and the alternatives. Typical types: <code>investigation.completed</code> and <code>proposal.recorded</code>. Links: <code>investigates</code> and <code>motivated_by</code> the problem. Often recorded by an AI agent on behalf of a person.</p>
+<h3>Decisions</h3>
+<p>Records what was decided, by whom, and on what terms. Type: <code>decision.made</code>. Link: <code>decides</code> a proposal. Recorded by a person, or by a chat or tracker integration after a person confirms it.</p>
+<h3>Implementations</h3>
+<p>Records the change itself. Type: <code>change.implemented</code>. Links: <code>implements</code> the proposal and <code>relates_to</code> the decision. Usually collected from a pull request or a commit, with the sources attached.</p>
+<h3>Verification</h3>
+<p>Records tests and checks, with the report as evidence. Type: <code>verification.completed</code>. Link: <code>verifies</code> the change. Usually recorded by CI.</p>
+<h3>Deployments</h3>
+<p>Records a version reaching an environment or a share of traffic. Type: <code>release.deployed</code>. Link: <code>releases</code> a change. Usually collected from a deployment system.</p>
+<h3>Incidents</h3>
+<p>Records that something broke. Type: <code>incident.opened</code>. Links: <code>observed_after</code> a release, and <code>caused_by</code> a change (often a hypothesis at first). Usually recorded by an alert or an incident tool.</p>
+<h3>Mitigations</h3>
+<p>Records a temporary measure that reduces impact, such as a feature flag. Type: <code>mitigation.applied</code>. Link: <code>mitigates</code> an incident or a problem. Recorded by a person.</p>
+<h3>Rollbacks</h3>
+<p>Records that a release was reverted, and then that recovery was checked. Types: <code>rollback.executed</code> and <code>recovery.verified</code>. Links: <code>reverts</code> the release, <code>mitigates</code> the incident, and <code>verifies</code> the rollback.</p>
+<h3>Postmortems</h3>
+<p>Records the review of an incident. Type: <code>postmortem.published</code>. Link: <code>follows_up</code> the incident. Usually collected from a document or recorded by a person.</p>
+<h3>Corrective actions</h3>
+<p>Records what will be done so the problem does not recur, and whether it was done. Type: <code>action.tracked</code>. Link: <code>follows_up</code> the incident or problem. Tracked until a verified outcome.</p>
+
+<h2 id="hypotheses">Confirmed relationships vs hypotheses</h2>
+<p>A confirmed link is drawn as a solid line, a hypothesis as a dashed one. A hypothesis is a suspected cause that nobody has established yet. It becomes corroborated when a <em>new</em> event is recorded, such as an investigation that finds the root cause, and that event links back to the same incident. Nothing edits the earlier event.</p>
+
+<h2 id="example">Worked example: Spring Spin</h2>
+<p>This simulated story follows a discount game for new clients in a service called <code>promo-api</code>. The ids are the real ids in the <a href="event-model.html#examples">examples</a>.</p>
+<ol>
+  <li><code>evt_01J9K2A0P002</code> <code>problem.reported</code>: new-client sign-ups have been flat for three weeks.</li>
+  <li><code>evt_01J9K2A0P004</code> <code>proposal.recorded</code> by an agent: a spin-to-win game, capped at 20%. Link: <code>motivated_by</code> P002.</li>
+  <li><code>evt_01J9K2A0P005</code> <code>decision.made</code>: approved with finance. Link: <code>decides</code> P004.</li>
+  <li><code>evt_01J9K2A0P006</code> <code>change.implemented</code>: the spin endpoint. Links: <code>implements</code> P004.</li>
+  <li><code>evt_01J9K2A0P007</code> <code>verification.completed</code>: abuse tests passed. Link: <code>verifies</code> P006.</li>
+  <li><code>evt_01J9K2A0P010</code> <code>release.deployed</code>: version 3.8.0 as a 5% canary. Link: <code>releases</code> P006.</li>
+  <li><code>evt_01J9K2A0P011</code> <code>incident.opened</code>: 5xx ratio of 6.2%. Links: <code>observed_after</code> P010 (confirmed) and <code>caused_by</code> P006 (<strong>hypothesis</strong>).</li>
+  <li><code>evt_01J9K2A0P012</code> <code>rollback.executed</code>: the canary returns to 3.7.2. Links: <code>reverts</code> P010 and <code>mitigates</code> P011.</li>
+  <li><code>evt_01J9K2A0P015</code> <code>investigation.completed</code>: duplicate spins from retrying mobile clients. Links: <code>investigates</code> P011 and <code>caused_by</code> P006 (<strong>confirmed</strong>). The hypothesis is now corroborated by this event.</li>
+  <li><code>evt_01J9K2A0P016</code> <code>change.implemented</code>: an idempotency key. Link: <code>follows_up</code> P011.</li>
+  <li><code>evt_01J9K2A0P018</code> <code>release.deployed</code>: version 3.8.1 promoted to 100%.</li>
+  <li><code>evt_01J9K2A0P022</code> <code>mitigation.applied</code>: a feature flag restores the old result panel for older browsers.</li>
+  <li><code>evt_01J9K2A0P024</code> <code>action.tracked</code>: follow-ups, including a browser check before go-live.</li>
+</ol>
+
+<h2 id="rules">Rules of thumb</h2>
+<ul>
+  <li>Events are append-only. A correction is a new event, and the old one may be given the status <code>superseded</code>.</li>
+  <li>Links point backward in time, from the later event to the earlier one.</li>
+  <li>Prefer a hypothesis you can later confirm over a confident claim you cannot support.</li>
+  <li>Record evidence as references. The artifact stays in the tool that owns it.</li>
+</ul>
+<nav class="pager" aria-label="Pager"><a href="event-model.html">← Event model</a><a href="architecture.html">Architecture →</a></nav>

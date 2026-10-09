@@ -1,0 +1,83 @@
+---
+title: Techlog Event Model
+description: The Techlog event schema, draft 0.1: required and optional fields, event types, statuses, links, extensions, and examples.
+layout: docs
+section: Concepts
+order: 1
+nav: Event model
+---
+<h1>Techlog Event Model</h1>
+<div class="page-meta"><span class="badge badge-proposed">Proposed · draft 0.1</span><span class="badge badge-simulated">Illustrative examples</span></div>
+
+<h2 id="stance">Design stance</h2>
+<p>The model has a small required core and optional extensions. We deliberately do not define a large schema before the use cases are clear. Events are immutable: a later event changes the state of the story, and nothing edits an earlier one.</p>
+
+<h2 id="required">Required fields</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Field</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td><code>schema_version</code></td><td>The constant <code>"0.1-draft"</code>.</td></tr>
+    <tr><td><code>id</code></td><td><code>evt_</code> followed by 12 characters from <code>[0-9A-Z]</code>. The recorder assigns it if it is absent on submission.</td></tr>
+    <tr><td><code>type</code></td><td>One of the 13 event types below.</td></tr>
+    <tr><td><code>time</code></td><td>When the event happened, as an RFC 3339 UTC timestamp.</td></tr>
+    <tr><td><code>actor</code></td><td><code>kind</code> (<code>human</code>, <code>ai_agent</code>, or <code>system</code>), <code>id</code>, and an optional <code>on_behalf_of</code>.</td></tr>
+    <tr><td><code>subject</code></td><td><code>system</code>, with optional <code>component</code> and <code>environment</code>.</td></tr>
+    <tr><td><code>status</code></td><td>One of the statuses below.</td></tr>
+    <tr><td><code>provenance</code></td><td><code>recorded_by</code> and <code>method</code>, with an optional <code>confidence</code>.</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="optional">Optional core fields</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td><code>summary</code></td><td>A short human-readable description, at most 280 characters.</td></tr>
+    <tr><td><code>sources</code></td><td>Where the event came from: a <code>kind</code> and a <code>ref</code>, such as <code>git.pr</code> and <code>promo-api#412</code>.</td></tr>
+    <tr><td><code>evidence</code></td><td>References to supporting artifacts: <code>kind</code>, <code>ref</code>, and an optional <code>sha256</code> digest.</td></tr>
+    <tr><td><code>links</code></td><td>Typed relationships to other events: <code>rel</code>, <code>target</code>, and <code>basis</code>.</td></tr>
+    <tr><td><code>extensions</code></td><td>Namespaced additions that are not part of the core.</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="types">Event types</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Type</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td><code>problem.reported</code></td><td>A need, defect, or request was raised.</td></tr>
+    <tr><td><code>investigation.completed</code></td><td>Someone or something examined a problem or a failure and recorded the findings.</td></tr>
+    <tr><td><code>proposal.recorded</code></td><td>A solution was proposed.</td></tr>
+    <tr><td><code>decision.made</code></td><td>A decision was taken, with its approver.</td></tr>
+    <tr><td><code>change.implemented</code></td><td>A change was built and merged.</td></tr>
+    <tr><td><code>verification.completed</code></td><td>Tests or checks ran against a change or a recovery.</td></tr>
+    <tr><td><code>release.deployed</code></td><td>A version reached an environment or a share of traffic.</td></tr>
+    <tr><td><code>incident.opened</code></td><td>Something broke in production.</td></tr>
+    <tr><td><code>mitigation.applied</code></td><td>A temporary measure reduced the impact.</td></tr>
+    <tr><td><code>rollback.executed</code></td><td>A release was reverted.</td></tr>
+    <tr><td><code>recovery.verified</code></td><td>Health was checked and confirmed after a mitigation or rollback.</td></tr>
+    <tr><td><code>postmortem.published</code></td><td>A review of an incident was written up.</td></tr>
+    <tr><td><code>action.tracked</code></td><td>A follow-up action was agreed or completed.</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="statuses">Statuses</h2>
+<p>There are nine: <code>proposed</code>, <code>recorded</code>, <code>in_progress</code>, <code>verified</code>, <code>failed</code>, <code>open</code>, <code>mitigated</code>, <code>resolved</code>, and <code>superseded</code>. A status describes the thing the event records <em>at the moment it was recorded</em>. When the situation changes, a new event is recorded; the old one keeps its status.</p>
+
+<h2 id="links">Links</h2>
+<p>The <code>rel</code> values are <code>motivated_by</code>, <code>investigates</code>, <code>decides</code>, <code>implements</code>, <code>verifies</code>, <code>releases</code>, <code>observed_after</code>, <code>mitigates</code>, <code>reverts</code>, <code>resolves</code>, <code>follows_up</code>, <code>caused_by</code>, and <code>relates_to</code>. Each link has a <code>basis</code>: <code>confirmed</code> or <code>hypothesis</code>.</p>
+<div class="callout callout-note"><p><strong>Confirmed or hypothesis?</strong> A confirmed link says "this is established", such as a change that implements a proposal. A hypothesis says "this is suspected". Only causal claims (<code>caused_by</code>) are expected to be hypotheses until another event corroborates them. In the Spring Spin example, the canary incident is first linked to the change as a hypothesis, and a later investigation event confirms it.</p></div>
+
+<h2 id="extensions">Extensions</h2>
+<p>Extension keys are namespaced: lowercase, dot-separated, in a reverse-DNS style such as <code>org.example.topic</code>. Consumers must ignore extensions they do not know. An extension must not change the meaning of a core field.</p>
+
+<h2 id="examples">Examples</h2>
+<h3>Minimal: required fields only</h3>
+{{code json event-minimal.json}}
+<h3>Full: sources, links, extensions</h3>
+{{code json event-full.json}}
+<h3>Incident with a hypothesis link</h3>
+{{code json event-incident.json}}
+
+<h2 id="schema">JSON Schema (draft)</h2>
+<p>This is the proposed schema for the core. It is a draft in this repository, not a published schema.</p>
+{{code json json-schema-core.json}}
+<nav class="pager" aria-label="Pager"><a href="getting-started.html">← Getting started</a><a href="lifecycle.html">Lifecycle model →</a></nav>

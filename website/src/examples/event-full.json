@@ -1,0 +1,53 @@
+{
+  "schema_version": "0.1-draft",
+  "id": "evt_01J9K2A0P006",
+  "type": "change.implemented",
+  "time": "2026-03-11T10:12:00Z",
+  "actor": {
+    "kind": "ai_agent",
+    "id": "agent:code-assistant",
+    "on_behalf_of": "user:a.novak"
+  },
+  "subject": {
+    "system": "promo-api",
+    "component": "spin-service"
+  },
+  "status": "recorded",
+  "summary": "Spin endpoint with server-side draw, 20% cap, and one spin per new account; reviewed and merged",
+  "sources": [
+    {
+      "kind": "git.pr",
+      "ref": "promo-api#412"
+    },
+    {
+      "kind": "git.commit",
+      "ref": "promo-api@9c3e7ab"
+    }
+  ],
+  "links": [
+    {
+      "rel": "implements",
+      "target": "evt_01J9K2A0P004",
+      "basis": "confirmed"
+    },
+    {
+      "rel": "relates_to",
+      "target": "evt_01J9K2A0P005",
+      "basis": "confirmed"
+    }
+  ],
+  "provenance": {
+    "recorded_by": "collector:git",
+    "method": "collected"
+  },
+  "extensions": {
+    "org.techlog.code": {
+      "files_changed": 5,
+      "lines_added": 164,
+      "lines_removed": 22,
+      "reviewers": [
+        "user:s.lindqvist"
+      ]
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "schema_version": "0.1-draft",
+  "id": "evt_01J9K2A0P011",
+  "type": "incident.opened",
+  "time": "2026-03-12T13:38:00Z",
+  "actor": {
+    "kind": "system",
+    "id": "alert:error-rate-monitor"
+  },
+  "subject": {
+    "system": "promo-api",
+    "component": "spin-service",
+    "environment": "production"
+  },
+  "status": "open",
+  "summary": "5xx ratio on the spin endpoint reached 6.2% on the canary, above the 1.0% rollback threshold for 3 minutes",
+  "evidence": [
+    {
+      "kind": "alert",
+      "ref": "alert://promo-api/high-error-rate/a-5521"
+    },
+    {
+      "kind": "metric.query",
+      "ref": "metrics://promo-api/http_5xx_ratio?canary=true"
+    }
+  ],
+  "links": [
+    {
+      "rel": "observed_after",
+      "target": "evt_01J9K2A0P010",
+      "basis": "confirmed"
+    },
+    {
+      "rel": "caused_by",
+      "target": "evt_01J9K2A0P006",
+      "basis": "hypothesis"
+    }
+  ],
+  "provenance": {
+    "recorded_by": "collector:alerting",
+    "method": "collected"
+  },
+  "extensions": {
+    "org.techlog.hypothesis": {
+      "statement": "the new spin endpoint may fail under production traffic patterns",
+      "status": "unconfirmed",
+      "next_step": "Replay canary traffic against the spin service and inspect the failing requests"
+    }
+  }
+}

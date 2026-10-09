@@ -1,0 +1,97 @@
+{
+  "title": "Spring Spin",
+  "subtitle": "a discount game to win new clients",
+  "left_label": "Pull request today",
+  "right_label": "Techlog",
+  "steps": [
+    {
+      "title": "You work with AI. It reports progress as it goes.",
+      "note": "The agent builds Spring Spin and records each step in Techlog, instead of waiting for a review to explain it.",
+      "left": { "lines": [
+        { "t": "text", "x": "PR #482 · Add spin-to-win discount" },
+        { "t": "dim", "x": "+920 −41 · 14 files · opened by the agent" },
+        { "t": "warn", "x": "Review requested from 2 people" }
+      ] },
+      "right": { "lines": [
+        { "t": "code", "x": "proposal.recorded · evt_01J9K2A0P004" },
+        { "t": "code", "x": "decision.made · evt_01J9K2A0P005" },
+        { "t": "code", "x": "change.implemented · evt_01J9K2A0P006" },
+        { "t": "dim", "x": "Sent by the agent over MCP, one call per step." }
+      ] }
+    },
+    {
+      "title": "The old way: the change waits for a review.",
+      "note": "Reviewers get a diff but not the reasons, so they ask, wait for answers, and ask again.",
+      "left": { "lines": [
+        { "t": "warn", "x": "Waiting for review · day 3" },
+        { "t": "text", "x": "41 comments · 3 threads unresolved" },
+        { "t": "dim", "x": "“Why a 20% cap? Who approved it?”" },
+        { "t": "dim", "x": "“Which tests cover repeat spins?”" }
+      ] },
+      "right": { "lines": [
+        { "t": "dim", "x": "The answers already exist as linked events:" },
+        { "t": "code", "x": "decision.made · evt_01J9K2A0P005" },
+        { "t": "text", "x": "Approved with finance: 20% cap, two-week window" },
+        { "t": "code", "x": "verification.completed · evt_01J9K2A0P007" },
+        { "t": "text", "x": "Repeat spins rejected, cap enforced" }
+      ] }
+    },
+    {
+      "title": "Techlog finds the connections.",
+      "note": "Each event is checked against the schema, then linked to what it implements, decides, and verifies. Nobody types the links by hand.",
+      "left": { "lines": [
+        { "t": "dim", "x": "The diff shows which lines changed." },
+        { "t": "dim", "x": "It does not show the problem, the decision, or the test evidence." }
+      ] },
+      "right": { "lines": [
+        { "t": "code", "x": "change.implemented · evt_01J9K2A0P006" },
+        { "t": "ok", "x": "implements → proposal evt_01J9K2A0P004 · confirmed" },
+        { "t": "ok", "x": "relates to → decision evt_01J9K2A0P005 · confirmed" },
+        { "t": "ok", "x": "verified by ← tests evt_01J9K2A0P007 · confirmed" }
+      ] }
+    },
+    {
+      "title": "The discussion is gone.",
+      "note": "The reviewer opens one card with the why, the approval, and the evidence, and approves.",
+      "left": { "lines": [
+        { "t": "ok", "x": "Review threads: 0 open" },
+        { "t": "ok", "x": "Approved and merged" },
+        { "t": "dim", "x": "No “why?” comments left to answer." }
+      ] },
+      "right": { "lines": [
+        { "t": "text", "x": "Why: sign-ups flat for three weeks (evt_01J9K2A0P002)" },
+        { "t": "text", "x": "Decided: finance approved a 20% cap" },
+        { "t": "ok", "x": "Evidence: abuse tests passed" },
+        { "t": "text", "x": "Risk: stacking with other promotions, blocked" }
+      ] }
+    },
+    {
+      "title": "Progress keeps flowing, even when it goes wrong.",
+      "note": "The canary release raises errors. Techlog links the incident to the release and the change, then the rollback to both.",
+      "left": { "lines": [
+        { "t": "warn", "x": "Canary 5xx at 6.2%, rollback threshold 1.0%" },
+        { "t": "dim", "x": "In a PR thread this is a new conversation, far from the code." }
+      ] },
+      "right": { "lines": [
+        { "t": "code", "x": "release.deployed · evt_01J9K2A0P010" },
+        { "t": "warn", "x": "incident.opened · evt_01J9K2A0P011" },
+        { "t": "dim", "x": "caused by the change (hypothesis, confirmed later by evt_01J9K2A0P015)" },
+        { "t": "ok", "x": "rollback.executed · evt_01J9K2A0P012, reverts the release" }
+      ] }
+    },
+    {
+      "title": "One record for the whole team.",
+      "note": "Make your work with AI, and bring the progress to Techlog. Everyone reads the same linked story.",
+      "left": { "lines": [
+        { "t": "dim", "x": "PR closed." },
+        { "t": "dim", "x": "The history is a comment thread." }
+      ] },
+      "right": { "lines": [
+        { "t": "text", "x": "Engineering: the change and its tests" },
+        { "t": "text", "x": "Production: the release and the rollback" },
+        { "t": "text", "x": "Marketing: why go-live was held (evt_01J9K2A0P014)" },
+        { "t": "text", "x": "Support: the mitigation and its follow-ups (evt_01J9K2A0P024)" }
+      ] }
+    }
+  ]
+}

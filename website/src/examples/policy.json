@@ -1,0 +1,18 @@
+{
+  "schema_version": "0.1-draft",
+  "id": "pol_prod_upgrade_requires_rollback_plan",
+  "description": "A production upgrade needs a reviewed rollback plan and a service-owner approval.",
+  "trigger": { "operation": "production.upgrade", "system": "promo-api" },
+  "conditions": [{ "field": "subject.environment", "equals": "production" }],
+  "requires": {
+    "evidence": [
+      { "kind": "rollback.plan", "status": "approved" },
+      { "kind": "test.report", "status": "verified" }
+    ],
+    "approvals": [{ "role": "service-owner", "count": 1 }]
+  },
+  "on_unmet": "block",
+  "exceptions": [{ "kind": "risk_acceptance", "approver_role": "engineering-director", "expires_after_days": 7 }],
+  "escalation": { "after_minutes": 30, "to": "role:on-call-lead" },
+  "enforcement": { "mode": "evaluate_only", "integration": "none" }
+}
