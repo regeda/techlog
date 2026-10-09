@@ -8,6 +8,6 @@
     "build": "node --permission --allow-fs-read=. --allow-fs-write=./site build.mjs",
     "test": "node --permission --allow-fs-read=. --allow-fs-write=./.test-out tests/run-all.mjs",
     "check": "node --permission --allow-fs-read=. tools/check-links.mjs site && node --permission --allow-fs-read=. tools/audit-content.mjs site",
-    "serve": "python3 -m http.server 8080 -d site"
+    "serve": "python3 -m http.server 8090 -d site"
   }
 }

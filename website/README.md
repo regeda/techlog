@@ -7,7 +7,7 @@ A static website for Techlog: a three-block landing page (headline with a guided
 Run these from the `website/` folder of the repository.
 ```sh
 npm run build   # src/ -> site/
-npm run serve   # http://localhost:8080 (the Techlog server also defaults to 8080; stop it first or run one of them on another port)
+npm run serve   # http://localhost:8090
 ```
 Or open `site/index.html` directly from disk. Node 22 or newer is required; Python 3 is needed only for `serve`.
 
