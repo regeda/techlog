@@ -22,7 +22,7 @@ func httpGet(t *testing.T, url string) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	body, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("GET %s: status %d\n%s", url, resp.StatusCode, body)
@@ -59,7 +59,7 @@ func TestSmoke(t *testing.T) {
 	if err != nil {
 		t.Fatalf("connect to /mcp: %v", err)
 	}
-	defer cs.Close()
+	defer func() { _ = cs.Close() }()
 
 	doc := testutil.Doc("promo-api", "decision.made", "Smoke test decision",
 		testutil.Link("relates_to", "evt_01J9K2A0P011"))

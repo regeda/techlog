@@ -37,8 +37,8 @@ func run(ctx context.Context, args []string, out io.Writer) error {
 	case "seed":
 		return runSeed(ctx, args[1:], out)
 	case "help", "-h", "--help":
-		fmt.Fprint(out, usage)
-		return nil
+		_, err := fmt.Fprint(out, usage)
+		return err
 	default:
 		return fmt.Errorf("unknown command %q\n\n%s", args[0], usage)
 	}

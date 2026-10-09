@@ -215,7 +215,9 @@ func (s *server) render(w http.ResponseWriter, status int, name string, data any
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(status)
-	buf.WriteTo(w)
+	if _, err := buf.WriteTo(w); err != nil {
+		slog.Error("ui: write response", "err", err)
+	}
 }
 
 func (s *server) fail(w http.ResponseWriter, r *http.Request, err error) {

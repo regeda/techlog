@@ -63,7 +63,7 @@ func open(dsn string) (*Store, error) {
 	}
 	db.SetMaxOpenConns(1)
 	if err := migrate(db); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, fmt.Errorf("migrate: %w", err)
 	}
 	return &Store{db: db}, nil
@@ -94,11 +94,11 @@ func migrate(db *sql.DB) error {
 			return err
 		}
 		if _, err := tx.Exec(string(script)); err != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 			return fmt.Errorf("%s: %w", e.Name(), err)
 		}
 		if _, err := tx.Exec(fmt.Sprintf("PRAGMA user_version = %d", version)); err != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 			return err
 		}
 		if err := tx.Commit(); err != nil {
@@ -150,7 +150,7 @@ func (s *Store) Insert(ctx context.Context, e event.Event) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	targets := make([]string, len(e.Links))
 	for i, l := range e.Links {
@@ -188,7 +188,7 @@ func (s *Store) AddLink(ctx context.Context, l event.Link) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 	if err := ensureEvents(ctx, tx, l.Source, l.Target); err != nil {
 		return err
 	}
@@ -222,7 +222,7 @@ func (s *Store) hydrate(ctx context.Context, body string) (event.Event, error) {
 	if err != nil {
 		return event.Event{}, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var links []event.LinkRef
 	for rows.Next() {
 		var l event.LinkRef
@@ -301,7 +301,7 @@ func (s *Store) Links(ctx context.Context, id string) ([]event.Link, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var links []event.Link
 	for rows.Next() {
 		var l event.Link
@@ -324,7 +324,7 @@ func (s *Store) queryStrings(ctx context.Context, query string, args ...any) ([]
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var out []string
 	for rows.Next() {
 		var v string

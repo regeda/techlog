@@ -20,7 +20,7 @@ func runSeed(ctx context.Context, args []string, out io.Writer) error {
 	if err != nil {
 		return err
 	}
-	defer st.Close()
+	defer func() { _ = st.Close() }()
 	svc, err := service.New(st)
 	if err != nil {
 		return err
@@ -33,6 +33,6 @@ func runSeed(ctx context.Context, args []string, out io.Writer) error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(out, "seeded %d new events (%d already present) in %s\n", inserted, skipped, sf.db)
-	return nil
+	_, err = fmt.Fprintf(out, "seeded %d new events (%d already present) in %s\n", inserted, skipped, sf.db)
+	return err
 }

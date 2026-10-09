@@ -32,7 +32,7 @@ func runServe(ctx context.Context, args []string, out io.Writer) error {
 	if err != nil {
 		return err
 	}
-	defer st.Close()
+	defer func() { _ = st.Close() }()
 	svc, err := service.New(st)
 	if err != nil {
 		return err
@@ -51,7 +51,7 @@ func runServe(ctx context.Context, args []string, out io.Writer) error {
 	defer stop()
 	errc := make(chan error, 1)
 	go func() { errc <- srv.Serve(ln) }()
-	fmt.Fprintf(out, "techlog listening on http://%s  (UI /, API /api/v1, MCP /mcp; db %s)\n", ln.Addr(), sf.db)
+	_, _ = fmt.Fprintf(out, "techlog listening on http://%s  (UI /, API /api/v1, MCP /mcp; db %s)\n", ln.Addr(), sf.db)
 
 	select {
 	case err := <-errc:
@@ -61,7 +61,7 @@ func runServe(ctx context.Context, args []string, out io.Writer) error {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(shutdownCtx); err != nil {
-		srv.Close() // an open MCP stream kept the server from draining in time
+		_ = srv.Close() // an open MCP stream kept the server from draining in time
 	}
 	if err := <-errc; err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err

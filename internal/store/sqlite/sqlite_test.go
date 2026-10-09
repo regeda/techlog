@@ -19,7 +19,7 @@ func TestContract(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		t.Cleanup(func() { s.Close() })
+		t.Cleanup(func() { _ = s.Close() })
 		return s
 	})
 }
@@ -48,7 +48,7 @@ func TestOpenCreatesDirectoryAndPersists(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer s2.Close()
+	defer func() { _ = s2.Close() }()
 	got, err := s2.Get(t.Context(), e.ID)
 	if err != nil {
 		t.Fatal(err)
@@ -67,12 +67,12 @@ func TestTwoHandlesOnOneFileDoNotLockEachOther(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer a.Close()
+	defer func() { _ = a.Close() }()
 	b, err := sqlite.Open(path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer b.Close()
+	defer func() { _ = b.Close() }()
 
 	mk := func(id string, links ...event.LinkRef) event.Event {
 		return event.Event{

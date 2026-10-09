@@ -25,12 +25,12 @@ func connect(t *testing.T) *mcp.ClientSession {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { ss.Close() })
+	t.Cleanup(func() { _ = ss.Close() })
 	cs, err := mcp.NewClient(&mcp.Implementation{Name: "test", Version: "0"}, nil).Connect(ctx, clientT, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { cs.Close() })
+	t.Cleanup(func() { _ = cs.Close() })
 	return cs
 }
 

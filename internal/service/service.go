@@ -194,9 +194,10 @@ func (s *Service) Link(ctx context.Context, in LinkInput) (event.Link, error) {
 		}
 		problems = append(problems, ve.Problems...)
 	}
-	if in.Source == "" {
+	switch in.Source {
+	case "":
 		problems = append(problems, event.Problem{Path: "/source", Message: "source is required"})
-	} else if in.Source == in.Target {
+	case in.Target:
 		problems = append(problems, event.Problem{Path: "/target", Message: "an event cannot link to itself"})
 	}
 	if len(problems) == 0 {
