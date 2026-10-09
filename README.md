@@ -60,7 +60,12 @@ skills/techlog-record/  the Claude skill
 ## Develop
 
 ```bash
-go test ./...
+make            # list the tasks
+make run        # build and serve; pass flags with ARGS="--addr :9090"
+make tools      # once: install golangci-lint (pinned in the Makefile)
+make check      # lint and test; run before committing
 ```
+
+Also `make build`, `make seed`, `make test`, `make lint`, `make fmt`. Lint rules are in `.golangci.yml`.
 
 The smoke test in `cmd/techlog` starts a real server on a local port.

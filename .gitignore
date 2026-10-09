@@ -12,3 +12,6 @@ share/
 # local tooling
 .claude/settings.local.json
 .DS_Store
+
+# build output
+bin/
