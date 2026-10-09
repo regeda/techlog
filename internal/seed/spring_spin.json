@@ -359,12 +359,6 @@
         "ref": "deploy://promo-api/3.8.0/canary-1"
       }
     ],
-    "evidence": [
-      {
-        "kind": "rollback.plan",
-        "ref": "techlog://plans/rbp_01J9K2A0P0R8"
-      }
-    ],
     "links": [
       {
         "rel": "releases",
@@ -443,12 +437,8 @@
       "environment": "production"
     },
     "status": "recorded",
-    "summary": "Approved rollback plan activated; canary traffic returned to 3.7.2",
+    "summary": "Canary traffic returned to 3.7.2",
     "evidence": [
-      {
-        "kind": "rollback.plan",
-        "ref": "techlog://plans/rbp_01J9K2A0P0R8"
-      },
       {
         "kind": "approval",
         "ref": "approval://appr_5188"
@@ -676,12 +666,6 @@
       {
         "kind": "deploy",
         "ref": "deploy://promo-api/3.8.1/full"
-      }
-    ],
-    "evidence": [
-      {
-        "kind": "rollback.plan",
-        "ref": "techlog://plans/rbp_01J9K2A0P0R8"
       }
     ],
     "links": [
