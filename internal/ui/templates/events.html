@@ -16,7 +16,7 @@
   <a href="/">Reset</a>
 </form>
 {{if .Error}}<p class="error">{{.Error}}</p>{{end}}
-<p class="muted">{{len .Events}} event(s), newest first{{if eq (len .Events) 100}} (showing the newest 100){{end}}</p>
+{{if not .Error}}<p class="muted">{{if .Events}}events {{.From}}–{{.To}}, newest first · {{end}}Page {{.Page}}</p>{{end}}
 {{if .Events}}
 <table>
   <thead><tr><th>Time (UTC)</th><th>Type</th><th>Status</th><th>System</th><th>Actor</th><th>Summary</th></tr></thead>
@@ -34,4 +34,10 @@
   </tbody>
 </table>
 {{else if not .Error}}<p>No events match.</p>{{end}}
+{{if or .HasPrev .HasNext}}
+<nav class="pager" aria-label="Pages">
+  {{if .HasPrev}}<a rel="prev" href="{{.PrevURL}}">← Previous</a>{{else}}<span></span>{{end}}
+  {{if .HasNext}}<a rel="next" href="{{.NextURL}}">Next →</a>{{end}}
+</nav>
+{{end}}
 {{template "foot" .}}

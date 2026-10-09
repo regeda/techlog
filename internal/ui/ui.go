@@ -8,6 +8,7 @@ import (
 	"embed"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -28,7 +29,7 @@ var templateFS embed.FS
 var staticFS embed.FS
 
 const (
-	eventsPageLimit  = 100
+	eventsPageSize   = 50 // events per page on the list
 	historyPageLimit = 200
 )
 
@@ -81,6 +82,12 @@ type eventsPage struct {
 	Systems, Types                []string
 	Events                        []event.Event
 	Error                         string
+
+	// Paging. From and To number the events shown (1-based); the URLs keep
+	// every filter and change only the page.
+	Page, From, To   int
+	HasPrev, HasNext bool
+	PrevURL, NextURL string
 }
 
 func (s *server) events(w http.ResponseWriter, r *http.Request) {
@@ -98,7 +105,11 @@ func (s *server) events(w http.ResponseWriter, r *http.Request) {
 	page.Systems = systems
 
 	status := http.StatusOK
+	pageNo, pageErr := parsePage(q.Get("page"))
 	p, err := service.SearchParamsFromQuery(q)
+	if err == nil {
+		err = pageErr
+	}
 	var bad *service.BadRequestError
 	switch {
 	case errors.As(err, &bad):
@@ -108,13 +119,45 @@ func (s *server) events(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, r, err)
 		return
 	default:
-		p.Limit = eventsPageLimit
-		if page.Events, err = s.svc.Search(r.Context(), p); err != nil {
+		// Ask for one event more than a page holds: it says whether a next page exists.
+		p.Limit = eventsPageSize + 1
+		p.Offset = (pageNo - 1) * eventsPageSize
+		events, err := s.svc.Search(r.Context(), p)
+		if err != nil {
 			s.fail(w, r, err)
 			return
 		}
+		if page.HasNext = len(events) > eventsPageSize; page.HasNext {
+			events = events[:eventsPageSize]
+		}
+		page.Events = events
+		page.Page, page.From, page.To = pageNo, p.Offset+1, p.Offset+len(events)
+		page.HasPrev = pageNo > 1
+		page.PrevURL, page.NextURL = pageURL(q, pageNo-1), pageURL(q, pageNo+1)
 	}
 	s.render(w, status, "events.html", page)
+}
+
+// parsePage reads the 1-based page number; an absent value is page 1.
+func parsePage(raw string) (int, error) {
+	if raw == "" {
+		return 1, nil
+	}
+	n, err := strconv.Atoi(raw)
+	if err != nil || n < 1 {
+		return 0, &service.BadRequestError{Msg: fmt.Sprintf("invalid page: %q is not a positive integer", raw)}
+	}
+	return n, nil
+}
+
+// pageURL is the list URL for page n with the current filters kept.
+func pageURL(q url.Values, n int) string {
+	v := url.Values{}
+	for k, vs := range q {
+		v[k] = vs
+	}
+	v.Set("page", strconv.Itoa(n))
+	return "/?" + v.Encode()
 }
 
 // linkRow is one link in the event page, with the other event's type and summary.

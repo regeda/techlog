@@ -11,7 +11,7 @@ a { color: var(--accent); }
 code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.9em; }
 pre { overflow-x: auto; background: var(--card); border: 1px solid var(--line); padding: 12px; border-radius: 6px; }
 .top { padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--card); }
-.brand { font-weight: 700; text-decoration: none; color: var(--fg); letter-spacing: 0.02em; }
+.brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; text-decoration: none; color: var(--fg); letter-spacing: 0.02em; }
 main { max-width: 1100px; margin: 0 auto; padding: 16px; }
 h1 { margin: 8px 0 12px; font-size: 1.5rem; }
 h2 { margin: 24px 0 8px; font-size: 1.1rem; }
@@ -55,3 +55,5 @@ th { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color
 .rel { font-size: 0.85rem; margin: 2px 0 0 8px; padding-left: 8px; border-left: 2px solid var(--line); }
 .rel.hypothesis { border-left-style: dashed; }
 @media (max-width: 640px) { .timeline li, .story li { grid-template-columns: 1fr; gap: 2px; } }
+.logo { display: block; }
+.pager { display: flex; justify-content: space-between; margin: 16px 0; }

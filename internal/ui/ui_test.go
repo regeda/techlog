@@ -2,10 +2,13 @@ package ui_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/regeda/techlog/internal/service"
 	"github.com/regeda/techlog/internal/testutil"
@@ -172,5 +175,80 @@ func TestStaticAndUnknownPaths(t *testing.T) {
 	}
 	if rec := get(h, "/nope"); rec.Code != http.StatusNotFound {
 		t.Errorf("/nope: status %d", rec.Code)
+	}
+}
+
+// recordMany records n events about one system, one minute apart, whose
+// summaries are "event 00", "event 01", ... in time order.
+func recordMany(t *testing.T, svc *service.Service, n int) {
+	t.Helper()
+	start := time.Date(2026, 3, 10, 9, 0, 0, 0, time.UTC)
+	for i := 0; i < n; i++ {
+		d := testutil.Doc("alpha", "problem.reported", fmt.Sprintf("event %02d", i))
+		d["time"] = start.Add(time.Duration(i) * time.Minute).Format(time.RFC3339)
+		record(t, svc, d)
+	}
+}
+
+func TestPagination(t *testing.T) {
+	h, svc := setup(t)
+	recordMany(t, svc, 55) // two pages at 50 per page
+
+	first := get(h, "/")
+	mustContain(t, first, "event 54", "event 05", "Page 1", "events 1–50", `href="/?page=2"`)
+	mustNotContain(t, first, "event 04", "Previous")
+
+	second := get(h, "/?page=2")
+	mustContain(t, second, "event 04", "event 00", "Page 2", "events 51–55", `href="/?page=1"`, "Previous")
+	mustNotContain(t, second, "event 05", "Next")
+
+	// A filter survives the page links.
+	filtered := get(h, "/?system=alpha")
+	mustContain(t, filtered, `href="/?page=2&amp;system=alpha"`)
+	mustContain(t, get(h, "/?system=alpha&page=2"), `href="/?page=1&amp;system=alpha"`)
+
+	// Past the end: an empty page that still lets you go back.
+	past := get(h, "/?page=9")
+	if past.Code != http.StatusOK {
+		t.Fatalf("page past the end: status %d", past.Code)
+	}
+	mustContain(t, past, "No events match", "Previous")
+	mustNotContain(t, past, "Next")
+
+	// A single short page has no paging links at all.
+	h2, svc2 := setup(t)
+	recordMany(t, svc2, 3)
+	short := get(h2, "/")
+	mustContain(t, short, "event 02")
+	mustNotContain(t, short, "Previous", "Next")
+}
+
+func TestPaginationBadPage(t *testing.T) {
+	h, _ := setup(t)
+	for _, target := range []string{"/?page=0", "/?page=-1", "/?page=abc"} {
+		rec := get(h, target)
+		if rec.Code != http.StatusBadRequest {
+			t.Errorf("%s: status %d, want 400", target, rec.Code)
+		}
+		mustContain(t, rec, "invalid page")
+	}
+}
+
+func TestBranding(t *testing.T) {
+	h, _ := setup(t)
+	mustContain(t, get(h, "/"), `rel="icon"`, `href="/static/favicon.svg"`, `src="/static/logo.svg"`)
+	for _, name := range []string{"favicon.svg", "logo.svg"} {
+		rec := get(h, "/static/"+name)
+		if rec.Code != http.StatusOK || !strings.Contains(rec.Header().Get("Content-Type"), "image/svg+xml") {
+			t.Errorf("%s: status %d, content-type %q", name, rec.Code, rec.Header().Get("Content-Type"))
+		}
+		// The website owns the artwork; the embedded copy must not drift from it.
+		want, err := os.ReadFile("../../website/src/assets/img/" + name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if rec.Body.String() != string(want) {
+			t.Errorf("internal/ui/static/%s differs from website/src/assets/img/%s", name, name)
+		}
 	}
 }
