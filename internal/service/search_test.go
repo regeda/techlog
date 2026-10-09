@@ -110,3 +110,15 @@ func TestHistoryLatestNChronological(t *testing.T) {
 		t.Fatalf("empty system: got %v, want a BadRequestError", err)
 	}
 }
+
+func TestSearchPassesOffset(t *testing.T) {
+	svc, fs := newService(t)
+	for _, tc := range []struct{ in, want int }{{0, 0}, {50, 50}, {-5, 0}} {
+		if _, err := svc.Search(ctx, service.SearchParams{Offset: tc.in}); err != nil {
+			t.Fatal(err)
+		}
+		if fs.lastFilter.Offset != tc.want {
+			t.Errorf("offset %d -> %d, want %d", tc.in, fs.lastFilter.Offset, tc.want)
+		}
+	}
+}

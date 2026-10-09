@@ -277,8 +277,8 @@ func (s *Store) Search(ctx context.Context, f store.Filter) ([]event.Event, erro
 	if len(where) > 0 {
 		query += " WHERE " + strings.Join(where, " AND ")
 	}
-	query += " ORDER BY e.time " + dir + ", e.id " + dir + " LIMIT ?"
-	args = append(args, limit)
+	query += " ORDER BY e.time " + dir + ", e.id " + dir + " LIMIT ? OFFSET ?"
+	args = append(args, limit, max(f.Offset, 0))
 
 	bodies, err := s.queryStrings(ctx, query, args...)
 	if err != nil {

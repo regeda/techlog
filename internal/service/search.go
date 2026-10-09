@@ -28,6 +28,7 @@ type SearchParams struct {
 	Since  time.Time
 	Until  time.Time
 	Limit  int
+	Offset int // events to skip, for paging; values below 0 count as 0
 }
 
 // ParseTime accepts an RFC 3339 timestamp or a YYYY-MM-DD date. A bare date is
@@ -91,7 +92,7 @@ func clamp(n, def, max int) int {
 func (s *Service) Search(ctx context.Context, p SearchParams) ([]event.Event, error) {
 	events, err := s.store.Search(ctx, store.Filter{
 		Text: p.Query, System: p.System, Types: p.Types, Since: p.Since, Until: p.Until,
-		Limit: clamp(p.Limit, defaultSearchLimit, maxSearchLimit),
+		Limit: clamp(p.Limit, defaultSearchLimit, maxSearchLimit), Offset: max(p.Offset, 0),
 	})
 	if err != nil {
 		return nil, err

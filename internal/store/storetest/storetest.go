@@ -32,6 +32,7 @@ func Run(t *testing.T, newStore func(t *testing.T) store.Store) {
 		"InsertDanglingLink":    insertDanglingLink,
 		"AddLink":               addLink,
 		"SearchFilters":         searchFilters,
+		"SearchOffset":          searchOffset,
 		"SearchTextPunctuation": searchTextPunctuation,
 		"Systems":               systems,
 		"TimeOffsets":           timeOffsets,
@@ -243,6 +244,19 @@ func searchFilters(t *testing.T, s store.Store) {
 	expectIDs(t, "text with system filter", search(t, s, store.Filter{Text: "canary", System: "beta"}), e3.ID)
 	expectIDs(t, "text matches the type", search(t, s, store.Filter{Text: "incident"}), e3.ID)
 	expectIDs(t, "no match", search(t, s, store.Filter{Text: "nomatch"}))
+}
+
+func searchOffset(t *testing.T, s store.Store) {
+	e1 := mk("evt_00000000000A", "problem.reported", "alpha", "2026-03-10T09:00:00Z", "one")
+	e2 := mk("evt_00000000000B", "problem.reported", "alpha", "2026-03-10T10:00:00Z", "two")
+	e3 := mk("evt_00000000000C", "problem.reported", "alpha", "2026-03-10T11:00:00Z", "three")
+	insert(t, s, e1, e2, e3)
+
+	expectIDs(t, "skip the newest", search(t, s, store.Filter{Offset: 1}), e2.ID, e1.ID)
+	expectIDs(t, "offset with limit", search(t, s, store.Filter{Offset: 1, Limit: 1}), e2.ID)
+	expectIDs(t, "offset ascending", search(t, s, store.Filter{Offset: 2, Ascending: true}), e3.ID)
+	expectIDs(t, "offset past the end", search(t, s, store.Filter{Offset: 5}))
+	expectIDs(t, "negative offset is zero", search(t, s, store.Filter{Offset: -3, Limit: 1}), e3.ID)
 }
 
 func searchTextPunctuation(t *testing.T, s store.Store) {

@@ -18,7 +18,8 @@ var (
 )
 
 // Filter selects events. Zero values mean "no constraint", except Limit, where
-// a value <= 0 means 100. Results are newest first unless Ascending is set.
+// a value <= 0 means 100, and Offset, where a value <= 0 means 0. Results are
+// newest first unless Ascending is set; Offset skips that many from the start.
 type Filter struct {
 	Text      string
 	System    string
@@ -26,6 +27,7 @@ type Filter struct {
 	Since     time.Time // inclusive
 	Until     time.Time // inclusive
 	Limit     int
+	Offset    int
 	Ascending bool
 }
 
