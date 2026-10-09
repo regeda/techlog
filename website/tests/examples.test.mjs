@@ -131,24 +131,33 @@ test('policy example separates evaluation from enforcement', () => {
   assert.equal(p.trigger.system, 'promo-api');
 });
 
-test('mcp tools: the six proposed tools with object input schemas', () => {
+test('mcp tools: the five implemented tools with object input schemas', () => {
   const tools = load('mcp-tools.json');
   assert.deepEqual(tools.map((t) => t.name), [
-    'techlog.search_events', 'techlog.get_system_history', 'techlog.record_event',
-    'techlog.link_events', 'techlog.create_rollback_plan', 'techlog.submit_evidence',
+    'techlog_search_events', 'techlog_get_system_history', 'techlog_get_event',
+    'techlog_record_event', 'techlog_link_events',
   ]);
   for (const t of tools) {
     assert.equal(t.inputSchema.type, 'object');
     assert.ok(t.description.length > 20);
   }
-  for (const f of ['mcp-record-event.json', 'mcp-submit-evidence.json']) {
+  for (const f of ['mcp-record-event.json', 'mcp-record-verification.json']) {
     const ex = load(f);
     assert.equal(ex.request.method, 'tools/call');
+    assert.equal(ex.request.params.name, 'techlog_record_event');
     assert.equal(ex.response.id, ex.request.id);
+    assert.equal(ex.response.result.isError, false);
+    const { event } = ex.request.params.arguments;
+    assert.equal(event.id, undefined, 'the caller never supplies an id');
+    const stored = ex.response.result.structuredContent.event;
+    assert.equal(ex.response.result.structuredContent.id, stored.id);
+    assert.deepEqual(validate(schema, stored), [], stored.id);
   }
   const rec = load('mcp-record-event.json');
   assert.equal(rec.response.result.structuredContent.id, idOf(4));
   assert.equal(byId[idOf(4)].type, rec.request.params.arguments.event.type);
-  const ev = load('mcp-submit-evidence.json');
-  assert.ok(byId[ev.request.params.arguments.event_id], 'evidence targets a story event');
+  const ver = load('mcp-record-verification.json');
+  assert.equal(ver.response.result.structuredContent.id, idOf(7));
+  assert.equal(byId[idOf(7)].type, ver.request.params.arguments.event.type);
+  assert.ok(ver.request.params.arguments.event.evidence.length, 'the verification carries its evidence');
 });

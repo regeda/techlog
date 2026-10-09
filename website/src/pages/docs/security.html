@@ -9,6 +9,7 @@ nav: Security and trust
 <h1>Security and Trust Model</h1>
 <div class="page-meta"><span class="badge badge-proposed">Proposed model</span><span class="badge badge-simulated">Illustrative</span></div>
 <div class="callout callout-proposed"><p><strong>Proposed model.</strong> Everything on this page describes intent. Each section ends with what is not claimed.</p></div>
+<div class="callout callout-note"><p><strong>What the server in this repository implements.</strong> None of the model below: it has no authentication, no signatures, no permissions, and no tenant isolation. It listens on <code>localhost</code> by default, so treat it as a local tool and do not expose it to an untrusted network. It does keep events immutable, record provenance on every event (<code>human_entered</code>, <code>agent_submitted</code>, or <code>collected</code>), validate every submission against the schema, limit request bodies to 1 MiB, and escape all event text in the web UI.</p></div>
 
 <h2 id="identity">Identity</h2>
 <p>Humans, AI agents, and systems are distinct actor kinds. An agent acts <code>on_behalf_of</code> a human, so responsibility stays with a person. <em>Not claimed:</em> a specific authentication mechanism.</p>

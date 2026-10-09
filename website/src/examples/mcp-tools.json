@@ -1,85 +1,144 @@
 [
   {
-    "name": "techlog.search_events",
-    "description": "Search engineering events by free text, type, system, and time range.",
+    "name": "techlog_search_events",
+    "description": "Search engineering events by free text, system, type and time range. Newest first. Use it before recording, to find the earlier events a new one should link to.",
     "inputSchema": {
-      "type": "object",
-      "required": ["query"],
+      "additionalProperties": false,
       "properties": {
-        "query": { "type": "string" },
-        "system": { "type": "string" },
-        "types": { "type": "array", "items": { "type": "string" } },
-        "since": { "type": "string", "format": "date-time" },
-        "until": { "type": "string", "format": "date-time" },
-        "limit": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
-      }
+        "limit": {
+          "description": "1 to 100, default 20",
+          "type": "integer"
+        },
+        "query": {
+          "description": "free text matched against summary, system, component and type; words are ANDed and punctuation is plain text",
+          "type": "string"
+        },
+        "since": {
+          "description": "RFC 3339 timestamp or YYYY-MM-DD; events at or after it",
+          "type": "string"
+        },
+        "system": {
+          "description": "only events about this system",
+          "type": "string"
+        },
+        "types": {
+          "description": "only these event types, for example incident.opened",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "null",
+            "array"
+          ]
+        },
+        "until": {
+          "description": "RFC 3339 timestamp or YYYY-MM-DD; events at or before it",
+          "type": "string"
+        }
+      },
+      "type": "object"
     }
   },
   {
-    "name": "techlog.get_system_history",
-    "description": "Retrieve the chronological event history for one system, optionally with relationships.",
+    "name": "techlog_get_system_history",
+    "description": "Read the latest events of one system in chronological order, optionally with their links.",
     "inputSchema": {
-      "type": "object",
-      "required": ["system"],
+      "additionalProperties": false,
       "properties": {
-        "system": { "type": "string" },
-        "since": { "type": "string", "format": "date-time" },
-        "limit": { "type": "integer", "minimum": 1, "maximum": 200, "default": 50 },
-        "include_links": { "type": "boolean", "default": true }
-      }
+        "include_links": {
+          "description": "include each event's links, default true",
+          "type": [
+            "null",
+            "boolean"
+          ]
+        },
+        "limit": {
+          "description": "1 to 200, default 50; the latest events are returned",
+          "type": "integer"
+        },
+        "since": {
+          "description": "RFC 3339 timestamp or YYYY-MM-DD; events at or after it",
+          "type": "string"
+        },
+        "system": {
+          "description": "the system whose history to read",
+          "type": "string"
+        }
+      },
+      "required": [
+        "system"
+      ],
+      "type": "object"
     }
   },
   {
-    "name": "techlog.record_event",
-    "description": "Record a structured event. The recorder assigns the id; the caller supplies every other required field.",
+    "name": "techlog_get_event",
+    "description": "Fetch one event by id, with the links that leave it and the links that point at it.",
     "inputSchema": {
-      "type": "object",
-      "required": ["event"],
-      "properties": { "event": { "type": "object", "description": "A Techlog event without an id." } }
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "event id, for example evt_01J9K2A0P011",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
     }
   },
   {
-    "name": "techlog.link_events",
-    "description": "Link two events. Causal links must state whether they are confirmed or a hypothesis.",
+    "name": "techlog_record_event",
+    "description": "Record a structured Techlog event (draft 0.1). Do not supply an id: the server assigns it. Events are immutable; record a correction as a new event. On a validation error the result lists the field paths to fix.",
     "inputSchema": {
-      "type": "object",
-      "required": ["source", "target", "rel", "basis"],
+      "additionalProperties": false,
       "properties": {
-        "source": { "type": "string" },
-        "target": { "type": "string" },
-        "rel": { "type": "string" },
-        "basis": { "enum": ["confirmed", "hypothesis"] },
-        "rationale": { "type": "string" }
-      }
+        "event": {
+          "additionalProperties": true,
+          "description": "the event without an id: type, time, actor, subject, status, provenance, and optionally summary, sources, evidence, links, extensions",
+          "type": "object"
+        }
+      },
+      "required": [
+        "event"
+      ],
+      "type": "object"
     }
   },
   {
-    "name": "techlog.create_rollback_plan",
-    "description": "Prepare a rollback plan for an upgrade. The plan starts as a draft and needs review before it counts as evidence.",
+    "name": "techlog_link_events",
+    "description": "Link two existing events. basis is confirmed or hypothesis; it is required for caused_by and defaults to confirmed for other relations.",
     "inputSchema": {
-      "type": "object",
-      "required": ["system", "current_version", "target_version", "strategy"],
+      "additionalProperties": false,
       "properties": {
-        "system": { "type": "string" },
-        "current_version": { "type": "string" },
-        "target_version": { "type": "string" },
-        "strategy": { "enum": ["canary", "in_place"] },
-        "change_event": { "type": "string" }
-      }
-    }
-  },
-  {
-    "name": "techlog.submit_evidence",
-    "description": "Attach an evidence reference, optionally with a content digest, to an existing event.",
-    "inputSchema": {
-      "type": "object",
-      "required": ["event_id", "kind", "ref"],
-      "properties": {
-        "event_id": { "type": "string" },
-        "kind": { "type": "string" },
-        "ref": { "type": "string" },
-        "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
-      }
+        "basis": {
+          "description": "confirmed or hypothesis; required for caused_by",
+          "type": "string"
+        },
+        "rationale": {
+          "description": "why the link holds",
+          "type": "string"
+        },
+        "rel": {
+          "description": "relation, for example caused_by, implements, relates_to",
+          "type": "string"
+        },
+        "source": {
+          "description": "id of the later event, the one the link leaves",
+          "type": "string"
+        },
+        "target": {
+          "description": "id of the earlier event, the one the link points at",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "target",
+        "rel"
+      ],
+      "type": "object"
     }
   }
 ]

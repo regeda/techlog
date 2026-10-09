@@ -21,6 +21,7 @@ description: Let AI write the code and keep the progress in Techlog. Reviews sto
     <div class="trust-strip">
       <span class="badge badge-proposed">Proposed standard · draft 0.1</span>
       <span class="badge badge-simulated">Fictional, simulated data</span>
+      <span class="badge badge-exists">Local server runs</span>
       <span class="badge badge-future">No hosted service yet</span>
     </div>
   </div>
@@ -34,7 +35,7 @@ description: Let AI write the code and keep the progress in Techlog. Reviews sto
       <p class="lead">API first: every step is a call, and the website is just another client.</p>
     </div>
     <ol class="pipe" aria-label="Pipeline">
-      <li><span class="pipe-n">1</span><h3>Agent sends</h3><p>An MCP request: <code>techlog.record_event</code>.</p></li>
+      <li><span class="pipe-n">1</span><h3>Agent sends</h3><p>An MCP request: <code>techlog_record_event</code>.</p></li>
       <li><span class="pipe-n">2</span><h3>Techlog reviews</h3><p>Checks the event against the schema and its evidence.</p></li>
       <li><span class="pipe-n">3</span><h3>Finds connections</h3><p>Links it to the problem, decision, tests, and release.</p></li>
       <li><span class="pipe-n">4</span><h3>Stores, serves</h3><p>One event store, read by API, MCP, and the UI.</p></li>

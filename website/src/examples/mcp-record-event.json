@@ -1,28 +1,123 @@
 {
   "request": {
-    "jsonrpc": "2.0", "id": 7, "method": "tools/call",
+    "jsonrpc": "2.0",
+    "id": 7,
+    "method": "tools/call",
     "params": {
-      "name": "techlog.record_event",
+      "name": "techlog_record_event",
       "arguments": {
         "event": {
           "schema_version": "0.1-draft",
           "type": "proposal.recorded",
           "time": "2026-03-10T11:30:00Z",
-          "actor": { "kind": "ai_agent", "id": "agent:code-assistant", "on_behalf_of": "user:a.novak" },
-          "subject": { "system": "promo-api", "component": "spin-service" },
+          "actor": {
+            "kind": "ai_agent",
+            "id": "agent:code-assistant",
+            "on_behalf_of": "user:a.novak"
+          },
+          "subject": {
+            "system": "promo-api",
+            "component": "spin-service"
+          },
           "status": "proposed",
           "summary": "Spin-to-win: one spin per new account, server-side draw, discount capped at 20%, never stacked with other promotions",
-          "links": [{ "rel": "motivated_by", "target": "evt_01J9K2A0P002", "basis": "confirmed" }],
-          "provenance": { "recorded_by": "agent:code-assistant", "method": "agent_submitted", "confidence": "asserted" }
+          "links": [
+            {
+              "rel": "motivated_by",
+              "target": "evt_01J9K2A0P002",
+              "basis": "confirmed"
+            },
+            {
+              "rel": "relates_to",
+              "target": "evt_01J9K2A0P003",
+              "basis": "confirmed"
+            }
+          ],
+          "provenance": {
+            "recorded_by": "agent:code-assistant",
+            "method": "agent_submitted",
+            "confidence": "asserted"
+          },
+          "extensions": {
+            "org.techlog.proposal": {
+              "alternatives_considered": [
+                {
+                  "option": "Client-side draw",
+                  "rejected_because": "the result could be tampered with"
+                },
+                {
+                  "option": "Unlimited spins",
+                  "rejected_because": "invites abuse and deep discounts"
+                }
+              ]
+            }
+          }
         }
       }
     }
   },
   "response": {
-    "jsonrpc": "2.0", "id": 7,
+    "jsonrpc": "2.0",
+    "id": 7,
     "result": {
-      "content": [{ "type": "text", "text": "Recorded evt_01J9K2A0P004 (proposed)" }],
-      "structuredContent": { "id": "evt_01J9K2A0P004", "status": "proposed" },
+      "content": [
+        {
+          "type": "text",
+          "text": "Recorded evt_01J9K2A0P004 (proposed)"
+        }
+      ],
+      "structuredContent": {
+        "id": "evt_01J9K2A0P004",
+        "status": "proposed",
+        "event": {
+          "schema_version": "0.1-draft",
+          "id": "evt_01J9K2A0P004",
+          "type": "proposal.recorded",
+          "time": "2026-03-10T11:30:00Z",
+          "actor": {
+            "kind": "ai_agent",
+            "id": "agent:code-assistant",
+            "on_behalf_of": "user:a.novak"
+          },
+          "subject": {
+            "system": "promo-api",
+            "component": "spin-service"
+          },
+          "status": "proposed",
+          "summary": "Spin-to-win: one spin per new account, server-side draw, discount capped at 20%, never stacked with other promotions",
+          "links": [
+            {
+              "rel": "motivated_by",
+              "target": "evt_01J9K2A0P002",
+              "basis": "confirmed"
+            },
+            {
+              "rel": "relates_to",
+              "target": "evt_01J9K2A0P003",
+              "basis": "confirmed"
+            }
+          ],
+          "provenance": {
+            "recorded_by": "agent:code-assistant",
+            "method": "agent_submitted",
+            "confidence": "asserted"
+          },
+          "extensions": {
+            "org.techlog.proposal": {
+              "alternatives_considered": [
+                {
+                  "option": "Client-side draw",
+                  "rejected_because": "the result could be tampered with"
+                },
+                {
+                  "option": "Unlimited spins",
+                  "rejected_because": "invites abuse and deep discounts"
+                }
+              ]
+            }
+          }
+        }
+      },
       "isError": false
     }
   }

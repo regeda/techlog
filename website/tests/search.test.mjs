@@ -11,7 +11,7 @@ const search = (...args) => Array.from(sandbox.window.TechlogSearch.search(...ar
 
 const index = [
   { url: 'docs/event-model.html', title: 'Event Model', headings: ['Required fields'], text: 'actor subject status' },
-  { url: 'docs/mcp.html', title: 'MCP Integration', headings: ['Tools'], text: 'record an event with techlog.record_event' },
+  { url: 'docs/mcp.html', title: 'MCP Integration', headings: ['Tools'], text: 'record an event with techlog_record_event' },
   { url: 'docs/security.html', title: 'Security', headings: ['Trust'], text: 'identity and permissions' },
 ];
 

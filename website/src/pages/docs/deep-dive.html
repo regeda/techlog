@@ -116,14 +116,15 @@ nav: Technical deep-dive
 </table></div>
 
 <h2 id="mcp-contracts">MCP tool contracts</h2>
+<p>These are the five implemented tools, as the server reports them. <a href="mcp.html">MCP integration</a> lists the proposed ones.</p>
 {{code json mcp-tools.json}}
 <ul>
-  <li><strong>Idempotency.</strong> <code>record_event</code> should accept an idempotency key (proposed), so a retried request records one event.</li>
-  <li><strong>Errors.</strong> A failure returns <code>isError: true</code> with a structured <code>code</code> and, where it applies, the offending <code>field</code>.</li>
-  <li><strong>Pagination.</strong> List-style tools take <code>limit</code> and return a cursor when more results exist.</li>
+  <li><strong>Idempotency.</strong> <code>techlog_record_event</code> should accept an idempotency key (proposed, not implemented), so a retried request records one event. Today a retry records a second event.</li>
+  <li><strong>Errors.</strong> Implemented: a failure returns <code>isError: true</code> and a text block that lists each problem as a JSON Pointer path and a message. Proposed: a structured <code>code</code> and the offending <code>field</code> in <code>structuredContent</code>.</li>
+  <li><strong>Pagination.</strong> Implemented: list-style tools take <code>limit</code> (search: default 20, at most 100; history: default 50, at most 200). Proposed: a cursor when more results exist. The web UI pages its event list with an offset.</li>
 </ul>
-<p>An example error, for <code>techlog.link_events</code> called without <code>basis</code>:</p>
-<pre><code>{"isError": true, "structuredContent": {"code": "invalid_argument", "field": "basis"}}</code></pre>
+<p>An example error, for <code>techlog_link_events</code> called with <code>rel</code> <code>caused_by</code> and without <code>basis</code>:</p>
+<pre><code>{"isError": true, "content": [{"type": "text", "text": "Rejected. Fix these problems and call the tool again:\n- /: missing property 'basis'"}]}</code></pre>
 
 <h2 id="rollback-contract">Rollback plan contract</h2>
 {{code json rollback-plan.json}}

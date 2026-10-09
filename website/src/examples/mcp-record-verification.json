@@ -1,0 +1,96 @@
+{
+  "request": {
+    "jsonrpc": "2.0",
+    "id": 12,
+    "method": "tools/call",
+    "params": {
+      "name": "techlog_record_event",
+      "arguments": {
+        "event": {
+          "schema_version": "0.1-draft",
+          "type": "verification.completed",
+          "time": "2026-03-11T11:05:00Z",
+          "actor": {
+            "kind": "system",
+            "id": "ci:pipeline"
+          },
+          "subject": {
+            "system": "promo-api",
+            "component": "spin-service"
+          },
+          "status": "verified",
+          "summary": "Unit, integration, and abuse tests passed: repeat spins are rejected and the cap is enforced",
+          "evidence": [
+            {
+              "kind": "test.report",
+              "ref": "ci://run/90412",
+              "digest": "sha256:7b1e4d9a2c6f08e35a9d1b7c4e2f6a8091d3c5b7e9f0a2c4d6e8b0a1c3e5f7d9"
+            }
+          ],
+          "links": [
+            {
+              "rel": "verifies",
+              "target": "evt_01J9K2A0P006",
+              "basis": "confirmed"
+            }
+          ],
+          "provenance": {
+            "recorded_by": "collector:ci",
+            "method": "collected"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "jsonrpc": "2.0",
+    "id": 12,
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Recorded evt_01J9K2A0P007 (verified)"
+        }
+      ],
+      "structuredContent": {
+        "id": "evt_01J9K2A0P007",
+        "status": "verified",
+        "event": {
+          "schema_version": "0.1-draft",
+          "id": "evt_01J9K2A0P007",
+          "type": "verification.completed",
+          "time": "2026-03-11T11:05:00Z",
+          "actor": {
+            "kind": "system",
+            "id": "ci:pipeline"
+          },
+          "subject": {
+            "system": "promo-api",
+            "component": "spin-service"
+          },
+          "status": "verified",
+          "summary": "Unit, integration, and abuse tests passed: repeat spins are rejected and the cap is enforced",
+          "evidence": [
+            {
+              "kind": "test.report",
+              "ref": "ci://run/90412",
+              "digest": "sha256:7b1e4d9a2c6f08e35a9d1b7c4e2f6a8091d3c5b7e9f0a2c4d6e8b0a1c3e5f7d9"
+            }
+          ],
+          "links": [
+            {
+              "rel": "verifies",
+              "target": "evt_01J9K2A0P006",
+              "basis": "confirmed"
+            }
+          ],
+          "provenance": {
+            "recorded_by": "collector:ci",
+            "method": "collected"
+          }
+        }
+      },
+      "isError": false
+    }
+  }
+}

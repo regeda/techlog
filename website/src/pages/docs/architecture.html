@@ -7,10 +7,10 @@ order: 3
 nav: Architecture
 ---
 <h1>Architecture</h1>
-<div class="page-meta"><span class="badge badge-proposed">Proposed design</span><span class="badge badge-simulated">Illustrative examples</span></div>
+<div class="page-meta"><span class="badge badge-proposed">Proposed design</span><span class="badge badge-exists">Core runs today</span></div>
 
 <h2 id="overview">Overview</h2>
-<p>Techlog is designed around one event store and one API. Collectors and AI agents write events through the same validation path, workflows and policies read from the store, and every client (the MCP server, the query API, a UI) reads the same data. Nothing below is implemented; this page describes the intended design.</p>
+<p>Techlog is designed around one event store and one API. Collectors and AI agents write events through the same validation path, workflows and policies read from the store, and every client (the MCP server, the query API, a UI) reads the same data. The core of this design runs today as a single Go server, described under <a href="#today">what runs today</a>. Collectors, the workflow engine, and policy evaluation are still proposals; this page marks which is which.</p>
 <pre class="mermaid">flowchart TB
   SRC[External tools]
   AG[AI agents]
@@ -34,6 +34,16 @@ nav: Architecture
 <p>External tools are Git hosting, issue trackers, CI/CD, observability, and incident tools. Read the diagram top to bottom: events come in from tools and agents, are validated and stored, and are then read by the query API and the workflow and policy engines. The MCP server also reads through the query API; that line is left out to keep the picture clear.</p>
 <p>Every section below describes a proposed design.</p>
 
+<h2 id="today">What runs today</h2>
+<p>One binary, <code>techlog</code>, serves three front doors on one port, and all three call the same service layer:</p>
+<ul>
+  <li><strong>HTTP API</strong> at <code>/api/v1</code>: record, get, search, link, and read system history.</li>
+  <li><strong>MCP server</strong> at <code>/mcp</code>: five tools over streamable HTTP. See <a href="mcp.html">MCP integration</a>.</li>
+  <li><strong>Web UI</strong> at <code>/</code>: read-only event list, event pages, system timelines, and story walkthroughs.</li>
+</ul>
+<p>The service validates every event against the JSON Schema (see <a href="event-model.html#server-behavior">what the server adds to the schema</a>), then writes it through a small storage interface. The interface has one implementation, SQLite, and a contract test suite that any further backend must pass. Events are immutable; links added later are stored beside them. See <a href="server.html">Run the server</a>.</p>
+<p>Not part of that core yet: collectors for git, CI, deployment, and alerting; the workflow engine; policy evaluation; event signatures; authentication and authorization.</p>
+
 <h2 id="ingestion">Event ingestion</h2>
 <p>Collectors and webhooks turn activity in external tools into events. Ingestion is idempotent by source reference, so a webhook delivered twice records one event. Every event is validated against the schema before it is written, and an invalid event is rejected with a structured error.</p>
 
@@ -53,7 +63,7 @@ nav: Architecture
 <p>A policy takes events and evidence as input and produces an outcome: compliant, missing evidence, approval required, or blocked. Evaluating a policy and enforcing it are separate. Enforcement needs an integration with the system that performs the operation. See <a href="policy.html">workflow and policy</a>.</p>
 
 <h2 id="mcp">MCP server</h2>
-<p>The MCP server exposes tools, resources, and prompts over the same ingestion path and query API, so an agent gets the same validation and the same permissions as any other client. See <a href="mcp.html">MCP integration</a>.</p>
+<p>The MCP server exposes tools over the same ingestion path and query API, so an agent gets the same validation as any other client. Today there are five tools; resources, prompts, and permissions per client are proposed. See <a href="mcp.html">MCP integration</a>.</p>
 
 <h2 id="integrations">External integrations</h2>
 <p>Collectors that only read from a tool come first. Integrations that write back, such as a status check on a deployment, come later and are authorized separately, with their own threat model.</p>
@@ -64,7 +74,8 @@ nav: Architecture
   <tbody>
     <tr><td>Event schema and examples</td><td><span class="badge badge-proposed">Proposed design</span></td></tr>
     <tr><td>Walkthrough on the home page</td><td><span class="badge badge-simulated">Simulated on this site</span></td></tr>
-    <tr><td>Ingestion, store, workflow and policy engines, MCP server</td><td><span class="badge badge-future">Not implemented</span></td></tr>
+    <tr><td>Event validation and ingestion, SQLite store, HTTP API, MCP server (five tools), read-only UI</td><td><span class="badge badge-exists">Implemented (basic)</span></td></tr>
+    <tr><td>Collectors, workflow engine, policy engine, signatures, authentication, further storage backends</td><td><span class="badge badge-future">Not implemented</span></td></tr>
   </tbody>
 </table></div>
 <nav class="pager" aria-label="Pager"><a href="lifecycle.html">← Lifecycle model</a><a href="mcp.html">MCP integration →</a></nav>

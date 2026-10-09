@@ -1,25 +1,30 @@
 ---
 title: Getting Started
-description: Record a proposal, attach test evidence, and read system history with the proposed Techlog API, in Python, TypeScript, Go, Java, and curl.
+description: Run the Techlog server locally, then record a proposal, record verification evidence, and read system history, in Python, TypeScript, Go, Java, and curl.
 layout: docs
 section: Start
 order: 2
 nav: Getting started
 ---
 <h1>Getting Started</h1>
-<div class="page-meta"><span class="badge badge-proposed">Proposed · draft 0.1</span><span class="badge badge-simulated">Illustrative examples</span></div>
-<div class="callout callout-warn"><p><strong>Illustrative API.</strong> The calls below show the proposed shape of the Techlog API. No hosted endpoint exists, and <code>techlog.example.invalid</code> is a reserved name that cannot resolve. Running these samples as-is will fail by design. They also omit the event signature that the proposed API requires by default; see <a href="security.html#signatures">signed events</a>.</p></div>
+<div class="page-meta"><span class="badge badge-exists">Runs locally</span><span class="badge badge-proposed">Draft 0.1</span></div>
+<div class="callout callout-note"><p><strong>These samples run.</strong> They call the Techlog server in this repository, started on your machine at <code>http://localhost:8080</code>. The server implements no authentication and no event signatures, so the calls send no token. The proposed signing and access model is described under <a href="security.html">security and trust</a>.</p></div>
+
+<h2 id="start">Start the server</h2>
+<p>From the root of this repository, load the example story and start the server. You need Go 1.27 or later.</p>
+{{code bash getting-started/run-server.sh}}
+<p>The UI is now at <code>http://localhost:8080/</code>. <a href="server.html">Run the server</a> explains the options.</p>
 
 <h2 id="what">What you will do</h2>
 <ol>
   <li>Record a proposal that is linked to the problem that motivated it.</li>
-  <li>Attach the test report as evidence.</li>
+  <li>Record the verification result, with the test report as evidence.</li>
   <li>Read the recent history of the system.</li>
 </ol>
-<p>The samples use the Spring Spin story: a service called <code>promo-api</code> and a discount game for new clients.</p>
+<p>The samples use the Spring Spin story: a service called <code>promo-api</code> and a discount game for new clients. <code>make seed</code> loads that story, so the problem report the proposal links to already exists.</p>
 
 <h2 id="first-event">A first event</h2>
-<p>This is the smallest valid event. Every field here is required. The <a href="event-model.html#required">event model</a> explains each one.</p>
+<p>This is the smallest valid event. Every field here is required. The <a href="event-model.html#required">event model</a> explains each one. When you submit an event, leave out the <code>id</code>: the server assigns it, and ignores one you send. <code>time</code> and <code>schema_version</code> may also be left out; the server fills them in.</p>
 {{code json event-minimal.json}}
 
 <h2 id="language">Choose your language</h2>
@@ -51,29 +56,29 @@ nav: Getting started
 <div class="table-wrap"><table>
   <thead><tr><th>Method</th><th>Path</th><th>Purpose</th></tr></thead>
   <tbody>
-    <tr><td><code>POST</code></td><td><code>/v0/events</code></td><td>Record an event. The recorder assigns the <code>id</code> and returns it.</td></tr>
-    <tr><td><code>POST</code></td><td><code>/v0/events/{id}/evidence</code></td><td>Attach an evidence reference to an event.</td></tr>
-    <tr><td><code>GET</code></td><td><code>/v0/systems/{system}/history</code></td><td>Read the recent events of one system.</td></tr>
+    <tr><td><code>POST</code></td><td><code>/api/v1/events</code></td><td>Record an event. The server validates it, assigns the <code>id</code>, and returns the stored event as <code>{"event": {...}}</code> with status 201.</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/v1/systems/{system}/history</code></td><td>Read the latest events of one system, oldest first.</td></tr>
   </tbody>
 </table></div>
-<p>Every call sends <code>Authorization: Bearer $TECHLOG_TOKEN</code>.</p>
+<p>An invalid event gets status 422 and a list of problems, each with the JSON Pointer path of the field to fix. Evidence is recorded inside the event, as references; there is no separate evidence endpoint. The full list of routes is on <a href="server.html#api">Run the server</a>.</p>
 
-<h2 id="local-vs-production">Local simulation vs production integration</h2>
+<h2 id="today-vs-proposed">What runs today and what is proposed</h2>
 <div class="table-wrap"><table>
-  <thead><tr><th>Local simulation (this repository)</th><th>Production integration (proposed)</th></tr></thead>
+  <thead><tr><th>Runs today (this repository)</th><th>Proposed</th></tr></thead>
   <tbody>
-    <tr><td>A static site with no network access. The walkthrough on the home page replays seeded events. Nothing is stored.</td><td>Collectors, an event API, an MCP server, and policy evaluation. Not available yet.</td></tr>
+    <tr><td>One Go binary with the event API, an MCP server, a storage layer with a SQLite backend, a read-only web UI, and a Claude skill. Events are validated against the draft 0.1 schema.</td><td>Collectors for git, CI, deploy, and alerting systems; policy evaluation; event signatures and authentication; further storage backends.</td></tr>
   </tbody>
 </table></div>
 
 <h2 id="run-site">Run this site locally</h2>
-<p>These are the only commands you can run today:</p>
+<p>The documentation site is a separate, static build in the <code>website/</code> directory:</p>
 {{code bash getting-started/run-site.sh}}
 
 <h2 id="next">Next steps</h2>
 <ul>
   <li><a href="event-model.html">Event model</a></li>
+  <li><a href="server.html">Run the server</a></li>
   <li><a href="mcp.html">MCP integration</a></li>
   <li><a href="deep-dive.html">Technical deep-dive</a></li>
 </ul>
-<nav class="pager" aria-label="Pager"><a href="index.html">← Overview</a><a href="event-model.html">Event model →</a></nav>
+<nav class="pager" aria-label="Pager"><a href="index.html">← Overview</a><a href="server.html">Run the server →</a></nav>

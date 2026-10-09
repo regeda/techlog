@@ -1,73 +1,82 @@
 ---
 title: MCP Integration
-description: How AI agents are proposed to read and write Techlog events over the Model Context Protocol: tools, resources, prompts, and examples.
+description: How AI agents read and write Techlog events over the Model Context Protocol: the five implemented tools, how to connect, examples, and what is still proposed.
 layout: docs
 section: Integrate
 order: 1
 nav: MCP integration
 ---
 <h1>MCP Integration</h1>
-<div class="page-meta"><span class="badge badge-proposed">Proposed · draft 0.1</span><span class="badge badge-simulated">Illustrative examples</span></div>
-<div class="callout callout-proposed"><p><strong>Proposed interface.</strong> Tool names, arguments, and payloads on this page are illustrative. They are not implemented or finalized.</p></div>
+<div class="page-meta"><span class="badge badge-exists">Implemented · basic</span><span class="badge badge-proposed">Draft 0.1</span></div>
+<div class="callout callout-note"><p><strong>Runs today.</strong> The Go server in this repository serves five MCP tools over streamable HTTP at <code>/mcp</code>. It implements no authentication and no signatures, so keep it on localhost or a trusted network. Resources, prompts, and the rollback-plan tool are still proposals; they are marked below.</p></div>
 
 <h2 id="mcp-and-techlog">MCP and Techlog</h2>
 <p>The Model Context Protocol (MCP) is how an agent talks to a tool. Techlog defines what the events mean and how the lifecycle fits together. An agent that already speaks MCP needs no custom client code to read history or record progress.</p>
 
+<h2 id="connect">Connect</h2>
+<p>Start the server (see <a href="server.html">Run the server</a>), then register it with Claude Code:</p>
+{{code bash mcp-connect.sh}}
+<p>Use <code>localhost</code> or <code>127.0.0.1</code> in the URL. The server rejects requests whose <code>Host</code> header names another host, as a guard against DNS rebinding. The <code>techlog-record</code> skill teaches Claude when to record an event, which type to use, and how to link it to earlier events; <code>make skill</code> installs it.</p>
+
 <h2 id="tools">Tools</h2>
+<p>Tool names use underscores, because some MCP clients accept only letters, digits, underscores, and hyphens.</p>
 <div class="table-wrap"><table>
   <thead><tr><th>Tool</th><th>Purpose</th></tr></thead>
   <tbody>
-    <tr><td><code>techlog.search_events</code></td><td>Search events by text, type, system, and time range.</td></tr>
-    <tr><td><code>techlog.get_system_history</code></td><td>Read the chronological history of one system, optionally with links.</td></tr>
-    <tr><td><code>techlog.record_event</code></td><td>Record a structured event. The recorder assigns the id.</td></tr>
-    <tr><td><code>techlog.link_events</code></td><td>Link two events. Causal links must state confirmed or hypothesis.</td></tr>
-    <tr><td><code>techlog.create_rollback_plan</code></td><td>Prepare a draft rollback plan for an upgrade. A draft needs review before it counts as evidence.</td></tr>
-    <tr><td><code>techlog.submit_evidence</code></td><td>Attach an evidence reference, optionally with a digest, to an event.</td></tr>
+    <tr><td><code>techlog_search_events</code></td><td>Search events by free text, system, type, and time range, newest first. The query is optional.</td></tr>
+    <tr><td><code>techlog_get_system_history</code></td><td>Read the latest events of one system in chronological order, optionally with links.</td></tr>
+    <tr><td><code>techlog_get_event</code></td><td>Fetch one event by id, with the links that leave it and the links that point at it.</td></tr>
+    <tr><td><code>techlog_record_event</code></td><td>Record a structured event. The server assigns the id and validates the event against the JSON Schema.</td></tr>
+    <tr><td><code>techlog_link_events</code></td><td>Link two existing events. A <code>caused_by</code> link must state confirmed or hypothesis; other links default to confirmed.</td></tr>
   </tbody>
 </table></div>
+<p>These definitions are the server's own <code>tools/list</code> output, trimmed to the name, description, and input schema.</p>
 {{code json mcp-tools.json}}
 
 <h2 id="record-event">Example: record an event</h2>
-<p>The agent supplies every required field except <code>id</code>. The response carries a human-readable <code>content</code> block for the model and a <code>structuredContent</code> object for code. <code>isError</code> is <code>false</code> on success. The recorder assigns the <code>id</code>. The example leaves out the signature that a real submission carries by default; see <a href="security.html#signatures">signed events</a>.</p>
+<p>The agent supplies the event without an <code>id</code>. The response carries a human-readable <code>content</code> block for the model and a <code>structuredContent</code> object for code, which includes the stored event. <code>isError</code> is <code>false</code> on success. The server assigns the <code>id</code>; the id shown here is the one this story uses, and a live server assigns a new one. The event carries no signature, because the server does not implement signing; see <a href="security.html#signatures">signed events</a>.</p>
 {{code json mcp-record-event.json}}
 
-<h2 id="submit-evidence">Example: submit verification evidence</h2>
-<p>Evidence is attached by reference. The digest lets a reader later check that the referenced artifact is the one that was collected.</p>
-{{code json mcp-submit-evidence.json}}
+<h2 id="record-verification">Example: record verification evidence</h2>
+<p>Evidence travels inside the event, as a reference. The digest lets a reader later check that the referenced artifact is the one that was collected. There is no separate evidence tool today.</p>
+{{code json mcp-record-verification.json}}
 
-<h2 id="resources">Resources</h2>
-<p>Proposed URIs a client could read directly:</p>
-<ul>
-  <li><code>techlog://systems/{system}/history</code></li>
-  <li><code>techlog://events/{id}</code></li>
-  <li><code>techlog://plans/{id}</code></li>
-</ul>
+<h2 id="errors">When the server rejects an event</h2>
+<p>A failed call returns <code>isError: true</code> and a text block that lists each problem as a JSON Pointer path and a message, for example <code>/actor/kind: value must be one of 'human', 'ai_agent', 'system'</code>. The agent can fix exactly those fields and call the tool again. The HTTP API reports the same problems in <code>error.details</code> with status 422, because both go through the same validation. See <a href="event-model.html#server-behavior">what the server adds to the schema</a>.</p>
 
-<h2 id="prompts">Prompts</h2>
-<ul>
-  <li><code>investigate_incident(incident_id)</code>: gathers the incident, its release, and the linked changes, and asks for a hypothesis.</li>
-  <li><code>prepare_rollback_plan(system, target_version)</code>: drafts a plan from the system's history for a person to review.</li>
-  <li><code>record_decision(event_id)</code>: asks for the decision, its approver, and the terms, and records them against a proposal.</li>
-</ul>
+<h2 id="proposed">Proposed, not implemented</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Part</th><th>Idea</th></tr></thead>
+  <tbody>
+    <tr><td><code>techlog_create_rollback_plan</code></td><td>Prepare a draft rollback plan for an upgrade. A draft needs review before it counts as evidence.</td></tr>
+    <tr><td><code>techlog_submit_evidence</code></td><td>Attach an evidence reference, optionally with a digest, to an event that already exists. Today, evidence is part of the event when it is recorded.</td></tr>
+    <tr><td>Resources</td><td><code>techlog://systems/{system}/history</code>, <code>techlog://events/{id}</code>, <code>techlog://plans/{id}</code></td></tr>
+    <tr><td>Prompt <code>investigate_incident(incident_id)</code></td><td>Gathers the incident, its release, and the linked changes, and asks for a hypothesis.</td></tr>
+    <tr><td>Prompt <code>prepare_rollback_plan(system, target_version)</code></td><td>Drafts a plan from the system's history for a person to review.</td></tr>
+    <tr><td>Prompt <code>record_decision(event_id)</code></td><td>Asks for the decision, its approver, and the terms, and records them against a proposal.</td></tr>
+  </tbody>
+</table></div>
 
 <h2 id="walkthrough">Agent walkthrough</h2>
 <ol>
-  <li><strong>Retrieve history.</strong> <code>techlog.get_system_history</code> for <code>promo-api</code>, to see what shipped recently.</li>
-  <li><strong>Inspect the incident.</strong> <code>techlog.search_events</code> for <code>incident.opened</code> returns <code>evt_01J9K2A0P011</code>, linked to the 3.8.0 canary.</li>
-  <li><strong>Record an event.</strong> <code>techlog.record_event</code> with an <code>investigation.completed</code> event that links back to the incident.</li>
-  <li><strong>Create a rollback plan.</strong> <code>techlog.create_rollback_plan</code> for the next upgrade. The plan starts as a draft.</li>
-  <li><strong>Submit evidence.</strong> <code>techlog.submit_evidence</code> attaches the test report to the change.</li>
+  <li><strong>Retrieve history.</strong> <code>techlog_get_system_history</code> for <code>promo-api</code>, to see what shipped recently.</li>
+  <li><strong>Inspect the incident.</strong> <code>techlog_search_events</code> for <code>incident.opened</code> returns <code>evt_01J9K2A0P011</code>, linked to the 3.8.0 canary.</li>
+  <li><strong>Read the neighbors.</strong> <code>techlog_get_event</code> for the incident shows the change it is suspected to be caused by, and the rollback that mitigated it.</li>
+  <li><strong>Record the finding.</strong> <code>techlog_record_event</code> with an <code>investigation.completed</code> event that links back to the incident.</li>
+  <li><strong>Corroborate the hypothesis.</strong> <code>techlog_link_events</code> adds a <code>caused_by</code> link with basis <code>confirmed</code> from the investigation to the change. The earlier hypothesis link stays; nothing is edited.</li>
 </ol>
 
 <h2 id="safety">Agent safety</h2>
-<p>An event submitted by an agent carries <code>actor.kind: ai_agent</code> and <code>provenance.method: agent_submitted</code>, so a reader can always tell it apart from a collected or human-entered event. An agent never grants an approval for its own submission. See <a href="security.html">security and trust</a>.</p>
+<p>An event submitted through MCP carries <code>provenance.method: agent_submitted</code> unless the agent states otherwise, and the <code>techlog-record</code> skill tells the agent to set <code>actor.kind: ai_agent</code>, so a reader can tell it apart from a collected or human-entered event. An agent never grants an approval for its own submission. See <a href="security.html">security and trust</a>.</p>
 
 <h2 id="status">Status</h2>
 <div class="table-wrap"><table>
   <thead><tr><th>Part</th><th>Status</th></tr></thead>
   <tbody>
-    <tr><td>Tool definitions and examples</td><td><span class="badge badge-proposed">Proposed</span></td></tr>
-    <tr><td>MCP server</td><td><span class="badge badge-future">Not implemented</span></td></tr>
+    <tr><td>Five tools over streamable HTTP, with schema validation</td><td><span class="badge badge-exists">Implemented (basic)</span></td></tr>
+    <tr><td>Claude skill <code>techlog-record</code></td><td><span class="badge badge-exists">Implemented</span></td></tr>
+    <tr><td>Authentication, event signatures</td><td><span class="badge badge-future">Not implemented</span></td></tr>
+    <tr><td>Rollback-plan and evidence tools, resources, prompts</td><td><span class="badge badge-proposed">Proposed</span></td></tr>
   </tbody>
 </table></div>
 <nav class="pager" aria-label="Pager"><a href="architecture.html">← Architecture</a><a href="reliability.html">Reliability →</a></nav>

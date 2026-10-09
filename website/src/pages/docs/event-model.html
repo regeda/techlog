@@ -7,7 +7,7 @@ order: 1
 nav: Event model
 ---
 <h1>Techlog Event Model</h1>
-<div class="page-meta"><span class="badge badge-proposed">Proposed · draft 0.1</span><span class="badge badge-simulated">Illustrative examples</span></div>
+<div class="page-meta"><span class="badge badge-exists">Enforced by the server</span><span class="badge badge-proposed">Draft 0.1</span></div>
 
 <h2 id="stance">Design stance</h2>
 <p>The model has a small required core and optional extensions. We deliberately do not define a large schema before the use cases are clear. Events are immutable: a later event changes the state of the story, and nothing edits an earlier one.</p>
@@ -69,6 +69,21 @@ nav: Event model
 <h2 id="extensions">Extensions</h2>
 <p>Extension keys are namespaced: lowercase, dot-separated, in a reverse-DNS style such as <code>org.example.topic</code>. Consumers must ignore extensions they do not know. An extension must not change the meaning of a core field.</p>
 
+<h2 id="server-behavior">What the server adds to the schema</h2>
+<p>The Techlog server validates every submitted event against the JSON Schema below, whether it arrives over the HTTP API or over MCP. It also applies a few rules and defaults that a schema cannot express.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Topic</th><th>Behavior</th></tr></thead>
+  <tbody>
+    <tr><td>Identifier</td><td>The server assigns <code>id</code>: <code>evt_</code>, then eight base-36 characters of the creation time in milliseconds, then four random ones, so ids sort by creation time. An <code>id</code> in a submission is ignored.</td></tr>
+    <tr><td>Defaults</td><td>A missing <code>schema_version</code> becomes <code>"0.1-draft"</code>; a missing <code>time</code> becomes the time of recording; a missing <code>provenance.method</code> becomes <code>human_entered</code> over HTTP and <code>agent_submitted</code> over MCP; a missing <code>provenance.recorded_by</code> becomes the actor's id.</td></tr>
+    <tr><td>Link basis</td><td>A link without a <code>basis</code> is stored as <code>confirmed</code>, except <code>caused_by</code>, which must state its basis.</td></tr>
+    <tr><td>Link targets</td><td>Every link target must be an event that already exists, and an event cannot link to itself.</td></tr>
+    <tr><td>Immutability</td><td>There is no update and no delete. A link added later is stored beside the event, not inside it. Adding the same link twice does nothing; adding it with the other basis stores a second link, so a hypothesis can be corroborated by a confirmed link without editing anything.</td></tr>
+    <tr><td>Time</td><td>Times may carry any offset. The server orders and filters by the instant, not by the text.</td></tr>
+    <tr><td>Errors</td><td>A rejected event returns every problem at once, each with the JSON Pointer path of the field and a message, for example <code>/links/0/target</code>.</td></tr>
+  </tbody>
+</table></div>
+
 <h2 id="examples">Examples</h2>
 <h3>Minimal: required fields only</h3>
 {{code json event-minimal.json}}
@@ -78,6 +93,6 @@ nav: Event model
 {{code json event-incident.json}}
 
 <h2 id="schema">JSON Schema (draft)</h2>
-<p>This is the proposed schema for the core. It is a draft in this repository, not a published schema.</p>
+<p>This is the schema the server enforces for the core. It is a draft in this repository, not a published schema. A test keeps the server's embedded copy identical to this file.</p>
 {{code json json-schema-core.json}}
-<nav class="pager" aria-label="Pager"><a href="getting-started.html">← Getting started</a><a href="lifecycle.html">Lifecycle model →</a></nav>
+<nav class="pager" aria-label="Pager"><a href="server.html">← Run the server</a><a href="lifecycle.html">Lifecycle model →</a></nav>
