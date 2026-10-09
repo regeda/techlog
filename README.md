@@ -66,6 +66,6 @@ make tools      # once: install golangci-lint (pinned in the Makefile)
 make check      # lint and test; run before committing
 ```
 
-Also `make build`, `make seed`, `make test`, `make lint`, `make fmt`. Lint rules are in `.golangci.yml`.
+`make flush` deletes the database after asking (`FORCE=1` skips the prompt, `DB=path` picks the file); `make reset` flushes and reloads the example story. Also `make build`, `make seed`, `make test`, `make lint`, `make fmt`. Lint rules are in `.golangci.yml`.
 
 The smoke test in `cmd/techlog` starts a real server on a local port.

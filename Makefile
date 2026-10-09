@@ -1,12 +1,14 @@
 # Techlog developer tasks. Run `make` to list them.
 
 BIN := bin/techlog
+DB ?= share/techlog.db
+PORT ?= 8080
 GOLANGCI_LINT_VERSION := v2.14.0
 GOLANGCI_LINT ?= $(shell command -v golangci-lint 2>/dev/null || echo $(shell go env GOPATH)/bin/golangci-lint)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help build run seed test lint fmt check tools clean
+.PHONY: help build run seed flush reset test lint fmt check tools clean
 
 help: ## list the available tasks
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-8s %s\n", $$1, $$2}'
@@ -15,10 +17,24 @@ build: ## build bin/techlog
 	go build -o $(BIN) ./cmd/techlog
 
 run: build ## build and serve the UI, API and MCP (pass flags with ARGS="--addr :9090")
-	$(BIN) serve $(ARGS)
+	$(BIN) serve --db $(DB) $(ARGS)
 
 seed: build ## load the Spring Spin example story
-	$(BIN) seed $(ARGS)
+	$(BIN) seed --db $(DB) $(ARGS)
+
+flush: ## delete the database and every event in it (asks first; FORCE=1 skips; DB=path)
+	@test -n "$(DB)" || { echo "DB is empty; refusing to flush"; exit 1; }
+	@if curl -sf -o /dev/null --max-time 1 http://localhost:$(PORT)/api/v1/systems; then \
+		echo "a server is answering on localhost:$(PORT); stop it before flushing"; exit 1; fi
+	@echo "This deletes $(DB), $(DB)-wal and $(DB)-shm."
+	@if [ -z "$(FORCE)" ]; then \
+		printf "Delete these and every event in them? [y/N] "; read answer; \
+		case "$$answer" in y|Y) ;; *) echo "aborted"; exit 1;; esac; fi
+	rm -f $(DB) $(DB)-wal $(DB)-shm
+
+reset: ## flush the database, then load the example story (same options as flush)
+	@$(MAKE) --no-print-directory flush
+	@$(MAKE) --no-print-directory seed
 
 test: ## run all tests
 	go test ./...
