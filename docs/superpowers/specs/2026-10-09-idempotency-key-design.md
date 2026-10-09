@@ -73,7 +73,8 @@ lets a client say "this is the same event as before".
 - `Link`, `Get` and `Search` are untouched.
 - Tests: the fake store enforces `(actor, key)` like SQLite. Cases: duplicate
   gives `DuplicateError` with `ExistingID` and no id retry; missing key gives
-  `InvalidError` at `/idempotency_key`; id collision still retries and succeeds;
+  `InvalidError` at `/` (`missing property 'idempotency_key'`) and an empty or
+  too-long key one at `/idempotency_key`; id collision still retries and succeeds;
   same key under another actor succeeds; `Import` skips duplicates.
 
 ## 4. HTTP API and MCP
@@ -83,10 +84,11 @@ lets a client say "this is the same event as before".
   (omitted for every other error):
   ```json
   {"error": {"code": "duplicate_event",
-             "message": "idempotency_key \"deploy-4411\" for actor \"ci-bot\" was already recorded",
+             "message": "duplicate: idempotency_key \"deploy-4411\" for actor \"ci-bot\" was already recorded as evt_0K3F9A2B7XQZ",
              "existing_id": "evt_0K3F9A2B7XQZ"}}
   ```
-  A missing or empty key stays a 422 with a `details` entry at `/idempotency_key`.
+  A missing key stays a 422 with a `details` entry at `/`; an empty or too-long
+  key at `/idempotency_key`.
 - MCP `techlog_record_event`: `describe` handles `DuplicateError` with an error
   result (`IsError: true`) saying the event was already recorded as `<existing id>`
   and that the caller should not retry. The tool description adds:
@@ -120,8 +122,8 @@ lets a client say "this is the same event as before".
 - Repo docs: add a short addendum to
   `docs/superpowers/specs/2026-10-09-techlog-server-design.md` pointing here. The
   old plan stays untouched.
-- Test fixtures: a shared helper takes the key as an argument so no fixture is
-  hand-edited twice.
+- Test fixtures: `testutil.Doc` generates a unique key per call from a counter, so
+  no fixture is hand-edited; tests that need a specific key overwrite it.
 - README: one line saying to delete the existing SQLite file after upgrading.
 
 ## Out of scope

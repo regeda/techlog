@@ -239,3 +239,7 @@ Decisions made while writing the implementation plan. They refine the sections a
 - **MCP inputs.** `query` on `techlog_search_events` is optional. `basis` on `techlog_link_events` is optional and defaults to `confirmed`, except for `caused_by`, where it is required.
 - **History** returns the latest N events in chronological order.
 - **Seed data and test helpers.** `internal/seed` embeds the Spring Spin story. `internal/testutil` holds shared test helpers.
+
+## Addendum: idempotency key
+
+Events now require an `idempotency_key`, unique per actor. See `2026-10-09-idempotency-key-design.md`.
