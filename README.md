@@ -21,7 +21,7 @@ Data lives in `share/techlog.db` (git-ignored). Flags: `--addr` (default `localh
 
 ```bash
 claude mcp add --transport http techlog http://localhost:8080/mcp
-ln -s "$PWD/skills/techlog-record" ~/.claude/skills/techlog-record
+make skill     # links skills/techlog-record into ~/.claude/skills (COPY=1 copies; make skill-remove undoes it)
 ```
 
 The first line connects the tools: `techlog_search_events`, `techlog_get_system_history`, `techlog_get_event`, `techlog_record_event`, `techlog_link_events`. The second installs the `techlog-record` skill, which teaches Claude when to record an event, which type to use, and how to link it to earlier events.

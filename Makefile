@@ -3,15 +3,19 @@
 BIN := bin/techlog
 DB ?= share/techlog.db
 PORT ?= 8080
+CLAUDE_HOME ?= $(HOME)/.claude
+SKILL := techlog-record
+SKILL_SRC := $(CURDIR)/skills/$(SKILL)
+SKILL_DST = $(CLAUDE_HOME)/skills/$(SKILL)
 GOLANGCI_LINT_VERSION := v2.14.0
 GOLANGCI_LINT ?= $(shell command -v golangci-lint 2>/dev/null || echo $(shell go env GOPATH)/bin/golangci-lint)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help build run seed flush reset test lint fmt check tools clean
+.PHONY: help build run seed flush reset skill skill-remove test lint fmt check tools clean
 
 help: ## list the available tasks
-	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-8s %s\n", $$1, $$2}'
+	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-13s %s\n", $$1, $$2}'
 
 build: ## build bin/techlog
 	go build -o $(BIN) ./cmd/techlog
@@ -35,6 +39,26 @@ flush: ## delete the database and every event in it (asks first; FORCE=1 skips; 
 reset: ## flush the database, then load the example story (same options as flush)
 	@$(MAKE) --no-print-directory flush
 	@$(MAKE) --no-print-directory seed
+
+skill: ## install the Claude skill into ~/.claude/skills (symlink; COPY=1 copies; FORCE=1 replaces; CLAUDE_HOME=dir)
+	@mkdir -p "$(CLAUDE_HOME)/skills"
+	@if [ -L "$(SKILL_DST)" ] && [ "$$(readlink "$(SKILL_DST)")" = "$(SKILL_SRC)" ] && [ -z "$(COPY)" ]; then \
+		echo "already installed: $(SKILL_DST) -> $(SKILL_SRC)"; exit 0; fi; \
+	if [ -e "$(SKILL_DST)" ] || [ -L "$(SKILL_DST)" ]; then \
+		if [ -z "$(FORCE)" ]; then \
+			echo "$(SKILL_DST) already exists:"; ls -ld "$(SKILL_DST)"; echo "use FORCE=1 to replace it"; exit 1; fi; \
+		rm -rf "$(SKILL_DST)"; fi; \
+	if [ -n "$(COPY)" ]; then cp -R "$(SKILL_SRC)" "$(SKILL_DST)" && echo "copied $(SKILL_SRC) to $(SKILL_DST)"; \
+	else ln -s "$(SKILL_SRC)" "$(SKILL_DST)" && echo "linked $(SKILL_DST) -> $(SKILL_SRC)"; fi
+
+skill-remove: ## remove the installed Claude skill (only this skill; FORCE=1 also removes a foreign link)
+	@if [ -L "$(SKILL_DST)" ]; then \
+		if [ "$$(readlink "$(SKILL_DST)")" = "$(SKILL_SRC)" ] || [ -n "$(FORCE)" ]; then rm "$(SKILL_DST)" && echo "removed link $(SKILL_DST)"; \
+		else echo "$(SKILL_DST) links elsewhere ($$(readlink "$(SKILL_DST)")); use FORCE=1 to remove it"; exit 1; fi; \
+	elif [ -f "$(SKILL_DST)/SKILL.md" ] && grep -q '^name: $(SKILL)$$' "$(SKILL_DST)/SKILL.md"; then \
+		rm -rf "$(SKILL_DST)" && echo "removed copy $(SKILL_DST)"; \
+	elif [ -e "$(SKILL_DST)" ]; then echo "$(SKILL_DST) is not the $(SKILL) skill; not removing it"; exit 1; \
+	else echo "nothing to remove at $(SKILL_DST)"; fi
 
 test: ## run all tests
 	go test ./...
