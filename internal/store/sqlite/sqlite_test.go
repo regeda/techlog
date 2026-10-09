@@ -1,8 +1,10 @@
 package sqlite_test
 
 import (
+	"fmt"
 	"path/filepath"
 	"reflect"
+	"sync"
 	"testing"
 
 	"github.com/regeda/techlog/internal/event"
@@ -53,5 +55,55 @@ func TestOpenCreatesDirectoryAndPersists(t *testing.T) {
 	}
 	if !reflect.DeepEqual(got, e) {
 		t.Fatalf("got %+v, want %+v", got, e)
+	}
+}
+
+// Two handles on one file stand in for `techlog serve` plus `techlog seed`
+// (or two servers). A write transaction that reads before it writes must wait
+// for the lock instead of failing with SQLITE_BUSY.
+func TestTwoHandlesOnOneFileDoNotLockEachOther(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "techlog.db")
+	a, err := sqlite.Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer a.Close()
+	b, err := sqlite.Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer b.Close()
+
+	mk := func(id string, links ...event.LinkRef) event.Event {
+		return event.Event{
+			SchemaVersion: event.SchemaVersion, ID: id, Type: "problem.reported",
+			Time: "2026-03-10T09:00:00Z", Actor: event.Actor{Kind: "human", ID: "user:a"},
+			Subject: event.Subject{System: "alpha"}, Status: "recorded", Links: links,
+			Provenance: event.Provenance{RecordedBy: "user:a", Method: "human_entered"},
+		}
+	}
+	if err := a.Insert(t.Context(), mk("evt_BASE00000000")); err != nil {
+		t.Fatal(err)
+	}
+
+	const perHandle = 40
+	errs := make(chan error, 2*perHandle)
+	var wg sync.WaitGroup
+	for h, s := range []*sqlite.Store{a, b} {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := 0; i < perHandle; i++ {
+				e := mk(fmt.Sprintf("evt_H%dN%08d", h, i), event.LinkRef{Rel: "relates_to", Target: "evt_BASE00000000", Basis: "confirmed"})
+				errs <- s.Insert(t.Context(), e)
+			}
+		}()
+	}
+	wg.Wait()
+	close(errs)
+	for err := range errs {
+		if err != nil {
+			t.Errorf("insert failed: %v", err)
+		}
 	}
 }

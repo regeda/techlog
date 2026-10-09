@@ -25,7 +25,10 @@ import (
 var migrationsFS embed.FS
 
 const (
-	pragmas = "_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)"
+	// _txlock=immediate starts write transactions with BEGIN IMMEDIATE, so the
+	// busy timeout applies to taking the lock (a deferred transaction that reads
+	// first fails at once with SQLITE_BUSY when another process writes).
+	pragmas = "_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)&_txlock=immediate"
 	// timeLayout is fixed-width UTC, so the time column sorts and compares as text.
 	timeLayout = "2006-01-02T15:04:05.000Z"
 )
