@@ -13,7 +13,7 @@ nav: Technical deep-dive
 <div class="callout callout-note"><p><strong>In a hurry?</strong> Start with <a href="getting-started.html">Getting Started</a>. This page is the reference. Everything on it is a proposal.</p></div>
 
 <h2 id="schema">Event schema, precisely</h2>
-<p>An event has eight required fields: <code>schema_version</code>, <code>id</code>, <code>type</code>, <code>time</code>, <code>actor</code>, <code>subject</code>, <code>status</code>, and <code>provenance</code>.</p>
+<p>An event has nine required fields: <code>schema_version</code>, <code>id</code>, <code>idempotency_key</code>, <code>type</code>, <code>time</code>, <code>actor</code>, <code>subject</code>, <code>status</code>, and <code>provenance</code>.</p>
 <ul>
   <li><code>id</code> matches <code>^evt_[0-9A-Z]{12}$</code>.</li>
   <li><code>time</code> is RFC 3339 in UTC, written with a trailing <code>Z</code>. Offsets such as <code>+02:00</code> are not accepted.</li>
@@ -119,7 +119,7 @@ nav: Technical deep-dive
 <p>These are the five implemented tools, as the server reports them. <a href="mcp.html">MCP integration</a> lists the proposed ones.</p>
 {{code json mcp-tools.json}}
 <ul>
-  <li><strong>Idempotency.</strong> <code>techlog_record_event</code> should accept an idempotency key (proposed, not implemented), so a retried request records one event. Today a retry records a second event.</li>
+  <li><strong>Idempotency.</strong> <code>idempotency_key</code> is required on every event and unique per actor. A retried request is rejected as a duplicate (HTTP 409, or an MCP error result) and names the event that already exists, so a retry records one event.</li>
   <li><strong>Errors.</strong> Implemented: a failure returns <code>isError: true</code> and a text block that lists each problem as a JSON Pointer path and a message. Proposed: a structured <code>code</code> and the offending <code>field</code> in <code>structuredContent</code>.</li>
   <li><strong>Pagination.</strong> Implemented: list-style tools take <code>limit</code> (search: default 20, at most 100; history: default 50, at most 200). Proposed: a cursor when more results exist. The web UI pages its event list with an offset.</li>
 </ul>

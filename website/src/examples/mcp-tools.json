@@ -90,13 +90,13 @@
   },
   {
     "name": "techlog_record_event",
-    "description": "Record a structured Techlog event (draft 0.1). Do not supply an id: the server assigns it. Events are immutable; record a correction as a new event. On a validation error the result lists the field paths to fix.",
+    "description": "Record a structured Techlog event (draft 0.1). Do not supply an id: the server assigns it. idempotency_key is required and unique per actor: use one stable key per logical event and reuse it when retrying; a duplicate is rejected and names the existing event. Events are immutable; record a correction as a new event. On a validation error the result lists the field paths to fix.",
     "inputSchema": {
       "additionalProperties": false,
       "properties": {
         "event": {
           "additionalProperties": true,
-          "description": "the event without an id: type, time, actor, subject, status, provenance, and optionally summary, sources, evidence, links, extensions",
+          "description": "the event without an id: type, time, actor, subject, status, provenance, idempotency_key, and optionally summary, sources, evidence, links, extensions",
           "type": "object"
         }
       },

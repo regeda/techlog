@@ -49,21 +49,23 @@ func call(method, path string, body any, out any) error {
 
 func main() {
 	// 1. Record a proposal, linked to the original problem report.
-	//    The server assigns the id and, because "time" is omitted, the time.
+	//    The server assigns the id and, because "time" is omitted, the time. The
+	//    idempotency_key makes a retry safe: reusing it is rejected with 409.
 	var proposal struct {
 		Event struct {
 			ID string `json:"id"`
 		} `json:"event"`
 	}
 	err := call("POST", "/api/v1/events", map[string]any{
-		"schema_version": "0.1-draft",
-		"type":           "proposal.recorded",
-		"actor":          map[string]any{"kind": "ai_agent", "id": "agent:code-assistant", "on_behalf_of": "user:a.novak"},
-		"subject":        map[string]any{"system": "promo-api", "component": "spin-service"},
-		"status":         "proposed",
-		"summary":        "Spin-to-win: one spin per new account, discount capped at 20%",
-		"links":          []map[string]any{{"rel": "motivated_by", "target": "evt_01J9K2A0P002", "basis": "confirmed"}},
-		"provenance":     map[string]any{"recorded_by": "agent:code-assistant", "method": "agent_submitted"},
+		"schema_version":  "0.1-draft",
+		"idempotency_key": "promo-api-spin-proposal",
+		"type":            "proposal.recorded",
+		"actor":           map[string]any{"kind": "ai_agent", "id": "agent:code-assistant", "on_behalf_of": "user:a.novak"},
+		"subject":         map[string]any{"system": "promo-api", "component": "spin-service"},
+		"status":          "proposed",
+		"summary":         "Spin-to-win: one spin per new account, discount capped at 20%",
+		"links":           []map[string]any{{"rel": "motivated_by", "target": "evt_01J9K2A0P002", "basis": "confirmed"}},
+		"provenance":      map[string]any{"recorded_by": "agent:code-assistant", "method": "agent_submitted"},
 	}, &proposal)
 	if err != nil {
 		log.Fatal(err)
@@ -73,12 +75,13 @@ func main() {
 	// 2. Record the verification result. The test report is evidence, kept as
 	//    a reference inside the event.
 	err = call("POST", "/api/v1/events", map[string]any{
-		"schema_version": "0.1-draft",
-		"type":           "verification.completed",
-		"actor":          map[string]any{"kind": "system", "id": "ci:pipeline"},
-		"subject":        map[string]any{"system": "promo-api", "component": "spin-service"},
-		"status":         "verified",
-		"summary":        "Unit, integration, and abuse tests passed",
+		"schema_version":  "0.1-draft",
+		"idempotency_key": "promo-api-spin-verification-ci-90412",
+		"type":            "verification.completed",
+		"actor":           map[string]any{"kind": "system", "id": "ci:pipeline"},
+		"subject":         map[string]any{"system": "promo-api", "component": "spin-service"},
+		"status":          "verified",
+		"summary":         "Unit, integration, and abuse tests passed",
 		"evidence": []map[string]any{{
 			"kind":   "test.report",
 			"ref":    "ci://run/90412",

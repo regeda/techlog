@@ -4,10 +4,12 @@ set -euo pipefail
 TECHLOG_URL="${TECHLOG_URL:-http://localhost:8080}"
 
 # 1. Record a proposal, linked to the original problem report.
-#    The server assigns the id and, because "time" is omitted, the time.
+#    The server assigns the id and, because "time" is omitted, the time. The
+#    idempotency_key makes a retry safe: reusing it is rejected with 409.
 ID=$(curl -fsS -X POST "$TECHLOG_URL/api/v1/events" -H "Content-Type: application/json" \
   -d '{
     "schema_version": "0.1-draft",
+    "idempotency_key": "promo-api-spin-proposal",
     "type": "proposal.recorded",
     "actor": { "kind": "ai_agent", "id": "agent:code-assistant", "on_behalf_of": "user:a.novak" },
     "subject": { "system": "promo-api", "component": "spin-service" },
@@ -23,6 +25,7 @@ echo "recorded $ID"
 curl -fsS -X POST "$TECHLOG_URL/api/v1/events" -H "Content-Type: application/json" \
   -d '{
     "schema_version": "0.1-draft",
+    "idempotency_key": "promo-api-spin-verification-ci-90412",
     "type": "verification.completed",
     "actor": { "kind": "system", "id": "ci:pipeline" },
     "subject": { "system": "promo-api", "component": "spin-service" },

@@ -65,3 +65,18 @@ func TestSkillUsesMCPOnlyAndIgnoresServerLifecycle(t *testing.T) {
 		}
 	}
 }
+
+// The skill must teach the model to choose a stable key and what to do on a
+// duplicate, or retries would create the very duplicates the key prevents.
+func TestSkillExplainsIdempotencyKeys(t *testing.T) {
+	b, err := os.ReadFile(skillPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := string(b)
+	for _, want := range []string{"## Retries and idempotency keys", "stable", "Already recorded", "Do not retry"} {
+		if !strings.Contains(s, want) {
+			t.Errorf("SKILL.md should contain %q", want)
+		}
+	}
+}

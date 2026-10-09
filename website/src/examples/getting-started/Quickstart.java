@@ -21,10 +21,12 @@ public class Quickstart {
 
     public static void main(String[] args) throws Exception {
         // 1. Record a proposal, linked to the original problem report.
-        //    The server assigns the id and, because "time" is omitted, the time.
+        //    The server assigns the id and, because "time" is omitted, the time. The
+        //    idempotency_key makes a retry safe: reusing it is rejected with 409.
         String created = call("POST", "/api/v1/events", """
             {
               "schema_version": "0.1-draft",
+              "idempotency_key": "promo-api-spin-proposal",
               "type": "proposal.recorded",
               "actor": { "kind": "ai_agent", "id": "agent:code-assistant", "on_behalf_of": "user:a.novak" },
               "subject": { "system": "promo-api", "component": "spin-service" },
@@ -43,6 +45,7 @@ public class Quickstart {
         call("POST", "/api/v1/events", """
             {
               "schema_version": "0.1-draft",
+              "idempotency_key": "promo-api-spin-verification-ci-90412",
               "type": "verification.completed",
               "actor": { "kind": "system", "id": "ci:pipeline" },
               "subject": { "system": "promo-api", "component": "spin-service" },

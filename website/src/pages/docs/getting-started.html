@@ -24,7 +24,7 @@ nav: Getting started
 <p>The samples use the Spring Spin story: a service called <code>promo-api</code> and a discount game for new clients. <code>make seed</code> loads that story, so the problem report the proposal links to already exists.</p>
 
 <h2 id="first-event">A first event</h2>
-<p>This is the smallest valid event. Every field here is required. The <a href="event-model.html#required">event model</a> explains each one. When you submit an event, leave out the <code>id</code>: the server assigns it, and ignores one you send. <code>time</code> and <code>schema_version</code> may also be left out; the server fills them in.</p>
+<p>This is the smallest valid event. Every field here is required. The <code>idempotency_key</code> is yours to choose: reuse it when you retry, and the server rejects the repeat. The <a href="event-model.html#required">event model</a> explains each one. When you submit an event, leave out the <code>id</code>: the server assigns it, and ignores one you send. <code>time</code> and <code>schema_version</code> may also be left out; the server fills them in.</p>
 {{code json event-minimal.json}}
 
 <h2 id="language">Choose your language</h2>
