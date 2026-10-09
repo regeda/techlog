@@ -10,14 +10,8 @@
           "schema_version": "0.1-draft",
           "type": "verification.completed",
           "time": "2026-03-11T11:05:00Z",
-          "actor": {
-            "kind": "system",
-            "id": "ci:pipeline"
-          },
-          "subject": {
-            "system": "promo-api",
-            "component": "spin-service"
-          },
+          "actor": { "kind": "system", "id": "ci:pipeline" },
+          "subject": { "system": "promo-api", "component": "spin-service" },
           "status": "verified",
           "summary": "Unit, integration, and abuse tests passed: repeat spins are rejected and the cap is enforced",
           "evidence": [
@@ -34,10 +28,7 @@
               "basis": "confirmed"
             }
           ],
-          "provenance": {
-            "recorded_by": "collector:ci",
-            "method": "collected"
-          }
+          "provenance": { "recorded_by": "collector:ci", "method": "collected" }
         }
       }
     }
@@ -46,12 +37,7 @@
     "jsonrpc": "2.0",
     "id": 12,
     "result": {
-      "content": [
-        {
-          "type": "text",
-          "text": "Recorded evt_01J9K2A0P007 (verified)"
-        }
-      ],
+      "content": [{ "type": "text", "text": "Recorded evt_01J9K2A0P007 (verified)" }],
       "structuredContent": {
         "id": "evt_01J9K2A0P007",
         "status": "verified",
@@ -60,14 +46,8 @@
           "id": "evt_01J9K2A0P007",
           "type": "verification.completed",
           "time": "2026-03-11T11:05:00Z",
-          "actor": {
-            "kind": "system",
-            "id": "ci:pipeline"
-          },
-          "subject": {
-            "system": "promo-api",
-            "component": "spin-service"
-          },
+          "actor": { "kind": "system", "id": "ci:pipeline" },
+          "subject": { "system": "promo-api", "component": "spin-service" },
           "status": "verified",
           "summary": "Unit, integration, and abuse tests passed: repeat spins are rejected and the cap is enforced",
           "evidence": [
@@ -84,10 +64,7 @@
               "basis": "confirmed"
             }
           ],
-          "provenance": {
-            "recorded_by": "collector:ci",
-            "method": "collected"
-          }
+          "provenance": { "recorded_by": "collector:ci", "method": "collected" }
         }
       },
       "isError": false

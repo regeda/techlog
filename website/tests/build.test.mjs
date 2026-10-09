@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync, readFileSync, mkdtempSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { build, parseFrontMatter } from '../build.mjs';
+import { build, parseFrontMatter, formatJson } from '../build.mjs';
 
 mkdirSync('.test-out', { recursive: true });
 
@@ -74,6 +74,45 @@ test('{{code}} embeds an escaped, copyable block', () => {
   assert.match(html, /class="language-json"/);
   assert.match(html, /&lt;b&gt;/);
   assert.match(html, /<button class="copy"/);
+});
+
+test('{{code lang file#path}} embeds only that part of a JSON example', () => {
+  const doc = { request: { method: 'tools/call', params: { n: 1 } }, response: { ok: true } };
+  const { src, out } = fixture({
+    'examples/a.json': JSON.stringify(doc),
+    'pages/index.html': '---\ntitle: T\n---\n[{{code json a.json#request}}][{{code json a.json#response}}][{{code json a.json#request.params}}]',
+  });
+  build({ srcDir: src, outDir: out });
+  const [req, res, params] = read(out, 'index.html').match(/\[(.*?)\]/gs);
+  assert.match(req, /&quot;method&quot;|"method"/);
+  assert.doesNotMatch(req, /"ok"|&quot;ok&quot;/);
+  assert.match(res, /ok/);
+  assert.doesNotMatch(res, /method/);
+  assert.match(params, /n/);
+  assert.doesNotMatch(params, /method/);
+});
+
+test('{{code}} with a path that does not exist fails the build', () => {
+  const { src, out } = fixture({
+    'examples/a.json': '{"request":{}}',
+    'pages/index.html': '---\ntitle: T\n---\n{{code json a.json#nope}}',
+  });
+  assert.throws(() => build({ srcDir: src, outDir: out }), /no "nope"/);
+  const f = fixture({
+    'examples/a.txt': 'plain',
+    'pages/index.html': '---\ntitle: T\n---\n{{code json a.txt#x}}',
+  });
+  assert.throws(() => build({ srcDir: f.src, outDir: f.out }), /not valid JSON|Unexpected/);
+});
+
+test('formatJson keeps short values on one line and expands long ones', () => {
+  assert.equal(formatJson({ a: 1, b: [1, 2] }), '{ "a": 1, "b": [1, 2] }');
+  assert.equal(formatJson('x'), '"x"');
+  const long = { description: 'x'.repeat(90) };
+  assert.equal(formatJson(long), `{\n  "description": "${'x'.repeat(90)}"\n}`);
+  assert.equal(formatJson({ a: { b: 1 }, list: [{ k: 1 }, { k: 2 }] }), '{ "a": { "b": 1 }, "list": [{ "k": 1 }, { "k": 2 }] }');
+  assert.equal(formatJson({}), '{}');
+  assert.equal(formatJson([]), '[]');
 });
 
 test('{{json-script}} embeds JSON safely and round-trips', () => {

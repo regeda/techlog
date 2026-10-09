@@ -41,8 +41,14 @@
   .pipe li:not(:last-child)::after { display: none; }
 }
 @media (max-width: 520px) { .pipe { grid-template-columns: 1fr; } }
-.how-split { margin-bottom: 0; }
-.how-split h3 { margin: var(--s-2) 0; }
+.how-text { max-width: 70ch; margin-block: var(--s-6) var(--s-4); }
+.how-text h3 { margin: var(--s-2) 0; }
+.panes { display: grid; gap: var(--s-4); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .panes { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.pane { margin: 0; min-width: 0; }
+.pane figcaption { margin-bottom: var(--s-2); font: 600 var(--fs-xs) var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-2); }
+.pane .codeblock { margin: 0; }
+.panes .pane pre { max-height: 24rem; overflow: auto; }
 
 /* connectors */
 .market { display: grid; gap: var(--s-4); grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
@@ -56,7 +62,4 @@
 .mk-own { border-style: dashed; border-color: var(--line-strong); background: transparent; }
 .connectors-cta { margin-top: var(--s-5); }
 .market-note { margin: var(--s-4) 0 0; font-size: var(--fs-xs); max-width: 80ch; }
-.how-split > * { min-width: 0; }
-.how-split .codeblock, .how-split pre { max-width: 100%; overflow-x: auto; }
-@media (min-width: 900px) { .how-split { grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); } }
 .pipe li:not(:last-child)::after { font-size: var(--fs-2xl); right: calc(-1 * var(--s-2)); padding-inline: 0; }

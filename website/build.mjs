@@ -80,6 +80,42 @@ function readExample(ctx, file, from) {
   return readFileSync(p, 'utf8').replace(/\n$/, '');
 }
 
+// formatJson prints a JSON value with short objects and arrays on one line and
+// longer ones expanded, so examples stay compact without losing structure.
+export function formatJson(value, indent = 0) {
+  const flat = inlineJson(value);
+  if (flat.length + indent <= 80 || value === null || typeof value !== 'object') return flat;
+  const pad = ' '.repeat(indent + 2);
+  const close = ' '.repeat(indent);
+  if (Array.isArray(value)) {
+    return `[\n${value.map((v) => pad + formatJson(v, indent + 2)).join(',\n')}\n${close}]`;
+  }
+  const entries = Object.entries(value).map(([k, v]) => `${pad}${JSON.stringify(k)}: ${formatJson(v, indent + 2)}`);
+  return `{\n${entries.join(',\n')}\n${close}}`;
+}
+
+function inlineJson(v) {
+  if (Array.isArray(v)) return v.length ? `[${v.map(inlineJson).join(', ')}]` : '[]';
+  if (v && typeof v === 'object') {
+    const entries = Object.entries(v);
+    return entries.length ? `{ ${entries.map(([k, x]) => `${JSON.stringify(k)}: ${inlineJson(x)}`).join(', ')} }` : '{}';
+  }
+  return JSON.stringify(v);
+}
+
+// readExamplePart returns one part of a JSON example: "request.params" selects
+// doc.request.params. A missing key fails the build.
+function readExamplePart(ctx, file, path, from) {
+  let part = JSON.parse(readExample(ctx, file, from));
+  for (const key of path.split('.')) {
+    if (part === null || typeof part !== 'object' || !(key in part)) {
+      throw new Error(`${from}: example "${file}" has no "${key}" (path "${path}")`);
+    }
+    part = part[key];
+  }
+  return formatJson(part);
+}
+
 function render(template, vars, ctx) {
   let out = template.replace(/\{\{>\s*([\w-]+)\s*\}\}/g, (_, name) => {
     if (!(name in ctx.partials)) throw new Error(`${vars.__file}: missing partial "${name}"`);
@@ -89,9 +125,9 @@ function render(template, vars, ctx) {
     if (!(key in vars)) throw new Error(`${vars.__file}: unknown variable {{${key}}}`);
     return vars[key];
   });
-  out = out.replace(/\{\{code\s+(\w+)\s+([^\s}]+)\s*\}\}/g, (_, lang, file) =>
+  out = out.replace(/\{\{code\s+(\w+)\s+([^\s}#]+)(?:#([\w.]+))?\s*\}\}/g, (_, lang, file, path) =>
     `<div class="codeblock" data-lang="${lang}"><button class="copy" type="button" aria-label="Copy code">Copy</button>` +
-    `<pre><code class="language-${lang}">${esc(readExample(ctx, file, vars.__file))}</code></pre></div>`);
+    `<pre><code class="language-${lang}">${esc(path ? readExamplePart(ctx, file, path, vars.__file) : readExample(ctx, file, vars.__file))}</code></pre></div>`);
   out = out.replace(/\{\{json-script\s+([\w-]+)\s+([^\s}]+)\s*\}\}/g, (_, id, file) => {
     const data = JSON.stringify(JSON.parse(readExample(ctx, file, vars.__file))).replace(/</g, '\\u003c');
     return `<script type="application/json" id="${id}">${data}</script>`;
