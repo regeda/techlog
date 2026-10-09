@@ -23,6 +23,24 @@ test('validator rejects a missing required field and an unknown top-level key', 
   assert.ok(validate(schema, { ...load('event-minimal.json'), extensions: { BadKey: 1 } }).some((e) => /invalid key/.test(e)));
 });
 
+test('validator enforces the idempotency key: required, non-empty, at most 128 characters', () => {
+  const base = load('event-minimal.json');
+  const { idempotency_key, ...without } = base;
+  assert.ok(validate(schema, without).some((e) => /idempotency_key: required/.test(e)));
+  assert.ok(validate(schema, { ...base, idempotency_key: '' }).some((e) => /shorter than 1/.test(e)));
+  assert.ok(validate(schema, { ...base, idempotency_key: 'k'.repeat(129) }).some((e) => /longer than 128/.test(e)));
+  assert.deepEqual(validate(schema, { ...base, idempotency_key: 'k'.repeat(128) }), []);
+});
+
+test('the timeline keys are unique per actor', () => {
+  const seen = new Set();
+  for (const e of timeline) {
+    const k = `${e.actor.id}\u0000${e.idempotency_key}`;
+    assert.ok(!seen.has(k), `${e.id} repeats a key for ${e.actor.id}`);
+    seen.add(k);
+  }
+});
+
 test('timeline: 25 sequential, chronological, schema-valid events linking only to earlier events', () => {
   assert.equal(timeline.length, 25);
   const seen = new Set();

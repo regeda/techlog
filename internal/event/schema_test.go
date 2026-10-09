@@ -14,14 +14,15 @@ import (
 
 func validDoc() map[string]any {
 	return map[string]any{
-		"schema_version": "0.1-draft",
-		"id":             "evt_01J9K2A0P001",
-		"type":           "problem.reported",
-		"time":           "2026-03-09T14:00:00Z",
-		"actor":          map[string]any{"kind": "human", "id": "user:t.nguyen"},
-		"subject":        map[string]any{"system": "support-desk"},
-		"status":         "recorded",
-		"provenance":     map[string]any{"recorded_by": "user:t.nguyen", "method": "human_entered"},
+		"schema_version":  "0.1-draft",
+		"id":              "evt_01J9K2A0P001",
+		"idempotency_key": "support-desk-ticket-790",
+		"type":            "problem.reported",
+		"time":            "2026-03-09T14:00:00Z",
+		"actor":           map[string]any{"kind": "human", "id": "user:t.nguyen"},
+		"subject":         map[string]any{"system": "support-desk"},
+		"status":          "recorded",
+		"provenance":      map[string]any{"recorded_by": "user:t.nguyen", "method": "human_entered"},
 	}
 }
 
@@ -63,6 +64,11 @@ func TestValidate(t *testing.T) {
 		{"time without zone", func(d map[string]any) { d["time"] = "2026-03-11T10:12:00" }, "/time"},
 		{"summary too long", func(d map[string]any) { d["summary"] = strings.Repeat("x", 281) }, "/summary"},
 		{"unknown top-level field", func(d map[string]any) { d["foo"] = "bar" }, "/"},
+		{"missing idempotency_key", func(d map[string]any) { delete(d, "idempotency_key") }, "/"},
+		{"empty idempotency_key", func(d map[string]any) { d["idempotency_key"] = "" }, "/idempotency_key"},
+		{"idempotency_key too long", func(d map[string]any) { d["idempotency_key"] = strings.Repeat("k", 129) }, "/idempotency_key"},
+		{"idempotency_key at the limit", func(d map[string]any) { d["idempotency_key"] = strings.Repeat("k", 128) }, ""},
+		{"idempotency_key is not a string", func(d map[string]any) { d["idempotency_key"] = 7 }, "/idempotency_key"},
 		{"bad link rel", func(d map[string]any) {
 			d["links"] = []any{map[string]any{"rel": "nope", "target": "evt_01J9K2A0P002", "basis": "confirmed"}}
 		}, "/links/0/rel"},

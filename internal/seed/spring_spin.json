@@ -2,6 +2,7 @@
   {
     "schema_version": "0.1-draft",
     "id": "evt_01J9K2A0P001",
+    "idempotency_key": "seed-spring-spin-001",
     "type": "problem.reported",
     "time": "2026-03-09T14:00:00Z",
     "actor": {
@@ -34,6 +35,7 @@
   {
     "schema_version": "0.1-draft",
     "id": "evt_01J9K2A0P002",
+    "idempotency_key": "seed-spring-spin-002",
     "type": "problem.reported",
     "time": "2026-03-10T09:00:00Z",
     "actor": {
@@ -73,6 +75,7 @@
   {
     "schema_version": "0.1-draft",
     "id": "evt_01J9K2A0P003",
+    "idempotency_key": "seed-spring-spin-003",
     "type": "investigation.completed",
     "time": "2026-03-10T10:20:00Z",
     "actor": {
@@ -112,6 +115,7 @@
   {
     "schema_version": "0.1-draft",
     "id": "evt_01J9K2A0P004",
+    "idempotency_key": "seed-spring-spin-004",
     "type": "proposal.recorded",
     "time": "2026-03-10T11:30:00Z",
     "actor": {
@@ -160,6 +164,7 @@
   {
     "schema_version": "0.1-draft",
     "id": "evt_01J9K2A0P005",
+    "idempotency_key": "seed-spring-spin-005",
     "type": "decision.made",
     "time": "2026-03-10T15:00:00Z",
     "actor": {
@@ -193,6 +198,7 @@
   {
     "schema_version": "0.1-draft",
     "id": "evt_01J9K2A0P006",
+    "idempotency_key": "seed-spring-spin-006",
     "type": "change.implemented",
     "time": "2026-03-11T10:12:00Z",
     "actor": {
@@ -236,6 +242,7 @@
   {
     "schema_version": "0.1-draft",
     "id": "evt_01J9K2A0P007",
+    "idempotency_key": "seed-spring-spin-007",
     "type": "verification.completed",
     "time": "2026-03-11T11:05:00Z",
     "actor": {
@@ -270,6 +277,7 @@
   {
     "schema_version": "0.1-draft",
     "id": "evt_01J9K2A0P008",
+    "idempotency_key": "seed-spring-spin-008",
     "type": "verification.completed",
     "time": "2026-03-11T16:40:00Z",
     "actor": {
@@ -304,6 +312,7 @@
   {
     "schema_version": "0.1-draft",
     "id": "evt_01J9K2A0P009",
+    "idempotency_key": "seed-spring-spin-009",
     "type": "action.tracked",
     "time": "2026-03-12T10:30:00Z",
     "actor": {
@@ -331,6 +340,7 @@
   {
     "schema_version": "0.1-draft",
     "id": "evt_01J9K2A0P010",
+    "idempotency_key": "seed-spring-spin-010",
     "type": "release.deployed",
     "time": "2026-03-12T13:20:00Z",
     "actor": {
@@ -370,6 +380,7 @@
   {
     "schema_version": "0.1-draft",
     "id": "evt_01J9K2A0P011",
+    "idempotency_key": "seed-spring-spin-011",
     "type": "incident.opened",
     "time": "2026-03-12T13:38:00Z",
     "actor": {
@@ -420,6 +431,7 @@
   {
     "schema_version": "0.1-draft",
     "id": "evt_01J9K2A0P012",
+    "idempotency_key": "seed-spring-spin-012",
     "type": "rollback.executed",
     "time": "2026-03-12T13:46:00Z",
     "actor": {
@@ -462,6 +474,7 @@
   {
     "schema_version": "0.1-draft",
     "id": "evt_01J9K2A0P013",
+    "idempotency_key": "seed-spring-spin-013",
     "type": "recovery.verified",
     "time": "2026-03-12T13:58:00Z",
     "actor": {
@@ -497,6 +510,7 @@
   {
     "schema_version": "0.1-draft",
     "id": "evt_01J9K2A0P014",
+    "idempotency_key": "seed-spring-spin-014",
     "type": "decision.made",
     "time": "2026-03-12T14:10:00Z",
     "actor": {
@@ -524,6 +538,7 @@
   {
     "schema_version": "0.1-draft",
     "id": "evt_01J9K2A0P015",
+    "idempotency_key": "seed-spring-spin-015",
     "type": "investigation.completed",
     "time": "2026-03-12T15:10:00Z",
     "actor": {
@@ -569,6 +584,7 @@
   {
     "schema_version": "0.1-draft",
     "id": "evt_01J9K2A0P016",
+    "idempotency_key": "seed-spring-spin-016",
     "type": "change.implemented",
     "time": "2026-03-13T09:40:00Z",
     "actor": {
@@ -608,6 +624,7 @@
   {
     "schema_version": "0.1-draft",
     "id": "evt_01J9K2A0P017",
+    "idempotency_key": "seed-spring-spin-017",
     "type": "verification.completed",
     "time": "2026-03-13T10:20:00Z",
     "actor": {
@@ -642,6 +659,7 @@
   {
     "schema_version": "0.1-draft",
     "id": "evt_01J9K2A0P018",
+    "idempotency_key": "seed-spring-spin-018",
     "type": "release.deployed",
     "time": "2026-03-13T13:00:00Z",
     "actor": {
@@ -681,6 +699,7 @@
   {
     "schema_version": "0.1-draft",
     "id": "evt_01J9K2A0P019",
+    "idempotency_key": "seed-spring-spin-019",
     "type": "release.deployed",
     "time": "2026-03-14T08:00:00Z",
     "actor": {
@@ -713,6 +732,7 @@
   {
     "schema_version": "0.1-draft",
     "id": "evt_01J9K2A0P020",
+    "idempotency_key": "seed-spring-spin-020",
     "type": "problem.reported",
     "time": "2026-03-14T11:15:00Z",
     "actor": {
@@ -761,6 +781,7 @@
   {
     "schema_version": "0.1-draft",
     "id": "evt_01J9K2A0P021",
+    "idempotency_key": "seed-spring-spin-021",
     "type": "investigation.completed",
     "time": "2026-03-14T11:50:00Z",
     "actor": {
@@ -806,6 +827,7 @@
   {
     "schema_version": "0.1-draft",
     "id": "evt_01J9K2A0P022",
+    "idempotency_key": "seed-spring-spin-022",
     "type": "mitigation.applied",
     "time": "2026-03-14T12:25:00Z",
     "actor": {
@@ -840,6 +862,7 @@
   {
     "schema_version": "0.1-draft",
     "id": "evt_01J9K2A0P023",
+    "idempotency_key": "seed-spring-spin-023",
     "type": "recovery.verified",
     "time": "2026-03-14T13:30:00Z",
     "actor": {
@@ -867,6 +890,7 @@
   {
     "schema_version": "0.1-draft",
     "id": "evt_01J9K2A0P024",
+    "idempotency_key": "seed-spring-spin-024",
     "type": "action.tracked",
     "time": "2026-03-15T09:00:00Z",
     "actor": {
@@ -916,6 +940,7 @@
   {
     "schema_version": "0.1-draft",
     "id": "evt_01J9K2A0P025",
+    "idempotency_key": "seed-spring-spin-025",
     "type": "change.implemented",
     "time": "2026-03-16T10:05:00Z",
     "actor": {

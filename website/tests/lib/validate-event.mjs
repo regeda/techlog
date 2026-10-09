@@ -1,5 +1,5 @@
 // Minimal JSON-Schema-subset validator: $ref (#/$defs/*), const, enum, type
-// string/array/object, pattern, maxLength, format date-time, required,
+// string/array/object, pattern, minLength, maxLength, format date-time, required,
 // properties, additionalProperties:false, propertyNames.pattern.
 export function validate(schema, value, root = schema, path = '$') {
   if (schema.$ref) return validate(root.$defs[schema.$ref.replace('#/$defs/', '')], value, root, path);
@@ -9,6 +9,7 @@ export function validate(schema, value, root = schema, path = '$') {
   if (schema.type === 'string') {
     if (typeof value !== 'string') return [`${path}: expected string`];
     if (schema.pattern && !new RegExp(schema.pattern).test(value)) errors.push(`${path}: "${value}" !~ ${schema.pattern}`);
+    if (schema.minLength && value.length < schema.minLength) errors.push(`${path}: shorter than ${schema.minLength}`);
     if (schema.maxLength && value.length > schema.maxLength) errors.push(`${path}: longer than ${schema.maxLength}`);
     if (schema.format === 'date-time' && !/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/.test(value)) {
       errors.push(`${path}: "${value}" is not an RFC 3339 UTC time`);

@@ -2,6 +2,8 @@
 package testutil
 
 import (
+	"fmt"
+	"sync/atomic"
 	"testing"
 
 	"github.com/regeda/techlog/internal/service"
@@ -23,16 +25,21 @@ func NewService(t testing.TB) *service.Service {
 	return svc
 }
 
+var keySeq atomic.Int64
+
 // Doc returns a valid event document without an id or provenance (Record
-// supplies both). Callers may overwrite any key, for example "time".
+// supplies both). It carries a fresh idempotency_key, so two docs from the
+// same actor never collide. Callers may overwrite any key, for example "time"
+// or "idempotency_key".
 func Doc(system, typ, summary string, links ...map[string]any) map[string]any {
 	d := map[string]any{
-		"type":    typ,
-		"time":    "2026-03-10T09:00:00Z",
-		"actor":   map[string]any{"kind": "human", "id": "user:test"},
-		"subject": map[string]any{"system": system},
-		"status":  "recorded",
-		"summary": summary,
+		"type":            typ,
+		"time":            "2026-03-10T09:00:00Z",
+		"idempotency_key": fmt.Sprintf("test-key-%d", keySeq.Add(1)),
+		"actor":           map[string]any{"kind": "human", "id": "user:test"},
+		"subject":         map[string]any{"system": system},
+		"status":          "recorded",
+		"summary":         summary,
 	}
 	if len(links) > 0 {
 		arr := make([]any, len(links))

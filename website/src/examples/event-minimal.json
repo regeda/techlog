@@ -1,6 +1,7 @@
 {
   "schema_version": "0.1-draft",
   "id": "evt_01J9K2A0Q001",
+  "idempotency_key": "promo-api-report-2026-03-12-m.okafor",
   "type": "problem.reported",
   "time": "2026-03-12T08:14:00Z",
   "actor": { "kind": "human", "id": "user:m.okafor" },

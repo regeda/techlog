@@ -1,6 +1,7 @@
 {
   "schema_version": "0.1-draft",
   "id": "evt_01J9K2A0P011",
+  "idempotency_key": "seed-spring-spin-011",
   "type": "incident.opened",
   "time": "2026-03-12T13:38:00Z",
   "actor": {

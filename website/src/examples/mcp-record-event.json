@@ -8,6 +8,7 @@
       "arguments": {
         "event": {
           "schema_version": "0.1-draft",
+          "idempotency_key": "seed-spring-spin-004",
           "type": "proposal.recorded",
           "time": "2026-03-10T11:30:00Z",
           "actor": {
@@ -64,6 +65,7 @@
         "event": {
           "schema_version": "0.1-draft",
           "id": "evt_01J9K2A0P004",
+          "idempotency_key": "seed-spring-spin-004",
           "type": "proposal.recorded",
           "time": "2026-03-10T11:30:00Z",
           "actor": {

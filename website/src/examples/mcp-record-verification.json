@@ -8,6 +8,7 @@
       "arguments": {
         "event": {
           "schema_version": "0.1-draft",
+          "idempotency_key": "seed-spring-spin-007",
           "type": "verification.completed",
           "time": "2026-03-11T11:05:00Z",
           "actor": { "kind": "system", "id": "ci:pipeline" },
@@ -44,6 +45,7 @@
         "event": {
           "schema_version": "0.1-draft",
           "id": "evt_01J9K2A0P007",
+          "idempotency_key": "seed-spring-spin-007",
           "type": "verification.completed",
           "time": "2026-03-11T11:05:00Z",
           "actor": { "kind": "system", "id": "ci:pipeline" },

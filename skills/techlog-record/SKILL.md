@@ -50,6 +50,7 @@ Statuses: `proposed`, `recorded`, `in_progress`, `verified`, `failed`, `open`, `
 Call `techlog_record_event` with `event` set to an object with these fields. Do not send an `id`.
 
 - `schema_version`: `"0.1-draft"`
+- `idempotency_key`: required. A stable string you choose, unique per actor, up to 128 characters. See "Retries and idempotency keys" below.
 - `type`, `status`: from the table above
 - `time`: when it happened, RFC 3339 with a zone, for example `2026-03-12T13:38:00Z`. Leave it out for something that has just happened, and the server stamps the time of recording. For past work, use a time you can read from a source, such as a git commit time (`git log --format=%aI`). Never invent precision: if a time is approximate, say so when you report to the user.
 - `actor`: `{"kind": "ai_agent", "id": "agent:claude-code", "on_behalf_of": "user:<who asked>"}`. Leave `on_behalf_of` out if you do not know who it is.
@@ -77,6 +78,7 @@ A decision, linked to the proposal it decides:
 ```json event
 {
   "schema_version": "0.1-draft",
+  "idempotency_key": "promo-api-spin-proposal-approved",
   "type": "decision.made",
   "time": "2026-03-10T14:05:00Z",
   "actor": {"kind": "ai_agent", "id": "agent:claude-code", "on_behalf_of": "user:a.novak"},
@@ -93,6 +95,7 @@ An incident, with a suspected cause recorded as a hypothesis:
 ```json event
 {
   "schema_version": "0.1-draft",
+  "idempotency_key": "promo-api-3.8.0-canary-5xx-incident",
   "type": "incident.opened",
   "time": "2026-03-12T13:38:00Z",
   "actor": {"kind": "ai_agent", "id": "agent:claude-code", "on_behalf_of": "user:a.novak"},
