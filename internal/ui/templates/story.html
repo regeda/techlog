@@ -1,0 +1,19 @@
+{{template "head" .}}
+<p class="crumbs"><a href="/">Events</a> / Story from <a href="/events/{{.Root}}">{{.Root}}</a></p>
+<h1>Story</h1>
+<p class="muted">{{len .Items}} connected event(s), oldest first. Links are followed in both directions. A dashed link is a hypothesis, not an established fact.</p>
+<ol class="story">
+  {{range .Items}}
+  <li id="{{.Event.ID}}" class="t-{{typeClass .Event.Type}}{{if .Root}} root{{end}}">
+    <div class="when">{{fmtTime .Event.Time}}</div>
+    <div class="what">
+      <span class="badge t-{{typeClass .Event.Type}}">{{.Event.Type}}</span>
+      <span class="status">{{.Event.Status}}</span>
+      <span class="muted">{{.Event.Subject.System}}</span>
+      <p class="lead"><a href="/events/{{.Event.ID}}">{{if .Event.Summary}}{{.Event.Summary}}{{else}}{{.Event.ID}}{{end}}</a></p>
+      {{range .Edges}}<div class="rel {{.Basis}}">{{.Rel}} <a href="#{{.Target}}">{{.Target}}</a> <span class="muted">({{.Basis}})</span></div>{{end}}
+    </div>
+  </li>
+  {{end}}
+</ol>
+{{template "foot" .}}

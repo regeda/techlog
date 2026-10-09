@@ -1,0 +1,21 @@
+{{template "head" .}}
+<p class="crumbs"><a href="/">Events</a> / System</p>
+<h1>{{.System}}</h1>
+<p class="muted">{{len .Events}} event(s), oldest first{{if eq (len .Events) 200}} (the latest 200){{end}}</p>
+{{if .Events}}
+<ol class="timeline">
+  {{range .Events}}
+  <li class="t-{{typeClass .Type}}">
+    <div class="when">{{fmtTime .Time}}</div>
+    <div class="what">
+      <span class="badge t-{{typeClass .Type}}">{{.Type}}</span>
+      <span class="status">{{.Status}}</span>
+      <a href="/events/{{.ID}}">{{if .Summary}}{{.Summary}}{{else}}{{.ID}}{{end}}</a>
+      {{range .Links}}<span class="chip {{.Basis}}">{{.Rel}} <a href="/events/{{.Target}}">{{.Target}}</a></span>{{end}}
+      <a class="walk" href="/story/{{.ID}}">walk through →</a>
+    </div>
+  </li>
+  {{end}}
+</ol>
+{{else}}<p>No events recorded for this system.</p>{{end}}
+{{template "foot" .}}

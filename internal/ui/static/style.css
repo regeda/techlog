@@ -1,0 +1,57 @@
+:root {
+  --bg: #fafaf8; --fg: #1d1d1b; --muted: #6b6b66; --line: #deded8; --card: #ffffff; --accent: #1f5fbf;
+  --warn: #b4540a;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #161615; --fg: #ececea; --muted: #9a9a94; --line: #33332f; --card: #1e1e1c; --accent: #6ea8ff; --warn: #e08a3c; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+a { color: var(--accent); }
+code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.9em; }
+pre { overflow-x: auto; background: var(--card); border: 1px solid var(--line); padding: 12px; border-radius: 6px; }
+.top { padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--card); }
+.brand { font-weight: 700; text-decoration: none; color: var(--fg); letter-spacing: 0.02em; }
+main { max-width: 1100px; margin: 0 auto; padding: 16px; }
+h1 { margin: 8px 0 12px; font-size: 1.5rem; }
+h2 { margin: 24px 0 8px; font-size: 1.1rem; }
+.muted { color: var(--muted); }
+.error { color: #c0262d; font-weight: 600; }
+.nowrap { white-space: nowrap; }
+.crumbs { color: var(--muted); margin: 4px 0; }
+.lead { font-size: 1.05rem; margin: 6px 0; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.filters input, .filters select, .filters button { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); color: var(--fg); }
+.filters input[type=search] { min-width: 220px; }
+.button { display: inline-block; padding: 6px 12px; border: 1px solid var(--accent); border-radius: 6px; text-decoration: none; }
+table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+.facts { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; }
+
+.badge { --c: #6b6b66; display: inline-block; padding: 1px 8px; border: 1px solid var(--c); color: var(--c); border-radius: 999px; font-size: 0.8rem; white-space: nowrap; }
+.t-problem { --c: #b4540a; } .t-investigation { --c: #6f42c1; } .t-proposal { --c: #1f5fbf; }
+.t-decision { --c: #0a7d5a; } .t-change { --c: #0a7d5a; } .t-verification { --c: #0a7d5a; }
+.t-release { --c: #1f5fbf; } .t-incident { --c: #c0262d; } .t-mitigation { --c: #b4540a; }
+.t-rollback { --c: #c0262d; } .t-recovery { --c: #0a7d5a; } .t-postmortem { --c: #6f42c1; } .t-action { --c: #6b6b66; }
+@media (prefers-color-scheme: dark) {
+  .t-problem, .t-mitigation { --c: #e08a3c; } .t-investigation, .t-postmortem { --c: #b08cf0; }
+  .t-proposal, .t-release { --c: #6ea8ff; } .t-decision, .t-change, .t-verification, .t-recovery { --c: #4cc29a; }
+  .t-incident, .t-rollback { --c: #ff7a80; }
+}
+.chip { display: inline-block; padding: 0 8px; border: 1px solid var(--line); border-radius: 4px; font-size: 0.8rem; }
+.chip.hypothesis, .rel.hypothesis { border-style: dashed; }
+.chip.hypothesis { color: var(--warn); }
+
+.timeline, .story { list-style: none; margin: 0; padding: 0 0 0 16px; border-left: 2px solid var(--line); }
+.timeline li, .story li { display: grid; grid-template-columns: 130px 1fr; gap: 12px; padding: 8px 0 8px 12px; position: relative; }
+.timeline li::before, .story li::before { content: ""; position: absolute; left: -22px; top: 14px; width: 10px; height: 10px; border-radius: 50%; background: var(--c, var(--muted)); }
+.when { color: var(--muted); font-size: 0.85rem; white-space: nowrap; }
+.status { color: var(--muted); font-size: 0.85rem; margin: 0 6px; }
+.walk { font-size: 0.85rem; margin-left: 8px; }
+.story li.root { background: color-mix(in srgb, var(--accent) 10%, transparent); border-radius: 6px; }
+.rel { font-size: 0.85rem; margin: 2px 0 0 8px; padding-left: 8px; border-left: 2px solid var(--line); }
+.rel.hypothesis { border-left-style: dashed; }
+@media (max-width: 640px) { .timeline li, .story li { grid-template-columns: 1fr; gap: 2px; } }

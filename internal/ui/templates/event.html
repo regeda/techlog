@@ -1,0 +1,39 @@
+{{template "head" .}}
+<p class="crumbs"><a href="/">Events</a> / <a href="/systems/{{pathEscape .Event.Subject.System}}">{{.Event.Subject.System}}</a></p>
+<h1><span class="badge t-{{typeClass .Event.Type}}">{{.Event.Type}}</span> <code>{{.Event.ID}}</code></h1>
+{{if .Event.Summary}}<p class="lead">{{.Event.Summary}}</p>{{end}}
+<p><a class="button" href="/story/{{.Event.ID}}">Walk through this story →</a></p>
+<dl class="facts">
+  <dt>Time</dt><dd>{{fmtTime .Event.Time}} UTC <span class="muted">({{.Event.Time}})</span></dd>
+  <dt>Status</dt><dd>{{.Event.Status}}</dd>
+  <dt>System</dt><dd><a href="/systems/{{pathEscape .Event.Subject.System}}">{{.Event.Subject.System}}</a>{{if .Event.Subject.Component}} / {{.Event.Subject.Component}}{{end}}{{if .Event.Subject.Environment}} ({{.Event.Subject.Environment}}){{end}}</dd>
+  <dt>Actor</dt><dd>{{.Event.Actor.ID}} <span class="muted">({{.Event.Actor.Kind}}{{if .Event.Actor.OnBehalfOf}}, on behalf of {{.Event.Actor.OnBehalfOf}}{{end}})</span></dd>
+  <dt>Provenance</dt><dd>{{.Event.Provenance.Method}} by {{.Event.Provenance.RecordedBy}}{{if .Event.Provenance.Confidence}} ({{.Event.Provenance.Confidence}}){{end}}</dd>
+</dl>
+<h2>Links from this event</h2>
+{{template "linkrows" .Outgoing}}
+<h2>Links to this event</h2>
+{{template "linkrows" .Incoming}}
+{{if .Event.Sources}}<h2>Sources</h2><ul>{{range .Event.Sources}}<li>{{.Kind}}: <code>{{.Ref}}</code></li>{{end}}</ul>{{end}}
+{{if .Event.Evidence}}<h2>Evidence</h2><ul>{{range .Event.Evidence}}<li>{{.Kind}}: <code>{{.Ref}}</code>{{if .Digest}} <span class="muted">{{.Digest}}</span>{{end}}</li>{{end}}</ul>{{end}}
+<details><summary>Raw JSON</summary><pre>{{toJSON .Event}}</pre></details>
+{{template "foot" .}}
+
+{{define "linkrows"}}
+{{if .}}
+<table class="links">
+  {{range .}}
+  <tr>
+    <td>{{.Rel}}</td>
+    <td><span class="chip {{.Basis}}">{{.Basis}}</span></td>
+    <td>
+      <a href="/events/{{.ID}}">{{.ID}}</a>
+      {{if .Type}}<span class="badge t-{{typeClass .Type}}">{{.Type}}</span>{{end}}
+      {{.Summary}}
+      {{if .Rationale}}<br><span class="muted">{{.Rationale}}</span>{{end}}
+    </td>
+  </tr>
+  {{end}}
+</table>
+{{else}}<p class="muted">None.</p>{{end}}
+{{end}}
