@@ -1,7 +1,7 @@
 # Techlog website
 
 ## What this is
-A static website for Techlog: a three-block landing page (headline with a guided demo, how it works, connectors), a "coming soon" Welcome page, twelve documentation pages (including Getting Started in five languages and a technical deep-dive). The site itself has no backend. Its pages describe two things and mark which is which: the Techlog server in this repository (implemented, basic, local, with no authentication or signatures) and the proposed standard and platform around it.
+A static website for Techlog: a three-block landing page (headline with a guided demo, how it works, connectors), a "coming soon" Welcome page, ten documentation pages (including Getting Started in five languages). The site itself has no backend. Its pages describe two things and mark which is which: the Techlog server in this repository (implemented, basic, local, with no authentication or signatures) and the proposed standard and platform around it.
 
 ## Quick start
 Run these from the `website/` folder of the repository.

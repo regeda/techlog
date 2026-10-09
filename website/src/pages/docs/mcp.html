@@ -8,7 +8,7 @@ nav: MCP integration
 ---
 <h1>MCP Integration</h1>
 <div class="page-meta"><span class="badge badge-exists">Implemented · basic</span><span class="badge badge-proposed">Draft 0.1</span></div>
-<div class="callout callout-note"><p><strong>Runs today.</strong> The Go server in this repository serves five MCP tools over streamable HTTP at <code>/mcp</code>. It implements no authentication and no signatures, so keep it on localhost or a trusted network. Resources, prompts, and the rollback-plan tool are still proposals; they are marked below.</p></div>
+<div class="callout callout-note"><p><strong>Runs today.</strong> The Go server in this repository serves five MCP tools over streamable HTTP at <code>/mcp</code>. It implements no authentication and no signatures, so keep it on localhost or a trusted network. Resources and prompts are still proposals; they are marked below.</p></div>
 
 <h2 id="mcp-and-techlog">MCP and Techlog</h2>
 <p>The Model Context Protocol (MCP) is how an agent talks to a tool. Techlog defines what the events mean and how the lifecycle fits together. An agent that already speaks MCP needs no custom client code to read history or record progress.</p>
@@ -48,11 +48,9 @@ nav: MCP integration
 <div class="table-wrap"><table>
   <thead><tr><th>Part</th><th>Idea</th></tr></thead>
   <tbody>
-    <tr><td><code>techlog_create_rollback_plan</code></td><td>Prepare a draft rollback plan for an upgrade. A draft needs review before it counts as evidence.</td></tr>
     <tr><td><code>techlog_submit_evidence</code></td><td>Attach an evidence reference, optionally with a digest, to an event that already exists. Today, evidence is part of the event when it is recorded.</td></tr>
-    <tr><td>Resources</td><td><code>techlog://systems/{system}/history</code>, <code>techlog://events/{id}</code>, <code>techlog://plans/{id}</code></td></tr>
+    <tr><td>Resources</td><td><code>techlog://systems/{system}/history</code>, <code>techlog://events/{id}</code></td></tr>
     <tr><td>Prompt <code>investigate_incident(incident_id)</code></td><td>Gathers the incident, its release, and the linked changes, and asks for a hypothesis.</td></tr>
-    <tr><td>Prompt <code>prepare_rollback_plan(system, target_version)</code></td><td>Drafts a plan from the system's history for a person to review.</td></tr>
     <tr><td>Prompt <code>record_decision(event_id)</code></td><td>Asks for the decision, its approver, and the terms, and records them against a proposal.</td></tr>
   </tbody>
 </table></div>
@@ -79,4 +77,4 @@ nav: MCP integration
     <tr><td>Rollback-plan and evidence tools, resources, prompts</td><td><span class="badge badge-proposed">Proposed</span></td></tr>
   </tbody>
 </table></div>
-<nav class="pager" aria-label="Pager"><a href="architecture.html">← Architecture</a><a href="reliability.html">Reliability →</a></nav>
+<nav class="pager" aria-label="Pager"><a href="event-model.html">← Event model</a><a href="policy.html">Workflow and policy →</a></nav>

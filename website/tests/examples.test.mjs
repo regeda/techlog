@@ -128,19 +128,6 @@ test('full example is its timeline event plus extensions; incident example is it
   assert.ok(byId[idOf(11)].extensions['org.techlog.hypothesis'], 'the incident carries its hypothesis details');
 });
 
-test('rollback plan has every section the docs describe and matches the story release', () => {
-  const p = load('rollback-plan.json');
-  for (const k of ['current_version', 'target_version', 'strategy', 'stages', 'health_checks',
-    'promotion_criteria', 'rollback_triggers', 'recovery_steps', 'verification_criteria',
-    'unresolved_risks', 'approvals']) {
-    assert.ok(k in p, `missing ${k}`);
-  }
-  assert.ok(['canary', 'in_place'].includes(p.strategy));
-  assert.ok(p.stages.length >= 3);
-  assert.equal(p.system, 'promo-api');
-  assert.ok(byId[idOf(10)].evidence.some((x) => x.ref === `techlog://plans/${p.id}`), 'canary release cites the plan');
-});
-
 test('policy example separates evaluation from enforcement', () => {
   const p = load('policy.json');
   assert.ok(p.requires.evidence.length && p.requires.approvals.length);

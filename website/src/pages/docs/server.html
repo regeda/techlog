@@ -57,4 +57,4 @@ nav: Run the server
 <h2 id="storage">Storage</h2>
 <p>The server talks to storage through a small interface: insert an event, add a link, get an event, search, list links, list systems. The SQLite backend is pure Go, needs no C toolchain, and keeps the full event JSON next to indexed columns and a full-text index. It uses one connection, and write transactions take the lock up front, so a second process on the same file waits instead of failing.</p>
 <p>A new backend is a package under <code>internal/store</code> that passes the shared contract test suite, plus one line that selects it with <code>--store</code>. Nothing else in the server changes.</p>
-<nav class="pager" aria-label="Pager"><a href="getting-started.html">← Getting started</a><a href="event-model.html">Event model →</a></nav>
+<nav class="pager" aria-label="Pager"><a href="getting-started.html">← Getting started</a><a href="lifecycle.html">Lifecycle model →</a></nav>
