@@ -17,15 +17,15 @@ nav: Lifecycle model
     <ol class="cycle-steps"><li>Problem</li><li>Proposal</li><li>Decision</li><li>Implementation</li><li>Verification</li><li>Release</li></ol>
   </section>
   <div class="cycle-links">
-    <span class="cycle-link cycle-up">▲ Corrective action outcomes re-enter software engineering</span>
-    <span class="cycle-link cycle-down">A release reaches production ▼</span>
+    <p class="cycle-link cycle-up"><strong>▲ Corrective action → the whole of software engineering</strong><span>The outcome re-enters at any stage, from Problem to Release.</span></p>
+    <p class="cycle-link cycle-down"><strong>Release → Incident ▼</strong><span>A release reaches production, and the incident is observed after it.</span></p>
   </div>
   <section class="cycle-zone cycle-rel" aria-labelledby="cycle-rel-t">
     <p class="cycle-title" id="cycle-rel-t">Reliability engineering</p>
     <ol class="cycle-steps cycle-back"><li>Incident</li><li>Mitigation</li><li>Rollback</li><li>Postmortem</li><li>Corrective action</li></ol>
   </section>
 </div>
-<p>An incident can also point back to the implementation that is suspected of causing it. What a corrective action leads to depends on its outcome. Most outcomes send work back into a development stage, so the next release does not repeat the failure.</p>
+<p>The incident links to the release it was observed after, and can also point to the change suspected of causing it. A corrective action is not tied to one stage: it feeds the whole of software engineering, and its outcome decides where it re-enters. Most outcomes send work back into a development stage, so the next release does not repeat the failure.</p>
 <div class="table-wrap"><table>
 <thead><tr><th>Corrective action outcome</th><th>Re-enters at</th><th>Event recorded</th></tr></thead>
 <tbody>

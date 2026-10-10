@@ -114,11 +114,16 @@ pre.mermaid { background: var(--bg-1); border: 1px solid var(--line); border-rad
 .cycle-steps li { position: relative; flex: 1 1 0; min-width: 0; text-align: center; padding: var(--s-3) var(--s-2); background: var(--bg-1); border: 1px solid var(--zone); border-radius: var(--r-2); color: var(--text-0); font-weight: 600; font-size: var(--fs-sm); overflow-wrap: anywhere; }
 .cycle-steps li:not(:last-child)::after { content: "→"; position: absolute; top: 50%; right: calc(var(--gap) / -2); transform: translate(50%, -50%); color: var(--zone); font-weight: 800; }
 .cycle-back li:not(:last-child)::after { content: "←"; right: auto; left: calc(var(--gap) / -2); transform: translate(-50%, -50%); }
-.cycle-links { display: flex; justify-content: space-between; gap: var(--s-4); padding: var(--s-3) var(--s-2); font: 600 var(--fs-xs)/1.4 var(--font-mono); }
-.cycle-up { color: var(--ok); }
-.cycle-down { color: var(--orange); text-align: right; margin-left: auto; }
+.cycle-links { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-4); padding: 0 var(--s-2); font: 600 var(--fs-xs)/1.4 var(--font-mono); }
+.cycle-link { margin: 0; padding: var(--s-4) var(--s-3); }
+.cycle-link strong { display: block; font-size: var(--fs-sm); }
+.cycle-link span { display: block; font-weight: 500; color: var(--text-1); }
+.cycle-up { color: var(--ok); border-left: 3px solid var(--ok); }
+.cycle-down { color: var(--orange); border-right: 3px solid var(--orange); text-align: right; }
 @media (max-width: 760px) {
   .cycle-steps, .cycle-back { flex-direction: column; --gap: 28px; }
   .cycle-steps li:not(:last-child)::after, .cycle-back li:not(:last-child)::after { content: "↓"; top: auto; bottom: calc(var(--gap) / -2); left: 50%; right: auto; transform: translate(-50%, 50%); }
-  .cycle-links { flex-direction: column-reverse; }
+  .cycle-links { grid-template-columns: 1fr; }
+  .cycle-links .cycle-up { order: 2; }
+  .cycle-down { text-align: left; border-right: 0; border-left: 3px solid var(--orange); }
 }
