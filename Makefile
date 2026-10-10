@@ -12,7 +12,7 @@ GOLANGCI_LINT ?= $(shell command -v golangci-lint 2>/dev/null || echo $(shell go
 
 .DEFAULT_GOAL := help
 
-.PHONY: help build run seed flush reset skill skill-remove test lint fmt check tools clean
+.PHONY: help deploy-website build run seed flush reset skill skill-remove test lint fmt check tools clean
 
 help: ## list the available tasks
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-13s %s\n", $$1, $$2}'
@@ -74,6 +74,9 @@ check: lint test ## lint and test; run before committing
 
 tools: ## install golangci-lint $(GOLANGCI_LINT_VERSION)
 	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
+
+deploy-website: ## build the website and deploy it to Cloudflare Pages (ARGS="--branch x")
+	scripts/deploy-website.sh $(ARGS)
 
 clean: ## remove build output
 	rm -rf bin
