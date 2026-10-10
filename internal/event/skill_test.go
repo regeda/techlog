@@ -80,3 +80,33 @@ func TestSkillExplainsIdempotencyKeys(t *testing.T) {
 		}
 	}
 }
+
+// Time comes from the source of the change first (a git commit time, a merge or
+// deploy time, an alert time). Only when the source has no timestamp is the
+// current time used.
+func TestSkillPrioritisesTheTimeOfTheSource(t *testing.T) {
+	b, err := os.ReadFile(skillPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := string(b)
+	i := strings.Index(s, "## Which time to use")
+	j := strings.Index(s, "## Links and honesty")
+	if i < 0 || j < i {
+		t.Fatal("SKILL.md should have a \"Which time to use\" section before \"Links and honesty\"")
+	}
+	sec := s[i:j]
+	src := strings.Index(sec, "The time the source of the change records")
+	cur := strings.Index(sec, "The current time, only if the source has no timestamp")
+	if src < 0 || cur < 0 || src > cur {
+		t.Errorf("the source's time must come first and the current time second:\n%s", sec)
+	}
+	for _, want := range []string{"git log -1 --format=%aI", "commit time", "Never invent a time"} {
+		if !strings.Contains(sec, want) {
+			t.Errorf("the time section should mention %q", want)
+		}
+	}
+	if strings.Contains(s, "Leave it out for something that has just happened") {
+		t.Error("the old rule (leave time out for anything recent) contradicts the new priority")
+	}
+}

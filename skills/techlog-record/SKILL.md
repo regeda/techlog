@@ -52,7 +52,7 @@ Call `techlog_record_event` with `event` set to an object with these fields. Do 
 - `schema_version`: `"0.1-draft"`
 - `idempotency_key`: required. A stable string you choose, unique per actor, up to 128 characters. See "Retries and idempotency keys" below.
 - `type`, `status`: from the table above
-- `time`: when it happened, RFC 3339 with a zone, for example `2026-03-12T13:38:00Z`. Leave it out for something that has just happened, and the server stamps the time of recording. For past work, use a time you can read from a source, such as a git commit time (`git log --format=%aI`). Never invent precision: if a time is approximate, say so when you report to the user.
+- `time`: when it happened, RFC 3339 with a zone, for example `2026-03-12T13:38:00Z`. Take it from the source of the change when it has one, and only otherwise use the current time. See "Which time to use" below.
 - `actor`: `{"kind": "ai_agent", "id": "agent:claude-code", "on_behalf_of": "user:<who asked>"}`. Leave `on_behalf_of` out if you do not know who it is.
 - `subject`: `{"system": "...", "component": "..."}`; `component` and `environment` are optional
 - `summary`: one plain sentence, at most 280 characters, that makes sense without context
@@ -63,6 +63,15 @@ Call `techlog_record_event` with `event` set to an object with these fields. Do 
 The result carries the new `id` in its structured result. Use it to link later events.
 
 To record several related events, such as the story of a piece of work, record the earliest first. A link needs its target to exist, so each event can link only to events that already have an id. Check the order against the table above (problem, proposal, decision, change, verification, release).
+
+## Which time to use
+
+`time` says when the thing happened, not when you recorded it. Pick it in this order:
+
+1. **The time the source of the change records.** For a commit, read it from git: `git log -1 --format=%aI <sha>` (author time) or `%cI` (commit time, when the change was merged or rebased). For a pull request, its merge time. For a release, the deploy time. For an alert or incident, the time on the alert or the ticket. This holds even for something that has just happened: if a source has a timestamp, use it.
+2. **The current time, only if the source has no timestamp** or there is no source (a decision taken in this conversation, a finding you just made). Leave `time` out and the server stamps the moment of recording, or send the current time yourself with a zone.
+
+Never invent a time and never guess one from memory. If the source gives only a date or an approximate time, use what it gives and say so in the summary or when you report to the user.
 
 ## Links and honesty
 
