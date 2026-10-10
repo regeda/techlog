@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, mkdirSync, existsSync } from 'node:fs';
 import { build, highlightJson, highlightCode } from '../build.mjs';
 
 mkdirSync('.test-out', { recursive: true });
@@ -92,4 +92,265 @@ test('highlightCode leaves unknown languages as escaped plain text', () => {
 
 test('welcome: the opening does not claim there is nothing to run', () => {
   assert.match(welcome, /run a basic server yourself|run the basic server yourself/i);
+});
+
+test('landing: the logo lives in the header bar, and the motto is big, in two lines', () => {
+  assert.doesNotMatch(html, /hero-logo|hero-head/);
+  assert.match(html, /<header class="site-header">[\s\S]*?<img src="assets\/img\/logo\.svg"[\s\S]*?<span class="brand-name">Techlog<\/span>/);
+  assert.doesNotMatch(html, /Forget Pull Requests/i);
+  assert.match(html, /<title>Forget Code Reviews — Techlog/);
+  assert.match(html, /<h1><span class="shout">Connect context across<\/span><span class="shout">🤖 agents and 💬 sessions\.<\/span><\/h1>/, 'two lines, with agents and sessions on the same line');
+  assert.match(css, /\.hero h1 \{[^}]*white-space:\s*nowrap[^}]*font-size:\s*clamp\(1\.5rem, 8cqw, 8\.2rem\)/, 'the motto stays on one line and scales with its container');
+  assert.match(css, /\.hero \.container \{[^}]*container-type:\s*inline-size/);
+  const js = readFileSync('src/assets/js/site.js', 'utf8');
+  assert.doesNotMatch(js, /has-hero-logo|brand-on/);
+});
+
+
+
+test('landing: how it works runs from hypotheses to a served store in four steps', () => {
+  const pipe = how.match(/<ol class="pipe"[\s\S]*?<\/ol>/)[0];
+  const titles = [...pipe.matchAll(/<h3>([^<]*)<\/h3>/g)].map((m) => m[1]);
+  assert.deepEqual(titles, ['Agents confirm', 'Changelog records', 'Build connections', 'Store, serve']);
+  assert.match(pipe, /hypotheses into confirmed/);
+  assert.match(pipe, /MCP request: <code>techlog_record_event<\/code>/);
+});
+
+test('lifecycle: "Confirm hypothesis" comes after Stages, as a four-block diagram with little text', () => {
+  const lc = readFileSync('.test-out/landing/docs/lifecycle.html', 'utf8');
+  assert.match(lc, /<h2 id="confirm-hypothesis">Confirm hypothesis<\/h2>/);
+  assert.doesNotMatch(lc, /From hypothesis to confirmed<\/h2>|id="hypothesis"/);
+  assert.ok(lc.indexOf('id="stages"') < lc.indexOf('id="confirm-hypothesis"') && lc.indexOf('id="confirm-hypothesis"') < lc.indexOf('id="rules"'), 'after Stages, before Rules of thumb');
+  const sec = lc.slice(lc.indexOf('id="confirm-hypothesis"'), lc.indexOf('id="rules"'));
+  assert.equal((sec.match(/<li[ >]/g) ?? []).length, 4, 'four blocks at most');
+  assert.deepEqual([...sec.matchAll(/<strong>([^<]*)<\/strong>/g)].map((m) => m[1]), ['Guess', 'Act', 'Confirm', 'Fix']);
+  for (const w of ['badge-hypothesis', 'badge-confirmed']) assert.ok(sec.includes(w), w);
+  assert.doesNotMatch(sec, /<table|<ul/, 'a diagram, not a table or a list');
+  assert.doesNotMatch(sec, /In the example story|Nothing is edited/, 'no example paragraph');
+  const words = sec.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
+  assert.ok(words <= 100, `short: ${words} words`);
+  const components = readFileSync('src/assets/css/components.css', 'utf8');
+  assert.match(components, /\.confirm \{[^}]*grid-template-columns:\s*repeat\(4,/);
+});
+
+test('header: the Techlog name stays next to the logo, also after scrolling', () => {
+  const header = readFileSync('src/partials/header.html', 'utf8');
+  assert.match(header, /<span class="brand-name">Techlog<\/span>/);
+  const components = readFileSync('src/assets/css/components.css', 'utf8');
+  assert.doesNotMatch(components, /\.scrolled \.site-header \.brand-name/, 'the name is not collapsed on scroll');
+  assert.match(html, /<span class="brand-name">Techlog<\/span>/);
+});
+
+test('landing: the hero is centred', () => {
+  assert.match(css, /\.hero h1 \{[^}]*text-align:\s*center/);
+  assert.match(css, /\.hero-row \{[^}]*justify-content:\s*center[^}]*text-align:\s*center/);
+});
+
+
+
+test('landing: the demo is gone', () => {
+  assert.doesNotMatch(html, /id="demo"|demo-data|demo-events|demo-core|assets\/js\/demo\.js/);
+  assert.doesNotMatch(html, /class="cs dm"/);
+  assert.ok(!existsSync('src/assets/js/demo.js') && !existsSync('src/assets/css/demo.css') && !existsSync('src/examples/demo-steps.json'));
+  assert.doesNotMatch(readFileSync('src/partials/head.html', 'utf8'), /demo\.css/);
+});
+
+test('landing: Try Techlog (no glow) and Read the docs sit under the animation in a very large size', () => {
+  const after = html.slice(html.indexOf('assets/js/scatter.js'));
+  const cta = after.match(/<div class="hero-cta">([\s\S]*?)<\/div>/)[1];
+  assert.match(cta, /btn btn-xl btn-primary" href="welcome\.html"><span aria-hidden="true">🚀<\/span> Try Techlog</);
+  assert.match(cta, /btn btn-xl btn-grey" href="docs\/index\.html"><span aria-hidden="true">📖<\/span> Read the docs</);
+  assert.doesNotMatch(css, /cta-glow|\.hero-cta \.btn-primary/, 'Try Techlog does not glow');
+  assert.match(css, /\.btn-xl\s*\{[^}]*font-size:\s*var\(--fs-2xl\)/);
+});
+
+test('landing: eight items from four systems start scattered with tangled links and end as one looped lifecycle', () => {
+  const sc = html.slice(html.indexOf('id="scatter"'), html.indexOf('assets/js/scatter.js'));
+  assert.equal((sc.match(/class="sc-card /g) ?? []).length, 10, 'eight steps and two AI agents');
+  for (const sys of ['sc-slack', 'sc-github', 'sc-atlassian', 'sc-pagerduty']) assert.ok(sc.includes(sys), sys);
+  for (const w of ['Slack', 'GitHub', 'Jira', 'Confluence', 'PagerDuty']) assert.ok(sc.includes(w), w);
+  const stages = [...sc.matchAll(/class="sc-step">([^<]*)</g)].map((m) => m[1]);
+  assert.deepEqual(stages, ['1 · Problem', '2 · Decision', '3 · Change', '4 · Release', '5 · Incident', '6 · Rollback', '7 · Postmortem', '8 · Corrective action']);
+  assert.match(sc, /<strong>Humans<\/strong>/);
+  assert.match(sc, /<strong>AI agents<\/strong>[^<]*MCP/);
+  for (let n = 1; n <= 10; n++) assert.match(css, new RegExp(`\\.sc-card:nth-child\\(${n}\\) \\{[^}]*--sx:[^}]*--cx:[^}]*--cy:`), `card ${n} has both positions`);
+  assert.match(css, /\.sc-chaos \{[^}]*stroke-dasharray/);
+  assert.match(css, /\.sc-loop \{[^}]*animation:\s*sc-flow/);
+});
+
+test('landing: the Techlog robot is one element in the centre of both states, grey and glowing at first, and Replay appears top right', () => {
+  const sc = html.slice(html.indexOf('id="scatter"'), html.indexOf('assets/js/scatter.js'));
+  assert.doesNotMatch(sc, /sc-progress|sc-range|sc-end|type="range"/, 'no slide control below');
+  assert.match(sc, /id="sc-caption" aria-live="polite">Legacy Changelog<\/p>/);
+  assert.equal((sc.match(/logo\.svg/g) ?? []).length, 1, 'a single Techlog robot, used for both states');
+  assert.doesNotMatch(sc, /sc-hub/, 'no second robot for the after state');
+  const stage = sc.slice(sc.indexOf('class="sc-stage"'));
+  assert.match(stage, /^class="sc-stage">\s*<button type="button" class="sc-go" id="sc-go" aria-label="Connect Techlog" title="[^"]*"><span class="sc-go-disc"><img src="assets\/img\/logo\.svg"[^>]*><\/span><span class="sc-go-name">Techlog<\/span><\/button>/);
+  assert.match(sc, /id="sc-replay" hidden>↺ Replay<\/button>/, 'Replay is in the top bar and hidden at first');
+  assert.match(css, /\.sc-go \{[^}]*position:\s*absolute;\s*left:\s*50%;\s*top:\s*50%;[^}]*transform:\s*translate\(-50%, -50%\)/, 'the centre of the stage');
+  assert.match(css, /\.sc-go-disc \{[^}]*width:\s*4\.75rem;[^}]*height:\s*4\.75rem[^}]*border-radius:\s*50%[^}]*animation:\s*sc-ask 1\.8s ease-in-out infinite/, 'round, and the disc itself pulses');
+  assert.match(css, /\.sc-go img \{[^}]*filter:\s*grayscale\(1\)/, 'the grey filter is on the picture, so it does not grey the glow');
+  assert.match(css, /\.sc-go\.is-on \.sc-go-disc \{[^}]*border-color:\s*var\(--primary\)[^}]*animation:\s*none/, 'green and calm once connected');
+  assert.match(css, /@keyframes sc-ask[^\n]*box-shadow: 0 0 0 0 transparent[^\n]*box-shadow: 0 0 30px 9px/, 'glows in and out');
+  assert.match(css, /prefers-reduced-motion: reduce\) \{ \.sc-go:not\(\.is-on\) \.sc-go-disc \{ animation: sc-ask[^}]*!important/, 'the glow also plays when base.css turns animations off');
+  const js = readFileSync('src/assets/js/scatter.js', 'utf8');
+  assert.match(js, /go\.addEventListener\('click', function \(\) \{ animateTo\(1, DURATION\); \}\)/);
+  assert.match(js, /replay\.addEventListener\('click', function \(\) \{ animateTo\(0, DURATION\); \}\)/);
+  assert.match(js, /replay\.hidden = p < 0\.9/);
+  assert.match(js, /go\.classList\.toggle\('is-on', ring\)/, 'the robot only changes colour');
+  assert.doesNotMatch(js, /go\.style\.(display|opacity|left|top|transform)/, 'the robot never moves, hides, or fades');
+  assert.match(js, /'Legacy Changelog'/);
+  assert.match(js, /DURATION = 300/, 'every change takes 300 ms');
+  assert.doesNotMatch(js, /IntersectionObserver|WAIT|setTimeout|addEventListener\('input'/, 'no timer and no slider: the button drives the change');
+  assert.match(js, /Fade, not fly/);
+  assert.match(js, /style\.opacity = fade/, 'cards fade between the two layouts');
+  assert.doesNotMatch(js, /prefers-reduced-motion|\breduce\b/, 'the fade plays even with reduced motion');
+  assert.match(js, /\(i \+ 1\) % ringPts\.length/, 'the last item links back to the first, closing the loop');
+});
+
+test('landing: no card of the legacy pane covers the Techlog robot in the centre', () => {
+  const rule = (src, n) => new RegExp(`\\.sc-card:nth-child\\(${n}\\) \\{[^}]*\\}`).exec(src)?.[0] ?? '';
+  const [base, media] = css.split('@media (max-width: 700px)');
+  for (const phone of [false, true]) {
+    const robot = phone ? { halfW: 7, halfH: 6 } : { halfW: 4, halfH: 17 }; // the robot with its caption, in % of the stage
+    const width = phone ? { card: 38, agent: 20 } : { card: 19, agent: 15 };
+    const halfH = phone ? 12 : 10;
+    for (let n = 1; n <= 10; n++) {
+      const src = (phone && /--sx/.test(rule(media, n))) ? rule(media, n) : rule(base, n);
+      const sx = Number(/--sx:\s*([\d.]+)/.exec(src)[1]);
+      const sy = Number(/--sy:\s*([\d.]+)/.exec(src)[1]);
+      const halfW = (n > 8 ? width.agent : width.card) / 2;
+      assert.ok(!(Math.abs(sx - 50) < halfW + robot.halfW && Math.abs(sy - 50) < halfH + robot.halfH), `${phone ? 'phone' : 'desktop'}: card ${n} covers the robot`);
+    }
+  }
+});
+
+test('landing: layout does not jump between legacy and Techlog', () => {
+  assert.match(css, /\.sc-stage \{[^}]*height:\s*18\.7rem/, 'fixed stage height');
+  assert.match(css, /@media \(max-width: 700px\) \{[\s\S]*?\.sc-stage \{ height: 25rem; \}/, 'fixed stage height on a phone');
+  assert.match(css, /\.sc-head \{[^}]*min-height:\s*2\.75rem/, 'the top bar keeps its height with or without Replay');
+  assert.doesNotMatch(css.match(/\.sc-head \{[^}]*\}/)[0], /flex-wrap:\s*wrap/, 'the top bar never wraps');
+  assert.match(css, /\.sc-caption \{[^}]*white-space:\s*nowrap/);
+});
+
+test('landing: in the after state Techlog is connected to the two agents only, not to the steps', () => {
+  const js = readFileSync('src/assets/js/scatter.js', 'utf8');
+  assert.doesNotMatch(js, /hubspoke|hubSpoke/i);
+  assert.doesNotMatch(css, /hubspoke/i);
+  assert.match(js, /agents\.forEach\(function \(ag, i\) \{\s*var a = loopPts\[cards\.length \+ i\];/, 'a link per agent');
+  assert.doesNotMatch(js, /centre\[0\]\)[^\n]*\n[^\n]*cards\.forEach|ringPts\.forEach[\s\S]{0,900}centre\[/, 'no link from the centre to a step');
+});
+
+test('landing: before, Claude opens a PR and Codex writes the postmortem', () => {
+  const sc = html.slice(html.indexOf('id="scatter"'), html.indexOf('assets/js/scatter.js'));
+  assert.match(sc, /sc-agent sc-a1" data-before="Opens PR #482"[^>]*>[\s\S]*?<strong>Claude<\/strong><span class="sc-sub">Opens PR #482</);
+  assert.match(sc, /sc-agent sc-a2" data-before="Writes the postmortem"[^>]*>[\s\S]*?<strong>Codex<\/strong><span class="sc-sub">Writes the postmortem</);
+  assert.match(sc, /data-after="Steps 1, 2, 7, 8"/);
+  assert.match(sc, /data-after="Steps 3, 4, 5, 6"/);
+  assert.doesNotMatch(html, /Control plane/i, 'the agent blocks do not say Control plane');
+  const js = readFileSync('src/assets/js/scatter.js', 'utf8');
+  assert.match(js, /\{ agent: 0, step: 2, label: 'opens PR' \}/);
+  assert.match(js, /\{ agent: 1, step: 6, label: 'writes postmortem' \}/);
+});
+
+// positions of the steps and agents, read from the CSS: the base layout and the phone layout
+function layout(phone) {
+  const pos = {};
+  const grab = (src) => { for (const m of src.matchAll(/\.sc-card:nth-child\((\d+)\) \{([^}]*)\}/g)) { const cx = /--cx:\s*([\d.]+)/.exec(m[2]); const cy = /--cy:\s*([\d.]+)/.exec(m[2]); if (cx && cy) pos[m[1]] = [Number(cx[1]), Number(cy[1])]; } };
+  const [base, media] = css.split('@media (max-width: 700px)');
+  grab(base);
+  if (phone) grab(media);
+  return pos;
+}
+const cross = (a, b, c, d) => {
+  const o = (p, q, r) => Math.sign((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]));
+  return o(a, b, c) !== o(a, b, d) && o(c, d, a) !== o(c, d, b);
+};
+
+test('landing: after, two agents in the centre each control their own steps, with no shared step and no crossing links', () => {
+  const OWNER = [0, 0, 1, 1, 1, 1, 0, 0];
+  const js = readFileSync('src/assets/js/scatter.js', 'utf8');
+  assert.match(js, /OWNER = \[0, 0, 1, 1, 1, 1, 0, 0\]/);
+  for (const phone of [false, true]) {
+    const pos = layout(phone);
+    const links = OWNER.map((o, i) => ({ agent: o, from: pos[9 + o], to: pos[1 + i] }));
+    assert.deepEqual([0, 1].map((a) => links.filter((l) => l.agent === a).length), [4, 4], 'four steps each; no step is shared');
+    for (let i = 0; i < links.length; i++) for (let j = i + 1; j < links.length; j++) {
+      if (links[i].agent === links[j].agent) continue; // the same agent may fan out from one point
+      assert.ok(!cross(links[i].from, links[i].to, links[j].from, links[j].to), `${phone ? 'phone' : 'desktop'}: link ${i + 1} crosses link ${j + 1}`);
+    }
+    const left = pos[9][0] < pos[10][0] || pos[9][1] < pos[10][1];
+    assert.ok(left, 'Claude is left of, or above, Codex');
+  }
+  assert.match(js, /sc-spoke-' \+ OWNER\[i\]/);
+  assert.match(css, /\.sc-spoke-1 \{ stroke: var\(--info\)/);
+  assert.match(css, /\.sc-card:nth-child\(9\) \{[^}]*--cx:\s*33;\s*--cy:\s*58;/);
+  assert.match(css, /\.sc-card:nth-child\(10\) \{[^}]*--cx:\s*67;\s*--cy:\s*42;/);
+});
+
+test('landing: both agents connect to the robot in the centre, and the robot does not move between the states', () => {
+  const js = readFileSync('src/assets/js/scatter.js', 'utf8');
+  assert.match(js, /sc-hublink sc-hublink-/);
+  assert.match(js, /hubLinks\[i\]\.setAttribute\('x2', centre\[0\]\)/);
+  assert.match(css, /\.sc-hublink-1 \{ stroke: var\(--info\)/);
+  for (const phone of [false, true]) {
+    const pos = layout(phone);
+    assert.ok(Math.abs(pos[9][0] - 50) + Math.abs(pos[10][0] - 50) + Math.abs(pos[9][1] - 50) + Math.abs(pos[10][1] - 50) > 0, 'the agents are beside the robot, not on it');
+  }
+  assert.doesNotMatch(css.match(/\.sc-go \{[^}]*\}/)[0], /left:\s*0/, 'not in a corner any more');
+});
+
+test('landing: the after pane has a light green background that fades in and out with the change', () => {
+  assert.match(css, /\.scatter \{[^}]*--tint:\s*0;[^}]*background:\s*color-mix\(in srgb, var\(--primary\) calc\(var\(--tint\) \* 9%\), var\(--bg-1\)\)/, 'light green: 9% of the primary colour');
+  const js = readFileSync('src/assets/js/scatter.js', 'utf8');
+  assert.match(js, /root\.style\.setProperty\('--tint', smooth\(0\.5, 1, p\)/, 'driven by the same progress as the fade, so it also plays with reduced motion');
+});
+
+test('lifecycle: the chain has no text after the diagram, and every block has a question mark with a tooltip', () => {
+  const lc = readFileSync('.test-out/landing/docs/lifecycle.html', 'utf8');
+  const chain = lc.slice(lc.indexOf('id="chain"'), lc.indexOf('id="stages"'));
+  const afterDiagram = chain.slice(chain.indexOf('</section>\n</div>') + '</section>\n</div>'.length);
+  assert.doesNotMatch(afterDiagram, /<p>/, 'no paragraph after the diagram');
+  assert.doesNotMatch(chain, /The incident links to the release it was observed after/);
+  assert.doesNotMatch(lc, /Where a corrective action re-enters|Corrective action outcome/, 'the outcomes table is gone');
+  assert.doesNotMatch(chain, /<table|<caption/, 'nothing but the diagram in the chain');
+  const steps = [...chain.matchAll(/<li>([A-Za-z ]+)<button type="button" class="tip" aria-label="About ([A-Za-z ]+)" aria-describedby="(tip-[a-z-]+)">\?<\/button><span class="tip-text" role="tooltip" id="\3"><code>([a-z.]+)<\/code>([^<]+)<\/span><\/li>/g)];
+  assert.deepEqual(steps.map((m) => m[1]), ['Problem', 'Proposal', 'Decision', 'Implementation', 'Verification', 'Release', 'Incident', 'Mitigation', 'Rollback', 'Postmortem', 'Corrective action']);
+  for (const m of steps) { assert.equal(m[1], m[2]); assert.ok(m[5].length > 20 && m[5].length < 170, `${m[1]}: a short explanation`); }
+  const components = readFileSync('src/assets/css/components.css', 'utf8');
+  assert.match(components, /\.tip:hover \+ \.tip-text, \.tip:focus-visible \+ \.tip-text \{[^}]*visibility:\s*visible/, 'shown on hover and on keyboard focus');
+  assert.match(components, /\.tip-text \{[^}]*visibility:\s*hidden/);
+});
+
+test('landing: the status labels sit above the demo, not below it', () => {
+  const labels = html.indexOf('class="trust-strip"');
+  assert.ok(labels > 0);
+  assert.ok(labels < html.indexOf('id="scatter"'), 'above the demo');
+  assert.ok(labels > html.indexOf('class="hero-row"'), 'under the lead');
+  const below = html.slice(html.indexOf('class="hero-cta"'), html.indexOf('id="how"'));
+  assert.doesNotMatch(below, /badge/, 'no labels left below the demo');
+  for (const w of ['Proposed standard · draft 0.1', 'Fictional, simulated data', 'Local server runs', 'No hosted service yet']) assert.ok(html.includes(w), w);
+  assert.match(css, /\.trust-strip \{[^}]*justify-content:\s*center/);
+});
+
+test('welcome: the heading breaks after "Welcome."', () => {
+  assert.match(welcome, /<h1[^>]*>Welcome\.<br> We're glad you're here\.<\/h1>/);
+});
+
+test('every "Try Techlog" link on every page leads to the same URL, without a fragment', () => {
+  const pages = ['index.html', 'welcome.html', 'docs/index.html', 'docs/lifecycle.html', 'docs/getting-started.html', 'docs/mcp.html'];
+  const urls = new Set();
+  let count = 0;
+  for (const page of pages) {
+    const src = readFileSync(`.test-out/landing/${page}`, 'utf8');
+    for (const m of src.matchAll(/<a [^>]*href="([^"]*)"[^>]*>(?:<span[^>]*>[^<]*<\/span>)?\s*Try Techlog<\/a>/g)) {
+      count++;
+      const depth = page.split('/').length - 1;
+      urls.add(m[1].replace(/^(\.\.\/)+/, ''));
+      assert.ok(!m[1].includes('#'), `${page}: ${m[1]} has a fragment`);
+      assert.equal(m[1], '../'.repeat(depth) + 'welcome.html', `${page}: ${m[1]}`);
+    }
+  }
+  assert.ok(count >= 5, `found ${count} Try Techlog links (header on every page, and two on the home page)`);
+  assert.deepEqual([...urls], ['welcome.html']);
 });

@@ -14,7 +14,7 @@ nav: Lifecycle model
 <div class="cycle" role="group" aria-label="The lifecycle chain: software engineering, then reliability engineering, then back to software engineering">
   <section class="cycle-zone cycle-dev" aria-labelledby="cycle-dev-t">
     <p class="cycle-title" id="cycle-dev-t">Software engineering</p>
-    <ol class="cycle-steps"><li>Problem</li><li>Proposal</li><li>Decision</li><li>Implementation</li><li>Verification</li><li>Release</li></ol>
+    <ol class="cycle-steps"><li>Problem<button type="button" class="tip" aria-label="About Problem" aria-describedby="tip-problem">?</button><span class="tip-text" role="tooltip" id="tip-problem"><code>problem.reported</code>A need, defect, or request. Usually where a story starts.</span></li><li>Proposal<button type="button" class="tip" aria-label="About Proposal" aria-describedby="tip-proposal">?</button><span class="tip-text" role="tooltip" id="tip-proposal"><code>proposal.recorded</code>A proposed solution and its alternatives, including the rejected ones.</span></li><li>Decision<button type="button" class="tip" aria-label="About Decision" aria-describedby="tip-decision">?</button><span class="tip-text" role="tooltip" id="tip-decision"><code>decision.made</code>What was decided, on what terms, and who owns the call.</span></li><li>Implementation<button type="button" class="tip" aria-label="About Implementation" aria-describedby="tip-implementation">?</button><span class="tip-text" role="tooltip" id="tip-implementation"><code>change.implemented</code>The change itself, tied to the reasons it exists.</span></li><li>Verification<button type="button" class="tip" aria-label="About Verification" aria-describedby="tip-verification">?</button><span class="tip-text" role="tooltip" id="tip-verification"><code>verification.completed</code>Tests and checks, with the report as evidence.</span></li><li>Release<button type="button" class="tip" aria-label="About Release" aria-describedby="tip-release">?</button><span class="tip-text" role="tooltip" id="tip-release"><code>release.deployed</code>A version reaching production: the moment a change can affect users.</span></li></ol>
   </section>
   <div class="cycle-links">
     <p class="cycle-link cycle-up"><strong>▲ Corrective action → the whole of software engineering</strong><span>The outcome re-enters at any stage, from Problem to Release.</span></p>
@@ -22,22 +22,9 @@ nav: Lifecycle model
   </div>
   <section class="cycle-zone cycle-rel" aria-labelledby="cycle-rel-t">
     <p class="cycle-title" id="cycle-rel-t">Reliability engineering</p>
-    <ol class="cycle-steps cycle-back"><li>Incident</li><li>Mitigation</li><li>Rollback</li><li>Postmortem</li><li>Corrective action</li></ol>
+    <ol class="cycle-steps cycle-back"><li>Incident<button type="button" class="tip" aria-label="About Incident" aria-describedby="tip-incident">?</button><span class="tip-text" role="tooltip" id="tip-incident"><code>incident.opened</code>Something broke. Linked to the release it followed, and to the change suspected of causing it.</span></li><li>Mitigation<button type="button" class="tip" aria-label="About Mitigation" aria-describedby="tip-mitigation">?</button><span class="tip-text" role="tooltip" id="tip-mitigation"><code>mitigation.applied</code>A temporary measure that reduces impact, such as a feature flag.</span></li><li>Rollback<button type="button" class="tip" aria-label="About Rollback" aria-describedby="tip-rollback">?</button><span class="tip-text" role="tooltip" id="tip-rollback"><code>rollback.executed</code>A release reverted, then recovery checked.</span></li><li>Postmortem<button type="button" class="tip" aria-label="About Postmortem" aria-describedby="tip-postmortem">?</button><span class="tip-text" role="tooltip" id="tip-postmortem"><code>postmortem.published</code>The review of an incident, so the team learns from it.</span></li><li>Corrective action<button type="button" class="tip" aria-label="About Corrective action" aria-describedby="tip-corrective-action">?</button><span class="tip-text" role="tooltip" id="tip-corrective-action"><code>action.tracked</code>What will be done so it does not recur. It feeds the whole of software engineering, and its outcome decides where it re-enters.</span></li></ol>
   </section>
 </div>
-<p>The incident links to the release it was observed after, and can also point to the change suspected of causing it. A corrective action is not tied to one stage: it feeds the whole of software engineering, and its outcome decides where it re-enters. Most outcomes send work back into a development stage, so the next release does not repeat the failure.</p>
-<div class="table-wrap"><table>
-<thead><tr><th>Corrective action outcome</th><th>Re-enters at</th><th>Event recorded</th></tr></thead>
-<tbody>
-<tr><td>A new problem to fix later</td><td><strong>Problem</strong></td><td><code>problem.reported</code></td></tr>
-<tr><td>A design change</td><td><strong>Proposal</strong></td><td><code>proposal.recorded</code></td></tr>
-<tr><td>A new rule or approval step</td><td><strong>Decision</strong></td><td><code>decision.made</code></td></tr>
-<tr><td>A code fix or hardening</td><td><strong>Implementation</strong></td><td><code>change.implemented</code></td></tr>
-<tr><td>A new test or check</td><td><strong>Verification</strong></td><td><code>verification.completed</code></td></tr>
-<tr><td>A safer rollout, such as a canary or a gate</td><td><strong>Release</strong></td><td><code>release.deployed</code></td></tr>
-<tr><td>An accepted risk</td><td>No stage</td><td><code>action.tracked</code> closes the action, and the story ends</td></tr>
-</tbody>
-</table></div>
 
 <h2 id="stages">Stages</h2>
 <div class="table-wrap"><table>
@@ -56,6 +43,15 @@ nav: Lifecycle model
 <tr><td><strong>Corrective action</strong></td><td><code>action.tracked</code></td><td>A person, tracked until a verified outcome</td><td>Records what will be done so the problem does not recur, and whether it was done. Link: <code>follows_up</code> the incident or problem. It stops the next release from repeating the failure.</td></tr>
 </tbody>
 </table></div>
+
+<h2 id="confirm-hypothesis">Confirm hypothesis</h2>
+<p>An agent can see a connection before anyone can prove it. Techlog records the guess honestly, and specific actions confirm it.</p>
+<ol class="confirm" aria-label="From hypothesis to confirmed">
+  <li class="confirm-guess"><span class="confirm-icon" aria-hidden="true">🤔</span><strong>Guess</strong><span>An agent links an incident to a change as a <span class="badge badge-hypothesis">hypothesis</span>.</span></li>
+  <li><span class="confirm-icon" aria-hidden="true">🔎</span><strong>Act</strong><span>Replay traffic, read a trace, inspect the code.</span></li>
+  <li class="confirm-ok"><span class="confirm-icon" aria-hidden="true">✅</span><strong>Confirm</strong><span>An investigation links it again as <span class="badge badge-confirmed">confirmed</span>, with evidence.</span></li>
+  <li><span class="confirm-icon" aria-hidden="true">🛠️</span><strong>Fix</strong><span>The corrective action follows up the incident.</span></li>
+</ol>
 
 <h2 id="rules">Rules of thumb</h2>
 <ul>

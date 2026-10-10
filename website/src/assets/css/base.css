@@ -1,5 +1,5 @@
 *, *::before, *::after { box-sizing: border-box; }
-html { color-scheme: light; -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 72px; }
+html { font-size: 105%; color-scheme: light; -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 72px; }
 body { margin: 0; background: var(--bg-0); color: var(--text-1); font: var(--fs-md)/1.65 var(--font-sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; padding-top: var(--header-h-full); }
 h1, h2, h3, h4 { color: var(--text-0); line-height: 1.2; margin: 0 0 var(--s-4); letter-spacing: -.02em; font-weight: 800; }
 h1 { font-size: var(--fs-4xl); font-weight: 850; letter-spacing: -.03em; } h2 { font-size: var(--fs-2xl); } h3 { font-size: var(--fs-xl); font-weight: 750; } h4 { font-size: var(--fs-lg); font-weight: 750; }

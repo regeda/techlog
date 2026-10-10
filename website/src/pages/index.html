@@ -1,28 +1,50 @@
 ---
-title: Forget pull requests
+title: Forget Code Reviews
 description: Let AI write the code and keep the progress in Techlog. Reviews stop being the bottleneck because every change carries its reasons and evidence. A proposed open standard.
 ---
 <section class="hero" id="top">
   <div class="grid-bg" aria-hidden="true"></div>
   <div class="container">
-    <h1>Forget Pull Requests. <span class="shout">Focus on Engineering Progress.</span></h1>
+    <h1><span class="shout">Connect context across</span><span class="shout">🤖 agents and 💬 sessions.</span></h1>
     <div class="hero-row">
-      <p class="lead">Long reviews and endless discussions are the bottleneck. Do your work with AI, bring the progress to Techlog, and let every change explain itself.</p>
-      <div class="btn-row">
-        <a class="btn btn-primary" href="{{root}}welcome.html">Try Techlog</a>
-        <a class="btn btn-grey" href="{{root}}docs/index.html">Read the docs</a>
-      </div>
+      <p class="lead">Your AI agent records the problem, the decision, the change, the tests, and the incident in Techlog as it works. Reviews get shorter, incidents get mitigated faster, and every postmortem ends in action.</p>
     </div>
-    <div class="cs dm" id="demo" role="region" aria-label="Techlog walkthrough, simulated. Use Prev and Next to step through."></div>
-    {{json-script demo-data demo-steps.json}}
-    <noscript><p class="callout callout-note">The walkthrough needs JavaScript. The same story is described in the <a href="{{root}}docs/lifecycle.html">lifecycle documentation</a>.</p></noscript>
-    <script src="{{root}}assets/js/demo-core.js"></script>
-    <script src="{{root}}assets/js/demo.js"></script>
     <div class="trust-strip">
       <span class="badge badge-proposed">Proposed standard · draft 0.1</span>
       <span class="badge badge-simulated">Fictional, simulated data</span>
       <span class="badge badge-exists">Local server runs</span>
       <span class="badge badge-future">No hosted service yet</span>
+    </div>
+    <div class="scatter" id="scatter">
+      <div class="sc-head">
+        <p class="sc-caption" id="sc-caption" aria-live="polite">Legacy Changelog</p>
+        <button type="button" class="sc-replay" id="sc-replay" hidden>↺ Replay</button>
+      </div>
+      <div class="sc-stage">
+        <button type="button" class="sc-go" id="sc-go" aria-label="Connect Techlog" title="Not connected. Press to connect."><span class="sc-go-disc"><img src="{{root}}assets/img/logo.svg" alt="" width="76" height="76"></span><span class="sc-go-name">Techlog</span></button>
+        <svg class="sc-lines" aria-hidden="true"></svg>
+        <ul class="sc-cards" aria-label="One story, kept in Atlassian, PagerDuty, Slack, and GitHub">
+          <li class="sc-card sc-slack"><em class="sc-step">1 · Problem</em><span class="sc-sys">💬 Slack</span><strong>“Why a 20% cap?”</strong></li>
+          <li class="sc-card sc-atlassian"><em class="sc-step">2 · Decision</em><span class="sc-sys">🎫 Jira</span><strong>SPIN-214 · cap approved</strong></li>
+          <li class="sc-card sc-github"><em class="sc-step">3 · Change</em><span class="sc-sys">🔀 GitHub</span><strong>PR #482 · spin-to-win</strong></li>
+          <li class="sc-card sc-github"><em class="sc-step">4 · Release</em><span class="sc-sys">🚀 GitHub</span><strong>Release 3.8.0 · canary</strong></li>
+          <li class="sc-card sc-pagerduty"><em class="sc-step">5 · Incident</em><span class="sc-sys">🚨 PagerDuty</span><strong>P1 · 5xx at 6.2%</strong></li>
+          <li class="sc-card sc-slack"><em class="sc-step">6 · Rollback</em><span class="sc-sys">💬 Slack</span><strong>“Rolling back, I think?”</strong></li>
+          <li class="sc-card sc-atlassian"><em class="sc-step">7 · Postmortem</em><span class="sc-sys">📄 Confluence</span><strong>Postmortem 2026-03-12</strong></li>
+          <li class="sc-card sc-atlassian"><em class="sc-step">8 · Corrective action</em><span class="sc-sys">🎫 Jira</span><strong>OPS-731 · 6 actions</strong></li>
+          <li class="sc-card sc-agent sc-a1" data-before="Opens PR #482" data-after="Steps 1, 2, 7, 8"><span class="sc-sys">🤖 AI agent</span><strong>Claude</strong><span class="sc-sub">Opens PR #482</span></li>
+          <li class="sc-card sc-agent sc-a2" data-before="Writes the postmortem" data-after="Steps 3, 4, 5, 6"><span class="sc-sys">🤖 AI agent</span><strong>Codex</strong><span class="sc-sub">Writes the postmortem</span></li>
+        </ul>
+      </div>
+      <div class="sc-nav">
+        <p class="sc-who"><span aria-hidden="true">👤</span><span><strong>Humans</strong> open one story and click from problem to decision, change, release, incident, and postmortem.</span></p>
+        <p class="sc-who"><span aria-hidden="true">🤖</span><span><strong>AI agents</strong> ask over MCP and get the same linked context, not five tabs.</span></p>
+      </div>
+    </div>
+    <script src="{{root}}assets/js/scatter.js"></script>
+    <div class="hero-cta">
+      <a class="btn btn-xl btn-primary" href="{{root}}welcome.html"><span aria-hidden="true">🚀</span> Try Techlog</a>
+      <a class="btn btn-xl btn-grey" href="{{root}}docs/index.html"><span aria-hidden="true">📖</span> Read the docs</a>
     </div>
   </div>
 </section>
@@ -35,10 +57,10 @@ description: Let AI write the code and keep the progress in Techlog. Reviews sto
       <p class="lead">API first: every step is a call, and the website is just another client.</p>
     </div>
     <ol class="pipe" aria-label="Pipeline">
-      <li><span class="pipe-n">1</span><h3>Agent sends</h3><p>An MCP request: <code>techlog_record_event</code>.</p></li>
-      <li><span class="pipe-n">2</span><h3>Techlog reviews</h3><p>Checks the event against the schema and its evidence.</p></li>
-      <li><span class="pipe-n">3</span><h3>Finds connections</h3><p>Links it to the problem, decision, tests, and release.</p></li>
-      <li><span class="pipe-n">4</span><h3>Stores, serves</h3><p>One event store, read by API, MCP, and the UI.</p></li>
+      <li><span class="pipe-n">1</span><h3>Agents confirm</h3><p>Agents help convert hypotheses into confirmed facts, with evidence.</p></li>
+      <li><span class="pipe-n">2</span><h3>Changelog records</h3><p>Each step is one record, sent as an MCP request: <code>techlog_record_event</code>.</p></li>
+      <li><span class="pipe-n">3</span><h3>Build connections</h3><p>Links the record to the problem, decision, tests, and release.</p></li>
+      <li><span class="pipe-n">4</span><h3>Store, serve</h3><p>One event store, read by API, MCP, and the UI.</p></li>
     </ol>
     <div class="how-text">
       <span class="badge badge-proposed">Open standard · draft 0.1</span>
@@ -82,6 +104,19 @@ description: Let AI write the code and keep the progress in Techlog. Reviews sto
       <a class="btn btn-secondary" href="{{root}}welcome.html#design-partner">Ask for a connector</a>
       <a class="btn btn-ghost" href="{{root}}docs/mcp.html">Build your own →</a>
     </div>
-    <p class="muted market-note">GitHub, Slack, Atlassian, Jira, and Confluence are trademarks of their owners, named only to show what a connector would link to. No partnership or availability is implied.</p>
+    <p class="muted market-note">GitHub, Slack, Atlassian, Jira, Confluence, and PagerDuty are trademarks of their owners, named only to show what a connector would link to or what teams use today. No partnership or availability is implied.</p>
+  </div>
+</section>
+
+<section class="section final-cta" id="start">
+  <div class="container">
+    <div class="section-head">
+      <h2>Run it on your machine today.</h2>
+      <p class="lead">A basic Techlog server runs locally with the example story loaded. Or read how the event model works first.</p>
+    </div>
+    <div class="btn-row">
+      <a class="btn btn-primary" href="{{root}}welcome.html">Try Techlog</a>
+      <a class="btn btn-grey" href="{{root}}docs/index.html">Read the docs</a>
+    </div>
   </div>
 </section>
