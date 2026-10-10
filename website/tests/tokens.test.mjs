@@ -31,9 +31,9 @@ const ratio = (a, c) => {
 };
 const hex = /^#[0-9a-fA-F]{6}$/;
 
-test('page theme is light Windows-95 silver; the terminal scope is dark', () => {
+test('page theme is the light grey of the Techlog UI; the terminal scope is dark', () => {
   assert.ok(light, 'root tokens exist');
-  assert.equal(light['bg-0'].toLowerCase(), '#c0c0c0', 'page background is Win95 silver');
+  assert.equal(light['bg-0'].toLowerCase(), '#fafaf8', 'page background is the light grey of the Techlog UI');
   assert.ok(dark, 'a dark scope exists for the console and code blocks (.cs, .codeblock, pre.mermaid)');
   assert.ok(lum(dark['bg-0']) < 0.05 && lum(dark['bg-1']) < 0.05, 'dark scope backgrounds are dark');
 });

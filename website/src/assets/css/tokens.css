@@ -1,6 +1,6 @@
 :root {
-  /* Light "Windows 95" silver page; panels step lighter */
-  --bg-0: #c0c0c0; --bg-1: #d6d6d6; --bg-2: #e4e4e4; --bg-3: #f2f2f2;
+  /* Light page, as in the Techlog UI (#fafaf8); cards are white, wells step darker */
+  --bg-0: #fafaf8; --bg-1: #ffffff; --bg-2: #f1f1ee; --bg-3: #e8e8e4;
   --line: #8a8a8a; --line-strong: #4d4d4d;
   --text-0: #000000; --text-1: #1f1f1f; --text-2: #474747;
   --accent: #00514a; --accent-hover: #003833; --accent-ink: #ffffff; --accent-dim: rgba(0, 81, 74, .12);

@@ -10,18 +10,34 @@ nav: Lifecycle model
 <div class="page-meta"><span class="badge badge-proposed">Proposed · draft 0.1</span><span class="badge badge-simulated">Illustrative examples</span></div>
 
 <h2 id="chain">The chain</h2>
-<p>A change usually travels from a problem to a corrective action. Each stage is recorded as one or more events, and each event links back to the one before it. A stage can be skipped (a hotfix may have no proposal), and a story can loop (an incident may lead to a new change).</p>
-<pre class="mermaid">flowchart LR
-  subgraph BUILD[Build and ship]
-    direction TB
-    P[Problem] --> PR[Proposal] --> D[Decision] --> I[Implementation] --> V[Verification] --> R[Release]
-  end
-  subgraph RUN[Run and learn]
-    direction TB
-    INC[Incident] --> M[Mitigation] --> RB[Rollback] --> PM[Postmortem] --> CA[Corrective action]
-  end
-  BUILD == release reaches production ==> RUN</pre>
-<p>Two loops close the circle. An incident can point back to the implementation that is suspected of causing it, and a corrective action can prevent the next release from repeating the failure.</p>
+<p>A change usually travels from a problem to a corrective action, and the corrective action feeds the next change. The chain has two halves. <strong>Software engineering</strong> takes an idea from a problem to a release. <strong>Reliability engineering</strong> starts when a release breaks something and ends with a corrective action. Each stage is recorded as one or more events, and each event links back to the one before it. A stage can be skipped (a hotfix may have no proposal).</p>
+<div class="cycle" role="group" aria-label="The lifecycle chain: software engineering, then reliability engineering, then back to software engineering">
+  <section class="cycle-zone cycle-dev" aria-labelledby="cycle-dev-t">
+    <p class="cycle-title" id="cycle-dev-t">Software engineering</p>
+    <ol class="cycle-steps"><li>Problem</li><li>Proposal</li><li>Decision</li><li>Implementation</li><li>Verification</li><li>Release</li></ol>
+  </section>
+  <div class="cycle-links">
+    <span class="cycle-link cycle-up">▲ Corrective action outcomes re-enter software engineering</span>
+    <span class="cycle-link cycle-down">A release reaches production ▼</span>
+  </div>
+  <section class="cycle-zone cycle-rel" aria-labelledby="cycle-rel-t">
+    <p class="cycle-title" id="cycle-rel-t">Reliability engineering</p>
+    <ol class="cycle-steps cycle-back"><li>Incident</li><li>Mitigation</li><li>Rollback</li><li>Postmortem</li><li>Corrective action</li></ol>
+  </section>
+</div>
+<p>An incident can also point back to the implementation that is suspected of causing it. What a corrective action leads to depends on its outcome. Most outcomes send work back into a development stage, so the next release does not repeat the failure.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Corrective action outcome</th><th>Re-enters at</th><th>Event recorded</th></tr></thead>
+<tbody>
+<tr><td>A new problem to fix later</td><td><strong>Problem</strong></td><td><code>problem.reported</code></td></tr>
+<tr><td>A design change</td><td><strong>Proposal</strong></td><td><code>proposal.recorded</code></td></tr>
+<tr><td>A new rule or approval step</td><td><strong>Decision</strong></td><td><code>decision.made</code></td></tr>
+<tr><td>A code fix or hardening</td><td><strong>Implementation</strong></td><td><code>change.implemented</code></td></tr>
+<tr><td>A new test or check</td><td><strong>Verification</strong></td><td><code>verification.completed</code></td></tr>
+<tr><td>A safer rollout, such as a canary or a gate</td><td><strong>Release</strong></td><td><code>release.deployed</code></td></tr>
+<tr><td>An accepted risk</td><td>No stage</td><td><code>action.tracked</code> closes the action, and the story ends</td></tr>
+</tbody>
+</table></div>
 
 <h2 id="stages">Stages</h2>
 <div class="table-wrap"><table>

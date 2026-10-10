@@ -1,5 +1,5 @@
 /* header / nav: fixed; shrinks while scrolling (class "scrolled" on <html>) */
-.site-header { position: fixed; top: 0; left: 0; right: 0; z-index: 50; background: rgba(192, 192, 192, .95); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.site-header { position: fixed; top: 0; left: 0; right: 0; z-index: 50; background: rgba(250, 250, 248, .95); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
 .site-header .bar { display: flex; align-items: center; gap: var(--s-5); height: var(--header-h-full); transition: height .25s ease; }
 .scrolled .site-header .bar { height: var(--header-h-small); }
 .brand { display: flex; align-items: center; gap: var(--s-3); color: var(--text-0); font-weight: 800; font-size: 1.3rem; text-decoration: none; letter-spacing: -.02em; }
@@ -103,3 +103,22 @@ pre.mermaid { background: var(--bg-1); border: 1px solid var(--line); border-rad
 @media (max-width: 480px) { .footer-grid { grid-template-columns: 1fr; } }
 /* table cells: size columns to their code words instead of breaking identifiers mid-word */
 .table-wrap code { white-space: nowrap; }
+
+/* lifecycle chain: two big, connected blocks */
+.cycle { margin: 0 0 var(--s-5); }
+.cycle-zone { --zone: var(--ok); border: 2px solid var(--zone); border-radius: var(--r-3); padding: var(--s-4) var(--s-5) var(--s-5); background: color-mix(in srgb, var(--zone) 7%, var(--bg-1)); }
+.cycle-rel { --zone: var(--orange); }
+.cycle-title { margin: 0 0 var(--s-4); font: 700 var(--fs-sm)/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--zone); }
+.cycle-steps { --gap: 36px; list-style: none; margin: 0; padding: 0; display: flex; gap: var(--gap); }
+.cycle-back { flex-direction: row-reverse; }
+.cycle-steps li { position: relative; flex: 1 1 0; min-width: 0; text-align: center; padding: var(--s-3) var(--s-2); background: var(--bg-1); border: 1px solid var(--zone); border-radius: var(--r-2); color: var(--text-0); font-weight: 600; font-size: var(--fs-sm); overflow-wrap: anywhere; }
+.cycle-steps li:not(:last-child)::after { content: "→"; position: absolute; top: 50%; right: calc(var(--gap) / -2); transform: translate(50%, -50%); color: var(--zone); font-weight: 800; }
+.cycle-back li:not(:last-child)::after { content: "←"; right: auto; left: calc(var(--gap) / -2); transform: translate(-50%, -50%); }
+.cycle-links { display: flex; justify-content: space-between; gap: var(--s-4); padding: var(--s-3) var(--s-2); font: 600 var(--fs-xs)/1.4 var(--font-mono); }
+.cycle-up { color: var(--ok); }
+.cycle-down { color: var(--orange); text-align: right; margin-left: auto; }
+@media (max-width: 760px) {
+  .cycle-steps, .cycle-back { flex-direction: column; --gap: 28px; }
+  .cycle-steps li:not(:last-child)::after, .cycle-back li:not(:last-child)::after { content: "↓"; top: auto; bottom: calc(var(--gap) / -2); left: 50%; right: auto; transform: translate(-50%, 50%); }
+  .cycle-links { flex-direction: column-reverse; }
+}

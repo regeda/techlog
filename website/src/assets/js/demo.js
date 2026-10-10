@@ -16,7 +16,7 @@
   // ---- skeleton (built once)
   var bar = el('div', 'cs-bar');
   var title = el('div', 'cs-title');
-  title.appendChild(el('strong', null, data.title));
+  title.appendChild(el('strong', null, 'Project: ' + data.title));
   title.appendChild(el('span', null, data.subtitle));
   var dots = el('div', 'dm-dots');
   var dotBtns = data.steps.map(function (s, n) {
@@ -29,7 +29,6 @@
   });
   bar.appendChild(title);
   bar.appendChild(dots);
-  bar.appendChild(el('span', 'badge badge-simulated', 'Simulated example'));
 
   var stage = el('div', 'dm-stage');
   stage.setAttribute('aria-live', 'polite');

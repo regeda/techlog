@@ -13,7 +13,7 @@
 .dm-title { font-size: var(--fs-xl); line-height: 1.25; margin: 0 0 var(--s-1); color: var(--text-0); font-weight: 800; letter-spacing: -.01em; }
 .dm-note { margin: 0; color: var(--text-1); font-size: var(--fs-sm); max-width: 78ch; min-height: 2.8em; }
 
-.dm-panels { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: var(--s-3); padding: var(--s-3) var(--s-5) var(--s-4); }
+.dm-panels { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s-3); padding: var(--s-3) var(--s-5) var(--s-4); }
 .dm-panel { border: 1px solid var(--line); border-radius: var(--r-2); background: var(--bg-0); padding: var(--s-3) var(--s-4); min-height: 150px; }
 .dm-old { border-style: dashed; }
 .dm-new { border-color: color-mix(in srgb, var(--primary) 70%, transparent); }
