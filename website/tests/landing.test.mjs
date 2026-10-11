@@ -6,37 +6,12 @@ import { build, highlightJson, highlightCode } from '../build.mjs';
 mkdirSync('.test-out', { recursive: true });
 build({ srcDir: 'src', outDir: '.test-out/landing' });
 const html = readFileSync('.test-out/landing/index.html', 'utf8');
-const how = html.slice(html.indexOf('id="how"'), html.indexOf('id="connectors"'));
+const how = html.slice(html.indexOf('id="how"'), html.indexOf('id="start"'));
 const css = readFileSync('src/assets/css/landing.css', 'utf8');
 
-test('landing: the MCP example is a single abridged request, no response', () => {
-  const panes = how.match(/<figure class="pane">[\s\S]*?<\/figure>/g) ?? [];
-  assert.equal(panes.length, 1, 'one pane');
-  assert.match(panes[0], /<figcaption>Request, abridged<\/figcaption>/);
-  assert.match(panes[0], /tools\/call/);
-  assert.doesNotMatch(how, /structuredContent|<figcaption>Response/);
-  assert.equal((how.match(/class="codeblock"/g) ?? []).length, 1);
-});
-
-test('landing: the abridged request is a subset of the full example and stays short', () => {
-  const full = JSON.parse(readFileSync('src/examples/mcp-record-event.json', 'utf8')).request;
-  const brief = JSON.parse(readFileSync('src/examples/mcp-request-brief.json', 'utf8'));
-  const subset = (a, b) =>
-    Array.isArray(a) ? a.every((x, i) => subset(x, b[i]))
-      : a && typeof a === 'object' ? Object.entries(a).every(([k, v]) => b && k in b && subset(v, b[k]))
-        : typeof a === 'string' ? b.startsWith(a) : a === b; // a string may be cut short
-  assert.ok(subset(brief, full), 'every field of the brief matches the full request');
-  const pre = how.match(/<pre><code[^>]*>([\s\S]*?)<\/code><\/pre>/)[1].replace(/<[^>]+>/g, '').replace(/&quot;/g, '"');
-  const lines = pre.split('\n');
-  assert.ok(lines.length <= 25, `at most 25 lines, got ${lines.length}`);
-  assert.ok(Math.max(...lines.map((l) => l.length)) <= 90, 'fits the page width without scrolling');
-});
-
-test('landing: the JSON is highlighted with design-token colours', () => {
-  for (const c of ['tk-key', 'tk-str', 'tk-num']) assert.match(how, new RegExp(`class="${c}"`));
-  const components = readFileSync('src/assets/css/components.css', 'utf8');
-  assert.match(components, /\.tk-key\s*\{\s*color:\s*var\(--info\)/);
-  assert.match(css, /\.pane pre\s*\{[^}]*max-height:\s*[\d.]+rem[^}]*overflow:\s*auto/);
+test('landing: no JSON example and no connectors section', () => {
+  assert.doesNotMatch(html, /plain JSON|id="connectors"|Available connectors|class="pane"|class="codeblock"/);
+  assert.doesNotMatch(html, /#connectors/);
 });
 
 test('highlightJson escapes markup and round-trips the text', () => {
@@ -44,10 +19,6 @@ test('highlightJson escapes markup and round-trips the text', () => {
   const out = highlightJson(src);
   assert.doesNotMatch(out, /<b|x&y/);
   assert.equal(out.replace(/<[^>]+>/g, '').replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&amp;/g, '&'), src);
-});
-
-test('landing: the example text does not call the shipped tool a proposal', () => {
-  assert.doesNotMatch(how, /tools shown are a proposal/i);
 });
 
 const welcome = readFileSync('.test-out/landing/welcome.html', 'utf8');
@@ -98,8 +69,8 @@ test('landing: the logo lives in the header bar, and the motto is big, in two li
   assert.doesNotMatch(html, /hero-logo|hero-head/);
   assert.match(html, /<header class="site-header">[\s\S]*?<img src="assets\/img\/logo\.svg"[\s\S]*?<span class="brand-name">Techlog<\/span>/);
   assert.doesNotMatch(html, /Forget Pull Requests/i);
-  assert.match(html, /<title>Forget Code Reviews — Techlog/);
-  assert.match(html, /<h1><span class="shout">Connect context across<\/span><span class="shout">🤖 agents and 💬 sessions\.<\/span><\/h1>/, 'two lines, with agents and sessions on the same line');
+  assert.match(html, /<title>AI Engineering Context — Techlog/);
+  assert.match(html, /<h1><span class="shout">Connect Engineering Work<\/span><\/h1>/, 'one line: the motto');
   assert.match(css, /\.hero h1 \{[^}]*white-space:\s*nowrap[^}]*font-size:\s*clamp\(1\.5rem, 8cqw, 8\.2rem\)/, 'the motto stays on one line and scales with its container');
   assert.match(css, /\.hero \.container \{[^}]*container-type:\s*inline-size/);
   const js = readFileSync('src/assets/js/site.js', 'utf8');
@@ -108,12 +79,18 @@ test('landing: the logo lives in the header bar, and the motto is big, in two li
 
 
 
-test('landing: how it works runs from hypotheses to a served store in four steps', () => {
+test('landing: how it works is Capture, Connect, Use, with one example story and the three layers', () => {
   const pipe = how.match(/<ol class="pipe"[\s\S]*?<\/ol>/)[0];
   const titles = [...pipe.matchAll(/<h3>([^<]*)<\/h3>/g)].map((m) => m[1]);
-  assert.deepEqual(titles, ['Agents confirm', 'Changelog records', 'Build connections', 'Store, serve']);
-  assert.match(pipe, /hypotheses into confirmed/);
-  assert.match(pipe, /MCP request: <code>techlog_record_event<\/code>/);
+  assert.deepEqual(titles, ['Agents capture context', 'Techlog connects events', 'Agents find answers']);
+  assert.deepEqual([...pipe.matchAll(/class="pipe-tag">([^<]*)</g)].map((m) => m[1]), ['Capture the why, not just the code.', 'One connected engineering history.', 'Turn engineering history into useful context.']);
+  assert.match(pipe, /confirmed link is told apart from a hypothesis/);
+  const chain = how.match(/<ol class="ev-chain"[\s\S]*?<\/ol>/)[0];
+  assert.deepEqual([...chain.matchAll(/class="ev-kind">([^<]*)</g)].map((m) => m[1]), ['Code change', 'Release', 'Incident', 'Rollback', 'Postmortem', 'Corrective action']);
+  assert.match(how, /does not replace GitHub, Jira, Slack/);
+  const layers = how.match(/<ul class="layers"[\s\S]*?<\/ul>/)[0];
+  assert.deepEqual([...layers.matchAll(/<h3>([^<]*)<\/h3>/g)].map((m) => m[1]), ['Open event standard', 'MCP interface', 'Techlog platform']);
+  assert.match(layers, /no hosted service or tool connector yet/);
 });
 
 test('lifecycle: "Confirm hypothesis" comes after Stages, as a four-block diagram with little text', () => {
@@ -155,13 +132,12 @@ test('landing: the demo is gone', () => {
   assert.doesNotMatch(readFileSync('src/partials/head.html', 'utf8'), /demo\.css/);
 });
 
-test('landing: Try Techlog (no glow) and Read the docs sit under the animation in a very large size', () => {
+test('landing: Read the docs sits under the animation, and Try Techlog is only in the header', () => {
   const after = html.slice(html.indexOf('assets/js/scatter.js'));
   const cta = after.match(/<div class="hero-cta">([\s\S]*?)<\/div>/)[1];
-  assert.match(cta, /btn btn-xl btn-primary" href="welcome\.html"><span aria-hidden="true">🚀<\/span> Try Techlog</);
   assert.match(cta, /btn btn-xl btn-grey" href="docs\/index\.html"><span aria-hidden="true">📖<\/span> Read the docs</);
-  assert.doesNotMatch(css, /cta-glow|\.hero-cta \.btn-primary/, 'Try Techlog does not glow');
-  assert.match(css, /\.btn-xl\s*\{[^}]*font-size:\s*var\(--fs-2xl\)/);
+  assert.doesNotMatch(html.replace(/<header[\s\S]*?<\/header>/, ''), /Try Techlog|Coming soon|cta-soon/, 'no Try Techlog outside the header');
+  assert.match(css, /\.btn-xl\s*\{[^}]*font-size:\s*var\(--fs-xl\)/);
 });
 
 test('landing: eight items from four systems start scattered with tangled links and end as one looped lifecycle', () => {
@@ -171,8 +147,7 @@ test('landing: eight items from four systems start scattered with tangled links 
   for (const w of ['Slack', 'GitHub', 'Jira', 'Confluence', 'PagerDuty']) assert.ok(sc.includes(w), w);
   const stages = [...sc.matchAll(/class="sc-step">([^<]*)</g)].map((m) => m[1]);
   assert.deepEqual(stages, ['1 · Problem', '2 · Decision', '3 · Change', '4 · Release', '5 · Incident', '6 · Rollback', '7 · Postmortem', '8 · Corrective action']);
-  assert.match(sc, /<strong>Humans<\/strong>/);
-  assert.match(sc, /<strong>AI agents<\/strong>[^<]*MCP/);
+  assert.doesNotMatch(sc, /sc-nav|<strong>Humans<\/strong>/, "no humans/agents block under the demo");
   for (let n = 1; n <= 10; n++) assert.match(css, new RegExp(`\\.sc-card:nth-child\\(${n}\\) \\{[^}]*--sx:[^}]*--cx:[^}]*--cy:`), `card ${n} has both positions`);
   assert.match(css, /\.sc-chaos \{[^}]*stroke-dasharray/);
   assert.match(css, /\.sc-loop \{[^}]*animation:\s*sc-flow/);
@@ -322,15 +297,10 @@ test('lifecycle: the chain has no text after the diagram, and every block has a 
   assert.match(components, /\.tip-text \{[^}]*visibility:\s*hidden/);
 });
 
-test('landing: the status labels sit above the demo, not below it', () => {
-  const labels = html.indexOf('class="trust-strip"');
-  assert.ok(labels > 0);
-  assert.ok(labels < html.indexOf('id="scatter"'), 'above the demo');
-  assert.ok(labels > html.indexOf('class="hero-row"'), 'under the lead');
-  const below = html.slice(html.indexOf('class="hero-cta"'), html.indexOf('id="how"'));
-  assert.doesNotMatch(below, /badge/, 'no labels left below the demo');
-  for (const w of ['Proposed standard · draft 0.1', 'Fictional, simulated data', 'Local server runs', 'No hosted service yet']) assert.ok(html.includes(w), w);
-  assert.match(css, /\.trust-strip \{[^}]*justify-content:\s*center/);
+test('landing: no status labels between the lead and the demo', () => {
+  assert.doesNotMatch(html, /trust-strip/);
+  const hero = html.slice(html.indexOf('class="hero-row"'), html.indexOf('id="scatter"'));
+  assert.doesNotMatch(hero, /badge/, 'no labels between the lead and the demo');
 });
 
 test('welcome: the heading breaks after "Welcome."', () => {
@@ -351,6 +321,6 @@ test('every "Try Techlog" link on every page leads to the same URL, without a fr
       assert.equal(m[1], '../'.repeat(depth) + 'welcome.html', `${page}: ${m[1]}`);
     }
   }
-  assert.ok(count >= 5, `found ${count} Try Techlog links (header on every page, and two on the home page)`);
+  assert.ok(count >= 6, `found ${count} Try Techlog links (the header on every page)`);
   assert.deepEqual([...urls], ['welcome.html']);
 });

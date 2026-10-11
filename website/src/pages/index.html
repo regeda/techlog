@@ -1,19 +1,13 @@
 ---
-title: Forget Code Reviews
+title: AI Engineering Context
 description: Let AI write the code and keep the progress in Techlog. Reviews stop being the bottleneck because every change carries its reasons and evidence. A proposed open standard.
 ---
 <section class="hero" id="top">
   <div class="grid-bg" aria-hidden="true"></div>
   <div class="container">
-    <h1><span class="shout">Connect context across</span><span class="shout">🤖 agents and 💬 sessions.</span></h1>
+    <h1><span class="shout">Connect Engineering Work</span></h1>
     <div class="hero-row">
-      <p class="lead">Your AI agent records the problem, the decision, the change, the tests, and the incident in Techlog as it works. Reviews get shorter, incidents get mitigated faster, and every postmortem ends in action.</p>
-    </div>
-    <div class="trust-strip">
-      <span class="badge badge-proposed">Proposed standard · draft 0.1</span>
-      <span class="badge badge-simulated">Fictional, simulated data</span>
-      <span class="badge badge-exists">Local server runs</span>
-      <span class="badge badge-future">No hosted service yet</span>
+      <p class="lead">Every problem, decision, code change, release, and incident becomes part of a connected engineering history that AI agents can record, search, and build on.</p>
     </div>
     <div class="scatter" id="scatter">
       <div class="sc-head">
@@ -36,14 +30,9 @@ description: Let AI write the code and keep the progress in Techlog. Reviews sto
           <li class="sc-card sc-agent sc-a2" data-before="Writes the postmortem" data-after="Steps 3, 4, 5, 6"><span class="sc-sys">🤖 AI agent</span><strong>Codex</strong><span class="sc-sub">Writes the postmortem</span></li>
         </ul>
       </div>
-      <div class="sc-nav">
-        <p class="sc-who"><span aria-hidden="true">👤</span><span><strong>Humans</strong> open one story and click from problem to decision, change, release, incident, and postmortem.</span></p>
-        <p class="sc-who"><span aria-hidden="true">🤖</span><span><strong>AI agents</strong> ask over MCP and get the same linked context, not five tabs.</span></p>
-      </div>
     </div>
     <script src="{{root}}assets/js/scatter.js"></script>
     <div class="hero-cta">
-      <a class="btn btn-xl btn-primary" href="{{root}}welcome.html"><span aria-hidden="true">🚀</span> Try Techlog</a>
       <a class="btn btn-xl btn-grey" href="{{root}}docs/index.html"><span aria-hidden="true">📖</span> Read the docs</a>
     </div>
   </div>
@@ -53,58 +42,46 @@ description: Let AI write the code and keep the progress in Techlog. Reviews sto
   <div class="container">
     <div class="section-head">
       <p class="eyebrow">How it works</p>
-      <h2>An agent reports progress. Techlog connects it.</h2>
-      <p class="lead">API first: every step is a call, and the website is just another client.</p>
+      <h2>Capture. Connect. Use.</h2>
+      <p class="lead">Techlog connects engineering context across agents, sessions, and the tools you already use. It is not another place to store artifacts, and it does not replace GitHub, Jira, Slack, your docs, code review, or engineering judgment.</p>
     </div>
-    <ol class="pipe" aria-label="Pipeline">
-      <li><span class="pipe-n">1</span><h3>Agents confirm</h3><p>Agents help convert hypotheses into confirmed facts, with evidence.</p></li>
-      <li><span class="pipe-n">2</span><h3>Changelog records</h3><p>Each step is one record, sent as an MCP request: <code>techlog_record_event</code>.</p></li>
-      <li><span class="pipe-n">3</span><h3>Build connections</h3><p>Links the record to the problem, decision, tests, and release.</p></li>
-      <li><span class="pipe-n">4</span><h3>Store, serve</h3><p>One event store, read by API, MCP, and the UI.</p></li>
+    <ol class="pipe" aria-label="Capture, connect, use">
+      <li>
+        <div class="pipe-top"><span class="pipe-n">1</span><span class="pipe-ico" aria-hidden="true">📝</span></div>
+        <h3>Agents capture context</h3>
+        <p>AI agents record engineering problems, decisions, code changes, releases, and incidents as work evolves.</p>
+        <p class="pipe-tag">Capture the why, not just the code.</p>
+      </li>
+      <li>
+        <div class="pipe-top"><span class="pipe-n">2</span><span class="pipe-ico" aria-hidden="true">🔗</span></div>
+        <h3>Techlog connects events</h3>
+        <p>Related events are linked across tools. Provenance and evidence are kept, and a confirmed link is told apart from a hypothesis.</p>
+        <p class="pipe-tag">One connected engineering history.</p>
+      </li>
+      <li>
+        <div class="pipe-top"><span class="pipe-n">3</span><span class="pipe-ico" aria-hidden="true">🔎</span></div>
+        <h3>Agents find answers</h3>
+        <p>AI agents query past decisions, investigate incidents, find similar failures, and reuse earlier investigations.</p>
+        <p class="pipe-tag">Turn engineering history into useful context.</p>
+      </li>
     </ol>
-    <div class="how-text">
-      <span class="badge badge-proposed">Open standard · draft 0.1</span>
-      <h3>The event is plain JSON.</h3>
-      <p>Any agent or tool can write it, and any tool can read it. A small required core, typed links marked <em>confirmed</em> or <em>hypothesis</em>, and a record of who produced it. Below, a <code>techlog_record_event</code> call with the ids of the example story, abridged to the fields that matter.</p>
-      <div class="btn-row">
-        <a class="btn btn-grey" href="{{root}}docs/event-model.html">Event model</a>
-        <a class="btn btn-ghost" href="{{root}}docs/standard.html">Read the standard →</a>
-      </div>
-    </div>
-    <figure class="pane"><figcaption>Request, abridged</figcaption>{{code json mcp-request-brief.json}}</figure>
-  </div>
-</section>
-
-<section class="section" id="connectors">
-  <div class="container">
-    <div class="section-head">
-      <p class="eyebrow">Available connectors</p>
-      <h2>Connect the tools you already use.</h2>
-      <span class="badge badge-proposed">Proposed · none available yet</span>
-    </div>
-    <div class="market">
-      <article class="card mk-card">
-        <div class="mk-head"><span class="mk-tile" aria-hidden="true">GH</span><div><h3>GitHub</h3><p class="mk-cat">Source and CI</p></div></div>
-        <p>Pull requests, commits, and workflow runs become linked events.</p>
-      </article>
-      <article class="card mk-card">
-        <div class="mk-head"><span class="mk-tile" aria-hidden="true">SL</span><div><h3>Slack</h3><p class="mk-cat">Collaboration</p></div></div>
-        <p>Decisions and approvals from chat stop disappearing.</p>
-      </article>
-      <article class="card mk-card">
-        <div class="mk-head"><span class="mk-tile" aria-hidden="true">AT</span><div><h3>Atlassian</h3><p class="mk-cat">Jira, Confluence, Service Management</p></div></div>
-        <p>Issues, incidents, and write-ups join the same story.</p>
-      </article>
-      <article class="card mk-card mk-own">
-        <div class="mk-head"><span class="mk-tile mk-tile-plus" aria-hidden="true">+</span><div><h3>Your tool</h3><p class="mk-cat">Anything that writes an event</p></div></div>
-        <p>The event model is open, so no permission is needed.</p>
-      </article>
-    </div>
-    <div class="btn-row connectors-cta">
-      <a class="btn btn-secondary" href="{{root}}welcome.html#design-partner">Ask for a connector</a>
-      <a class="btn btn-ghost" href="{{root}}docs/mcp.html">Build your own →</a>
-    </div>
-    <p class="muted market-note">GitHub, Slack, Atlassian, Jira, Confluence, and PagerDuty are trademarks of their owners, named only to show what a connector would link to or what teams use today. No partnership or availability is implied.</p>
+    <figure class="events" aria-labelledby="ev-cap">
+      <figcaption id="ev-cap">One story across tools</figcaption>
+      <ol class="ev-chain">
+        <li><span class="ev-kind">Code change</span><span class="ev-src">GitHub · PR #482</span></li>
+        <li class="ev-hyp"><span class="ev-kind">Release</span><span class="ev-src">GitHub · 3.8.0</span></li>
+        <li><span class="ev-kind">Incident</span><span class="ev-src">PagerDuty · P1</span><span class="badge badge-hypothesis">hypothesis</span></li>
+        <li><span class="ev-kind">Rollback</span><span class="ev-src">Slack · thread</span><span class="badge badge-confirmed">confirmed</span></li>
+        <li><span class="ev-kind">Postmortem</span><span class="ev-src">Confluence</span></li>
+        <li><span class="ev-kind">Corrective action</span><span class="ev-src">Jira · OPS-731</span></li>
+      </ol>
+      <p class="ev-legend">A solid link is confirmed by evidence. A dashed link is a hypothesis, such as a release suspected of causing an incident, until evidence confirms it. Agents or people can add more links later.</p>
+    </figure>
+    <ul class="layers" aria-label="Standard, interface, and platform">
+      <li><span class="badge badge-proposed">Proposed · draft 0.1</span><h3>Open event standard</h3><p>What an event looks like, so any tool can write and read it.</p></li>
+      <li><span class="badge badge-exists">Implemented · basic</span><h3>MCP interface</h3><p>How agents record and query events, such as <code>techlog_record_event</code>.</p></li>
+      <li><span class="badge badge-future">Local only</span><h3>Techlog platform</h3><p>Stores and links events. A basic server runs locally; there is no hosted service or tool connector yet.</p></li>
+    </ul>
   </div>
 </section>
 
@@ -115,7 +92,6 @@ description: Let AI write the code and keep the progress in Techlog. Reviews sto
       <p class="lead">A basic Techlog server runs locally with the example story loaded. Or read how the event model works first.</p>
     </div>
     <div class="btn-row">
-      <a class="btn btn-primary" href="{{root}}welcome.html">Try Techlog</a>
       <a class="btn btn-grey" href="{{root}}docs/index.html">Read the docs</a>
     </div>
   </div>
