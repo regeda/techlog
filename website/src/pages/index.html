@@ -42,45 +42,58 @@ description: Let AI write the code and keep the progress in Techlog. Reviews sto
   <div class="container">
     <div class="section-head">
       <p class="eyebrow">How it works</p>
-      <h2>Capture. Connect. Use.</h2>
-      <p class="lead">Techlog connects engineering context across agents, sessions, and the tools you already use. It is not another place to store artifacts, and it does not replace GitHub, Jira, Slack, your docs, code review, or engineering judgment.</p>
+      <h2>One history. Every agent.</h2>
+      <p class="lead">Techlog connects the context scattered across agents, sessions, and engineering tools, so people and AI can understand how problems, decisions, changes, and incidents relate.</p>
     </div>
-    <ol class="pipe" aria-label="Capture, connect, use">
-      <li>
-        <div class="pipe-top"><span class="pipe-n">1</span><span class="pipe-ico" aria-hidden="true">📝</span></div>
-        <h3>Agents capture context</h3>
-        <p>AI agents record engineering problems, decisions, code changes, releases, and incidents as work evolves.</p>
-        <p class="pipe-tag">Capture the why, not just the code.</p>
-      </li>
-      <li>
-        <div class="pipe-top"><span class="pipe-n">2</span><span class="pipe-ico" aria-hidden="true">🔗</span></div>
-        <h3>Techlog connects events</h3>
-        <p>Related events are linked across tools. Provenance and evidence are kept, and a confirmed link is told apart from a hypothesis.</p>
-        <p class="pipe-tag">One connected engineering history.</p>
-      </li>
-      <li>
-        <div class="pipe-top"><span class="pipe-n">3</span><span class="pipe-ico" aria-hidden="true">🔎</span></div>
-        <h3>Agents find answers</h3>
-        <p>AI agents query past decisions, investigate incidents, find similar failures, and reuse earlier investigations.</p>
-        <p class="pipe-tag">Turn engineering history into useful context.</p>
-      </li>
-    </ol>
-    <figure class="events" aria-labelledby="ev-cap">
-      <figcaption id="ev-cap">One story across tools</figcaption>
-      <ol class="ev-chain">
-        <li><span class="ev-kind">Code change</span><span class="ev-src">GitHub · PR #482</span></li>
-        <li class="ev-hyp"><span class="ev-kind">Release</span><span class="ev-src">GitHub · 3.8.0</span></li>
-        <li><span class="ev-kind">Incident</span><span class="ev-src">PagerDuty · P1</span><span class="badge badge-hypothesis">hypothesis</span></li>
-        <li><span class="ev-kind">Rollback</span><span class="ev-src">Slack · thread</span><span class="badge badge-confirmed">confirmed</span></li>
-        <li><span class="ev-kind">Postmortem</span><span class="ev-src">Confluence</span></li>
-        <li><span class="ev-kind">Corrective action</span><span class="ev-src">Jira · OPS-731</span></li>
-      </ol>
-      <p class="ev-legend">A solid link is confirmed by evidence. A dashed link is a hypothesis, such as a release suspected of causing an incident, until evidence confirms it. Agents or people can add more links later.</p>
+    <figure class="shell cs" id="shell" aria-labelledby="sh-cap">
+      <figcaption><span id="sh-cap">An agent records the story as it works</span><span class="badge badge-simulated">Simulated example</span></figcaption>
+      <div class="sh-body" tabindex="0" role="log" aria-label="Simulated agent transcript">
+      <div class="sh-idle-hint"><p>Press <strong>Run simulation</strong> to watch an agent record the story.</p></div>
+<div class="sh-step"><div class="sh-l sh-user"><span class="sh-gt">&gt;</span> <span class="sh-typed">Merge PR #482 and release 3.8.0 as a canary</span></div><div class="sh-l sh-tool"><span class="sh-dot">●</span> Bash<span class="sh-args">(gh pr merge 482 --squash)</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  ✓ Squashed and merged pull request #482 (feat(spin): spin-to-win, 20% cap)</div><div class="sh-l sh-tool"><span class="sh-dot">●</span> Bash<span class="sh-args">(gh release create 3.8.0 --prerelease)</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  https://github.com/acme/promo-api/releases/tag/3.8.0</div><div class="sh-l sh-say"><span class="sh-dot">●</span> Merged PR #482 and released 3.8.0 as a canary.</div><div class="sh-l sh-user"><span class="sh-gt">&gt;</span> <span class="sh-typed">/techlog-record</span></div><div class="sh-l sh-tool"><span class="sh-dot">●</span> /techlog-record<span class="sh-args">(<span class="sh-k">2 events</span>)</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  <strong>change.implemented</strong>  time 2026-03-12T09:12:44Z, from the PR merge</div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  found  evt_01J9K2A0P005  Approved spin-to-win: 20% cap</div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  link implements → evt_01J9K2A0P005 <span class="sh-ok">━━ confirmed</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  <span class="sh-ok">✓ recorded evt_01J9K2A0P006</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  <strong>release.deployed</strong>  time 2026-03-12T11:02:10Z, from the release</div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  link releases → evt_01J9K2A0P006 <span class="sh-ok">━━ confirmed</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  <span class="sh-ok">✓ recorded evt_01J9K2A0P010</span></div><div class="sh-l sh-say"><span class="sh-dot">●</span> Recorded both events, each linked to the one it follows from.</div></div>
+<div class="sh-step"><div class="sh-l sh-rule">── a new session, after 3 days ──</div><div class="sh-l sh-user"><span class="sh-gt">&gt;</span> <span class="sh-typed">Investigate PagerDuty alert P1-5521</span></div><div class="sh-l sh-tool"><span class="sh-dot">●</span> Bash<span class="sh-args">(pd incident show P1-5521)</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  5xx ratio 6.2% on /spin  triggered 2026-03-15T13:38:00Z</div><div class="sh-l sh-say"><span class="sh-dot">●</span> 5xx started three days after the 3.8.0 canary. That does not prove the release caused it.</div><div class="sh-l sh-user"><span class="sh-gt">&gt;</span> <span class="sh-typed">/techlog-record</span></div><div class="sh-l sh-tool"><span class="sh-dot">●</span> /techlog-record<span class="sh-args">(<span class="sh-k">incident.opened</span>)</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  time  2026-03-15T13:38:00Z, from the alert</div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  link observed_after → evt_01J9K2A0P010 <span class="sh-ok">━━ confirmed</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  link caused_by → evt_01J9K2A0P006 <span class="sh-hyp">┅┅ hypothesis</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  <span class="sh-ok">✓ recorded evt_01J9K2A0P011</span></div><div class="sh-l sh-say"><span class="sh-dot">●</span> Recorded the incident. The suspected cause stays a hypothesis until there is evidence.</div></div>
+<div class="sh-step"><div class="sh-l sh-user"><span class="sh-gt">&gt;</span> <span class="sh-typed">Rollback PR #482</span></div><div class="sh-l sh-tool"><span class="sh-dot">●</span> Bash<span class="sh-args">(kubectl rollout undo deploy/promo-api)</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  deployment.apps/promo-api rolled back</div><div class="sh-l sh-say"><span class="sh-dot">●</span> Rolled back the 3.8.0 canary.</div><div class="sh-l sh-user"><span class="sh-gt">&gt;</span> <span class="sh-typed">/techlog-record</span></div><div class="sh-l sh-tool"><span class="sh-dot">●</span> /techlog-record<span class="sh-args">(<span class="sh-k">rollback.executed</span>)</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  time  2026-03-15T13:51:20Z, from the rollout</div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  link reverts → evt_01J9K2A0P010 <span class="sh-ok">━━ confirmed</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  link mitigates → evt_01J9K2A0P011 <span class="sh-ok">━━ confirmed</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  <span class="sh-ok">✓ recorded evt_01J9K2A0P012</span></div><div class="sh-l sh-say"><span class="sh-dot">●</span> Recorded the rollback. It confirms the mitigation, not the cause.</div></div>
+<div class="sh-step"><div class="sh-l sh-rule">── a new session, after 1 day ──</div><div class="sh-l sh-user"><span class="sh-gt">&gt;</span> <span class="sh-typed">Write the postmortem for P1-5521 and create follow-ups in Jira</span></div><div class="sh-l sh-tool"><span class="sh-dot">●</span> Bash<span class="sh-args">(confluence page create --title "Postmortem 2026-03-16")</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  Created page Postmortem 2026-03-16</div><div class="sh-l sh-tool"><span class="sh-dot">●</span> Bash<span class="sh-args">(jira issue create --summary "Add 5xx gate to canary promotion")</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  OPS-731  Add 5xx gate to canary promotion</div><div class="sh-l sh-say"><span class="sh-dot">●</span> Postmortem written and OPS-731 created.</div><div class="sh-l sh-user"><span class="sh-gt">&gt;</span> <span class="sh-typed">/techlog-record</span></div><div class="sh-l sh-tool"><span class="sh-dot">●</span> /techlog-record<span class="sh-args">(<span class="sh-k">2 events</span>)</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  <strong>postmortem.published</strong>  time 2026-03-16T10:05:00Z, from the page</div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  link follows_up → evt_01J9K2A0P011 <span class="sh-ok">━━ confirmed</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  <span class="sh-ok">✓ recorded evt_01J9K2A0P013</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  <strong>action.tracked</strong>  time 2026-03-16T10:07:30Z, from the ticket</div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  link follows_up → evt_01J9K2A0P013 <span class="sh-ok">━━ confirmed</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  <span class="sh-ok">✓ recorded evt_01J9K2A0P014</span></div><div class="sh-l sh-say"><span class="sh-dot">●</span> Recorded the postmortem and the corrective action, each linked to what it follows.</div></div>
+<div class="sh-step"><div class="sh-l sh-rule">── a new session, weeks later ──</div><div class="sh-l sh-user"><span class="sh-gt">&gt;</span> <span class="sh-typed">/techlog-record What happened to promo-api in March?</span></div><div class="sh-l sh-tool"><span class="sh-dot">●</span> /techlog-record<span class="sh-args">(<span class="sh-k">history</span> promo-api)</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  3.8.0 canary → 6.2% 5xx → rolled back → postmortem → OPS-731</div><div class="sh-l sh-say"><span class="sh-dot">●</span> The 3.8.0 canary hit 6.2% 5xx and was rolled back. <span class="sh-hyp">The cause is still a hypothesis: no investigation has confirmed it.</span></div></div>
+      </div>
+      <div class="sh-input" id="sh-input" aria-hidden="true" hidden><span class="sh-gt">&gt;</span> <span class="sh-line"><span id="sh-text"></span><span class="sh-caret"></span></span></div>
+      <div class="sh-ctl" id="sh-ctl" hidden>
+        <button type="button" class="sh-play" id="sh-play" aria-label="Run simulation">▶ Run simulation</button>
+        <input type="range" class="sh-seek" id="sh-seek" min="0" max="1000" step="1" value="0" aria-label="Playback position">
+        <span class="sh-time" id="sh-time" aria-hidden="true">0:00 / 0:00</span>
+      </div>
+      <p class="sh-foot">Each <code>/techlog-record</code> call uses the skill to choose the event type, link each event to the ones before it, and mark an unproven cause as a hypothesis.</p>
     </figure>
+    <script src="{{root}}assets/js/shell.js"></script>
+  </div>
+</section>
+
+<section class="section section-open" id="open">
+  <div class="container">
+    <div class="section-head">
+      <h2>Open by design. Built for agents.</h2>
+    </div>
     <ul class="layers" aria-label="Standard, interface, and platform">
-      <li><span class="badge badge-proposed">Proposed · draft 0.1</span><h3>Open event standard</h3><p>What an event looks like, so any tool can write and read it.</p></li>
-      <li><span class="badge badge-exists">Implemented · basic</span><h3>MCP interface</h3><p>How agents record and query events, such as <code>techlog_record_event</code>.</p></li>
-      <li><span class="badge badge-future">Local only</span><h3>Techlog platform</h3><p>Stores and links events. A basic server runs locally; there is no hosted service or tool connector yet.</p></li>
+      <li>
+        <span class="badge badge-proposed">Proposed · draft 0.1</span>
+        <h3>Open event standard</h3>
+        <p>A vendor-neutral format for recording and linking engineering events.</p>
+        <p class="layer-status">A draft proposal, not a finished standard.</p>
+        <a class="btn btn-secondary" href="{{root}}docs/standard.html">Explore the standard</a>
+      </li>
+      <li>
+        <span class="badge badge-exists">Implemented · basic</span>
+        <h3>MCP interface</h3>
+        <p>Let compatible AI agents record and query engineering history.</p>
+        <p class="layer-status">Five tools, such as <code>techlog_record_event</code>, run in the local server.</p>
+        <a class="btn btn-secondary" href="{{root}}docs/mcp.html">Read the MCP guide</a>
+      </li>
+      <li>
+        <span class="badge badge-future">Local only</span>
+        <h3>Techlog platform</h3>
+        <p>A local prototype for storing, connecting, and exploring events.</p>
+        <p class="layer-status">There is no hosted service or tool connector yet.</p>
+        <a class="btn btn-secondary" href="{{root}}docs/getting-started.html#start">Run Techlog locally</a>
+      </li>
     </ul>
   </div>
 </section>

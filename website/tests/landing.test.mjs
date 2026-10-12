@@ -6,7 +6,7 @@ import { build, highlightJson, highlightCode } from '../build.mjs';
 mkdirSync('.test-out', { recursive: true });
 build({ srcDir: 'src', outDir: '.test-out/landing' });
 const html = readFileSync('.test-out/landing/index.html', 'utf8');
-const how = html.slice(html.indexOf('id="how"'), html.indexOf('id="start"'));
+const how = html.slice(html.indexOf('id="how"'), html.indexOf('id="open"'));
 const css = readFileSync('src/assets/css/landing.css', 'utf8');
 
 test('landing: no JSON example and no connectors section', () => {
@@ -79,18 +79,30 @@ test('landing: the logo lives in the header bar, and the motto is big, in two li
 
 
 
-test('landing: how it works is Capture, Connect, Use, with one example story and the three layers', () => {
-  const pipe = how.match(/<ol class="pipe"[\s\S]*?<\/ol>/)[0];
-  const titles = [...pipe.matchAll(/<h3>([^<]*)<\/h3>/g)].map((m) => m[1]);
-  assert.deepEqual(titles, ['Agents capture context', 'Techlog connects events', 'Agents find answers']);
-  assert.deepEqual([...pipe.matchAll(/class="pipe-tag">([^<]*)</g)].map((m) => m[1]), ['Capture the why, not just the code.', 'One connected engineering history.', 'Turn engineering history into useful context.']);
-  assert.match(pipe, /confirmed link is told apart from a hypothesis/);
-  const chain = how.match(/<ol class="ev-chain"[\s\S]*?<\/ol>/)[0];
-  assert.deepEqual([...chain.matchAll(/class="ev-kind">([^<]*)</g)].map((m) => m[1]), ['Code change', 'Release', 'Incident', 'Rollback', 'Postmortem', 'Corrective action']);
-  assert.match(how, /does not replace GitHub, Jira, Slack/);
-  const layers = how.match(/<ul class="layers"[\s\S]*?<\/ul>/)[0];
+test('landing: how it works is one simulated agent session; the layers follow in their own section', () => {
+  assert.match(how, /<h2>One history\. Every agent\.<\/h2>/);
+  assert.doesNotMatch(how, /class="pipe"|class="events"|ev-chain/, 'the three cards and the event flow are gone');
+  assert.match(how, /id="shell"[\s\S]*Simulated example/);
+  const typed = [...how.matchAll(/class="sh-typed">([^<]*)</g)].map((m) => m[1]);
+  assert.ok(typed.includes('Merge PR #482 and release 3.8.0 as a canary'), 'two actions, one command');
+  assert.ok(typed.includes('Investigate PagerDuty alert P1-5521') && typed.includes('Rollback PR #482'), 'investigate and rollback are separate commands');
+  assert.ok(typed.includes('Write the postmortem for P1-5521 and create follow-ups in Jira'));
+  assert.deepEqual([...how.matchAll(/class="sh-l sh-rule">── ([^<]*) ──</g)].map((m) => m[1]), ['a new session, after 3 days', 'a new session, after 1 day', 'a new session, weeks later']);
+  assert.equal(typed.filter((c) => c === '/techlog-record').length, 4, 'one /techlog-record per batch of work');
+  assert.equal([...how.matchAll(/✓ recorded evt_/g)].length, 6, 'six events from four commands');
+  assert.doesNotMatch(how, /techlog_record_event/, 'the skill, not the raw tool, is what the demo shows');
+  assert.match(how, /Hypothesis|hypothesis/, 'an unproven cause stays a hypothesis');
+  assert.match(how, /It confirms the mitigation, not the cause/);
+  assert.match(how, /id="sh-play"[^>]*>▶ Run simulation/, 'starts idle with a call to run');
+  const js = readFileSync('src/assets/js/shell.js', 'utf8');
+  assert.doesNotMatch(js, /IntersectionObserver|autoplay/, 'does not start by itself');
+  const open = html.slice(html.indexOf('id="open"'), html.indexOf('id="start"'));
+  assert.match(open, /<h2>Open by design\. Built for agents\.<\/h2>/);
+  assert.ok(html.indexOf('id="open"') > html.indexOf('id="how"'));
+  const layers = open.match(/<ul class="layers"[\s\S]*?<\/ul>/)[0];
   assert.deepEqual([...layers.matchAll(/<h3>([^<]*)<\/h3>/g)].map((m) => m[1]), ['Open event standard', 'MCP interface', 'Techlog platform']);
   assert.match(layers, /no hosted service or tool connector yet/);
+  assert.deepEqual([...layers.matchAll(/class="badge [^"]*">([^<]*)</g)].map((m) => m[1]), ['Proposed · draft 0.1', 'Implemented · basic', 'Local only']);
 });
 
 test('lifecycle: "Confirm hypothesis" comes after Stages, as a four-block diagram with little text', () => {
