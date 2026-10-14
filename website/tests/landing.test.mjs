@@ -88,7 +88,7 @@ test('landing: how it works is one simulated agent session; the layers follow in
   assert.ok(typed.includes('Investigate PagerDuty alert P1-5521') && typed.includes('Rollback PR #482'), 'investigate and rollback are separate commands');
   assert.ok(typed.includes('Write the postmortem for P1-5521 and create follow-ups in Jira'));
   assert.deepEqual([...how.matchAll(/class="sh-l sh-rule">── ([^<]*) ──</g)].map((m) => m[1]), ['a new session, after 3 days', 'a new session, after 1 day', 'a new session, weeks later']);
-  assert.equal(typed.filter((c) => c === '/techlog-record').length, 4, 'one /techlog-record per batch of work');
+  assert.equal(typed.filter((c) => c === '/techlog:record').length, 4, 'one /techlog:record per batch of work');
   assert.equal([...how.matchAll(/✓ recorded evt_/g)].length, 6, 'six events from four commands');
   assert.doesNotMatch(how, /techlog_record_event/, 'the skill, not the raw tool, is what the demo shows');
   assert.match(how, /Hypothesis|hypothesis/, 'an unproven cause stays a hypothesis');

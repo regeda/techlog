@@ -1,0 +1,68 @@
+# Which skill of the development plugin handles each Techlog stage.
+# /techlog:welcome use <plugin> selects a block; /techlog:problem and
+# /techlog:proposal read it. The `decision` stage is different: it is a
+# standing rule that those two skills hand on, and `before` lists the skills
+# it holds back. To support another plugin, add a block with the same stages.
+superpowers:
+  stages:
+    problem:
+      skill: superpowers:brainstorming
+      framing: |
+        This is a PROBLEM-DEFINITION session, not a design session.
+        Do not propose solutions, approaches or architecture. Do not write a spec
+        or a plan, and do not invoke any planning or implementation skill.
+        Walk the decision tree the caller passes you, one question at a time:
+        ask the node's `ask`, offer its `options` when it has them, skip a node
+        whose `skip_if` already holds from what the user said, accept "none" for
+        an `optional` node, and follow `next`. Stop at the `confirm` node. Your
+        result is the answers the tree collected; the caller turns them into a
+        draft event and records it.
+        These instructions come from the user's Techlog plugin and take
+        precedence over the default brainstorming flow.
+    proposal:
+      skill: superpowers:brainstorming
+      framing: |
+        This is a PROPOSAL session. Start from the confirmed context note the
+        caller passes you, and do not ask again what it already answers.
+        Whatever you would classify this request as, take the architectural path's
+        design steps: approaches with trade-offs, a design the user approves, and
+        a spec file under docs/superpowers/specs/. Do not use the in-chat bounded
+        path, and do not use the spike path. Keep the rejected options in the
+        spec, not only the one chosen. Stop when the design is approved and the
+        spec file is written.
+        Do not implement anything: no product code, no scaffolding.
+        Do not invoke writing-plans or any implementation skill: the caller
+        records the proposal first, and the user decides afterwards whether to
+        plan.
+        These instructions come from the user's Techlog plugin and take
+        precedence over the default brainstorming flow.
+    decision:
+      skill: techlog:record
+      before: [superpowers:writing-plans]
+      framing: |
+        This is a standing rule for the whole session, not a step of the skill
+        that hands it to you. Before you invoke any skill held back below,
+        record the decision first.
+        1. Find the spec path and the proposal event id in this conversation.
+           If there is no spec, do not draft a decision: tell the user to run
+           /techlog:proposal first. If the proposal id is missing, search
+           Techlog for it with techlog_search_events. If a decision.made
+           already decides the proposal, say so and do not draft another. If
+           there is still no proposal, link relates_to the problem if it is
+           known, otherwise leave out the link, and say so in the draft.
+        2. Build a decision.made event: status recorded, the proposal's subject,
+           and a summary of one plain sentence, at most 280 characters, that
+           names the approved approach. Its evidence is
+           [{"kind": "spec", "ref": "<spec path>"}]. Its links are
+           [{"rel": "decides", "target": "<proposal id>", "basis": "confirmed"}].
+           Its time is the current time: the user's approval is the decision.
+           Its idempotency_key is decision-<system>-<spec file name without
+           .md>, so the server rejects a second decision for the same spec.
+        3. Show the draft and ask whether to record it.
+           Record nothing until the user says yes.
+           If the user says skip, say that nothing was recorded and carry on.
+           Record at most once per spec.
+        4. Record it with techlog:record, then invoke the skill you held back.
+           If Techlog is unreachable, say you cannot record and let the user
+           choose whether to go on without it. If the server rejects the event,
+           show the corrected draft again before you retry.

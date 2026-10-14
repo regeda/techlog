@@ -21,10 +21,18 @@ Data lives in `share/techlog.db` (git-ignored). Events require an `idempotency_k
 
 ```bash
 claude mcp add --transport http techlog http://localhost:8080/mcp
-make skill     # links skills/techlog-record into ~/.claude/skills (COPY=1 copies; make skill-remove undoes it)
 ```
 
-The first line connects the tools: `techlog_search_events`, `techlog_get_system_history`, `techlog_get_event`, `techlog_record_event`, `techlog_link_events`. The second installs the `techlog-record` skill, which teaches Claude when to record an event, which type to use, and how to link it to earlier events.
+That connects the tools: `techlog_search_events`, `techlog_get_system_history`, `techlog_get_event`, `techlog_record_event`, `techlog_link_events`.
+
+Then install the plugin, which adds the `/techlog:problem`, `/techlog:proposal` and `/techlog:welcome` skills and the `techlog:record` skill that teaches Claude when to record an event, which type to use, and how to link it to earlier events:
+
+```
+/plugin marketplace add /path/to/this/repo
+/plugin install techlog@techlog
+```
+
+To try it without installing, start Claude Code with `claude --plugin-dir ./plugin`. `/techlog:welcome` explains the rest: connecting the server, switching the development plugin (default `superpowers`), and the config files in `plugin/config/`. `make plugin` installs it from this checkout and `make plugin-remove` undoes it.
 
 ## HTTP API
 
@@ -48,7 +56,8 @@ internal/store/       the Store interface and a contract test suite
 internal/store/sqlite/  the SQLite backend (pure Go, no cgo)
 internal/service/     use cases; the API, MCP and UI call only this
 internal/api/ mcpserver/ ui/   the three front doors
-skills/techlog-record/  the Claude skill
+plugin/                 the Claude plugin: skills, config, help pages
+.claude-plugin/         the marketplace file that lists the plugin
 ```
 
 ## Add a storage backend
