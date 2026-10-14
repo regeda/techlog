@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-const skillPath = "../../skills/techlog-record/SKILL.md"
+const skillPath = "../../plugin/skills/record/SKILL.md"
 
 func TestSkillFrontMatter(t *testing.T) {
 	b, err := os.ReadFile(skillPath)
@@ -16,7 +16,7 @@ func TestSkillFrontMatter(t *testing.T) {
 		t.Fatal(err)
 	}
 	s := string(b)
-	if !strings.HasPrefix(s, "---\nname: techlog-record\ndescription: ") {
+	if !strings.HasPrefix(s, "---\nname: record\ndescription: ") {
 		t.Fatalf("SKILL.md must start with front matter naming the skill and describing when to use it:\n%.200s", s)
 	}
 }

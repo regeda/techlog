@@ -1,0 +1,12 @@
+{
+  "name": "techlog",
+  "description": "Techlog lifecycle skills for Claude Code",
+  "owner": { "name": "Anton Regeda" },
+  "plugins": [
+    {
+      "name": "techlog",
+      "source": "./plugin",
+      "description": "Techlog lifecycle skills on top of your development plugin"
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+---
+title: Claude plugin
+description: How the techlog Claude Code plugin puts the Techlog lifecycle chain on top of a development plugin such as superpowers: install, the skills and the journey from problem to decision.
+layout: docs
+section: Integrate
+order: 2
+nav: Claude plugin
+---
+<h1>Claude plugin</h1>
+<div class="page-meta"><span class="badge badge-exists">Implemented · basic</span><span class="badge badge-proposed">Draft 0.1</span></div>
+<div class="callout callout-note"><p><strong>Runs today, with limits.</strong> The plugin covers the first three stages of the <a href="lifecycle.html#chain">lifecycle chain</a>: problem, proposal and decision. It records events through the <a href="mcp.html">MCP tools</a>, so the server must be connected first. The decision step is advice to Claude and is not enforced. The skills have not been run end to end in an interactive session; the repository tests check their structure and wording.</p></div>
+
+<h2 id="what">What it does</h2>
+<p>A development plugin, such as <code>superpowers</code>, runs the engineering workflow: it asks the questions, designs the change and writes the plan. The techlog plugin sits on top of it. Each Techlog skill hands the thinking to a skill of the development plugin, adds context from Techlog and the repository, asks you to confirm, and records the event. Nothing is recorded that you have not seen and confirmed.</p>
+
+<h2 id="install">Install</h2>
+<p>Connect the server first (see <a href="mcp.html">MCP integration</a>), then install the plugin from a checkout of this repository, either with the two commands in Claude Code or with <code>make plugin</code>. <code>/techlog:welcome</code> explains the rest and answers questions about the setup.</p>
+{{code bash claude-plugin-install.sh}}
+
+<h2 id="skills">The skills</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Skill</th><th>What it does</th><th>Records</th></tr></thead>
+  <tbody>
+    <tr><td><code>/techlog:problem</code></td><td>Narrows a problem with a decision tree, shows a draft, and records it after you confirm. Asking Claude to "create a Jira ticket" or "log a bug" starts it. It never creates a Jira ticket; a Jira key you give becomes evidence.</td><td><code>problem.reported</code></td></tr>
+    <tr><td><code>/techlog:proposal</code></td><td>Finds the problem in Techlog, collects context for you to confirm, runs the design process of the development plugin, and records the result linked to the problem.</td><td><code>proposal.recorded</code></td></tr>
+    <tr><td><code>/techlog:welcome</code></td><td>A help desk: answers questions, shows the status, and switches the development plugin with <code>/techlog:welcome use &lt;plugin&gt;</code>.</td><td>Nothing</td></tr>
+    <tr><td><code>/techlog:record</code></td><td>The only skill that writes events. The others call it. It also answers "what happened to this system earlier?".</td><td>Any event type</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="pipeline">The journey</h2>
+<p>We are all problem solvers. Start with <code>/techlog:problem</code>, and use <code>/techlog:record</code> wherever you want to record a step. With <code>superpowers</code> as the development plugin:</p>
+<ol>
+  <li><strong>Problem.</strong> <code>/techlog:problem</code> runs <code>superpowers:brainstorming</code> with a decision tree to narrow it. You confirm the draft and Techlog records <code>problem.reported</code>. Stage: <em>problem</em>.</li>
+  <li><strong>Proposal.</strong> <code>/techlog:proposal</code> confirms a context note, then brainstorming designs the change and writes the spec. Techlog records <code>proposal.recorded</code> with the spec as evidence. Stage: <em>proposal</em>.</li>
+  <li><strong>Decision.</strong> When you ask to plan, Claude stops before <code>superpowers:writing-plans</code>, shows a draft <code>decision.made</code> with the spec as evidence, and records it once you say yes. Stage: <em>decision</em>.</li>
+  <li><strong>Everything after.</strong> Implementation, verification, release and incidents have no skill yet. Record them with <code>/techlog:record</code>: <code>change.implemented</code>, <code>verification.completed</code>, <code>release.deployed</code> and the rest.</li>
+</ol>
+<p>Each event links back to the one before it, so anyone can walk the story from the problem to its follow-up.</p>
+
+<h2 id="limits">Limits</h2>
+<ul>
+  <li>The decision rule is advice to Claude and is not enforced. It does not apply in a session that did not start from <code>/techlog:problem</code> or <code>/techlog:proposal</code>, it can be lost when the conversation is compacted, and a <code>/superpowers:writing-plans</code> you type yourself does not trigger it.</li>
+  <li>Only <code>superpowers</code> has a mapping block. The mechanism supports others; none is written.</li>
+  <li>Implementation, verification, release and the reliability stages have no skill yet.</li>
+</ul>
+
+<h2 id="status">Status</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Part</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>Skills <code>/techlog:problem</code>, <code>/techlog:proposal</code>, <code>/techlog:welcome</code>, <code>/techlog:record</code></td><td><span class="badge badge-exists">Implemented (basic)</span></td></tr>
+    <tr><td>Mapping for <code>superpowers</code>, with the decision rule</td><td><span class="badge badge-exists">Implemented (advisory)</span></td></tr>
+    <tr><td>A mapping block for another development plugin</td><td><span class="badge badge-proposed">Supported by the format, not written</span></td></tr>
+    <tr><td>Skills for implementation, verification, release and the reliability stages</td><td><span class="badge badge-future">Not implemented</span></td></tr>
+  </tbody>
+</table></div>
+<nav class="pager" aria-label="Pager"><a href="mcp.html">← MCP integration</a><a href="policy.html">Workflow and policy →</a></nav>

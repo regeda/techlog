@@ -1,0 +1,117 @@
+# Decision tree for /techlog:problem.
+#
+# Each node has exactly one of:
+#   options:  a closed choice; every option has a label and a next node
+#   next:     an open question; the answer is free text
+#   confirm:  true; the end of the tree: show the draft event and ask to record it
+#
+# Other fields:
+#   ask       the question to put to the user
+#   skip_if   skip the node when this already holds from the user's message or
+#             from context
+#   optional  the user may answer "none"
+#   sets      what the answer feeds in the problem.reported event: summary,
+#             subject.system, subject.component, evidence, links
+start: classify
+nodes:
+  classify:
+    ask: What kind of problem is this?
+    sets: [summary]
+    options:
+      - { label: "Defect: something is broken or behaves wrongly", next: defect_system }
+      - { label: "Feature request: a need that is not met", next: feature_system }
+      - { label: "Tech debt: something works but is costly to keep", next: debt_system }
+      - { label: "Operational issue: something is failing or degraded in running systems", next: ops_system }
+
+  defect_system:
+    ask: Which system is it in, and which component if you know?
+    sets: [subject.system, subject.component]
+    next: defect_impact
+  defect_impact:
+    ask: What is the impact, and who is affected?
+    sets: [summary]
+    next: defect_repro
+  defect_repro:
+    ask: How can it be reproduced?
+    skip_if: the report already says how to reproduce it
+    sets: [summary]
+    next: defect_expected
+  defect_expected:
+    ask: What should happen, and what happens instead?
+    sets: [summary]
+    next: defect_evidence
+  defect_evidence:
+    ask: Is there a log, trace, alert or ticket that shows it? Give the references.
+    optional: true
+    sets: [evidence]
+    next: similar
+
+  feature_system:
+    ask: Which system is this for, and which component if you know?
+    sets: [subject.system, subject.component]
+    next: feature_who
+  feature_who:
+    ask: Who needs this?
+    sets: [summary]
+    next: feature_outcome
+  feature_outcome:
+    ask: What outcome do they need?
+    sets: [summary]
+    next: feature_today
+  feature_today:
+    ask: How do they cope today?
+    optional: true
+    sets: [summary]
+    next: similar
+
+  debt_system:
+    ask: Which system carries the debt, and which component if you know?
+    sets: [subject.system, subject.component]
+    next: debt_pain
+  debt_pain:
+    ask: What hurts about it today?
+    sets: [summary]
+    next: debt_cost
+  debt_cost:
+    ask: What does it cost to leave it as it is?
+    sets: [summary]
+    next: similar
+
+  ops_system:
+    ask: Which system is affected, and which component if you know?
+    sets: [subject.system, subject.component]
+    next: ops_symptom
+  ops_symptom:
+    ask: What is the symptom, and what is the impact?
+    sets: [summary]
+    next: ops_since
+  ops_since:
+    ask: Since when?
+    sets: [summary]
+    next: ops_release
+  ops_release:
+    ask: Did it start after a release or a change?
+    skip_if: the report already names a release or change, or says there was none
+    optional: true
+    sets: [summary]
+    next: ops_evidence
+  ops_evidence:
+    ask: Is there an alert, dashboard or ticket that shows it? Give the references.
+    optional: true
+    sets: [evidence]
+    next: similar
+
+  similar:
+    ask: Search Techlog for similar problems on this system and show them. Which, if any, are related to this one?
+    optional: true
+    sets: [links]
+    next: jira
+  jira:
+    ask: Is there a Jira key for this? Give it, or say none.
+    optional: true
+    sets: [evidence]
+    next: confirm
+
+  confirm:
+    ask: Here is the draft problem.reported event. Shall I record it?
+    confirm: true

@@ -1,5 +1,5 @@
 ---
-name: techlog-record
+name: record
 description: Use when work in this conversation reaches something worth remembering about a system (a problem found, a proposal, a decision, a merged change, a release, an incident, a rollback, a postmortem, a follow-up action) to record it as an event in Techlog, and when asked what happened to a system earlier. Records through the Techlog MCP tools and links each new event to the earlier events it follows from.
 ---
 
@@ -155,7 +155,7 @@ The superpowers skills run the engineering workflow; this skill records what com
 | Superpowers stage | Record | Evidence or source |
 |---|---|---|
 | `brainstorming`: design or spec written | `proposal.recorded` | `{"kind": "spec", "ref": "docs/superpowers/specs/<file>.md"}` |
-| `brainstorming`: user approves the design | `decision.made`, linked `decides` to the proposal | the same spec |
+| `brainstorming`: user approves the written spec, before `writing-plans` | `decision.made`, linked `decides` to the proposal | the same spec |
 | `systematic-debugging`: root cause found | `investigation.completed` | log, trace or test that shows it |
 | `verification-before-completion`: checks ran | `verification.completed` (`verified` or `failed`) | the command run |
 | `finishing-a-development-branch`: merged | `change.implemented`, linked `implements` to the decision | `{"kind": "commit", "ref": "<sha>"}` |

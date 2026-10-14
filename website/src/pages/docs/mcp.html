@@ -16,7 +16,7 @@ nav: MCP integration
 <h2 id="connect">Connect</h2>
 <p>Start the server (see <a href="server.html">Run the server</a>), then register it with Claude Code:</p>
 {{code bash mcp-connect.sh}}
-<p>Use <code>localhost</code> or <code>127.0.0.1</code> in the URL. The server rejects requests whose <code>Host</code> header names another host, as a guard against DNS rebinding. The <code>techlog-record</code> skill teaches Claude when to record an event, which type to use, and how to link it to earlier events; <code>make skill</code> installs it.</p>
+<p>Use <code>localhost</code> or <code>127.0.0.1</code> in the URL. The server rejects requests whose <code>Host</code> header names another host, as a guard against DNS rebinding. The <code>techlog:record</code> skill teaches Claude when to record an event, which type to use, and how to link it to earlier events; <code>make plugin</code> installs it as part of the techlog plugin; see <a href="claude-plugin.html">Claude plugin</a>.</p>
 
 <h2 id="tools">Tools</h2>
 <p>Tool names use underscores, because some MCP clients accept only letters, digits, underscores, and hyphens.</p>
@@ -65,16 +65,16 @@ nav: MCP integration
 </ol>
 
 <h2 id="safety">Agent safety</h2>
-<p>An event submitted through MCP carries <code>provenance.method: agent_submitted</code> unless the agent states otherwise, and the <code>techlog-record</code> skill tells the agent to set <code>actor.kind: ai_agent</code>, so a reader can tell it apart from a collected or human-entered event. An agent never grants an approval for its own submission. See <a href="security.html">security and trust</a>.</p>
+<p>An event submitted through MCP carries <code>provenance.method: agent_submitted</code> unless the agent states otherwise, and the <code>techlog:record</code> skill tells the agent to set <code>actor.kind: ai_agent</code>, so a reader can tell it apart from a collected or human-entered event. An agent never grants an approval for its own submission. See <a href="security.html">security and trust</a>.</p>
 
 <h2 id="status">Status</h2>
 <div class="table-wrap"><table>
   <thead><tr><th>Part</th><th>Status</th></tr></thead>
   <tbody>
     <tr><td>Five tools over streamable HTTP, with schema validation</td><td><span class="badge badge-exists">Implemented (basic)</span></td></tr>
-    <tr><td>Claude skill <code>techlog-record</code></td><td><span class="badge badge-exists">Implemented</span></td></tr>
+    <tr><td>Claude skill <code>techlog:record</code></td><td><span class="badge badge-exists">Implemented</span></td></tr>
     <tr><td>Authentication, event signatures</td><td><span class="badge badge-future">Not implemented</span></td></tr>
     <tr><td>Rollback-plan and evidence tools, resources, prompts</td><td><span class="badge badge-proposed">Proposed</span></td></tr>
   </tbody>
 </table></div>
-<nav class="pager" aria-label="Pager"><a href="event-model.html">← Event model</a><a href="policy.html">Workflow and policy →</a></nav>
+<nav class="pager" aria-label="Pager"><a href="event-model.html">← Event model</a><a href="claude-plugin.html">Claude plugin →</a></nav>
