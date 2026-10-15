@@ -184,7 +184,7 @@ export function renderDemoCards(events) {
     const to = from < 0 ? -1 : lines.indexOf('  ],', from);
     const json = lines.map(highlightJson);
     if (from >= 0 && to >= 0) { json[from] = `<mark class="rec-hl">${json[from]}`; json[to] += '</mark>'; }
-    return `<li class="rec-card" id="rec-${n}" data-rec="${n}">` +
+    return `<li class="rec-card" id="rec-${n}" data-rec="${n}" data-type="${esc(e.type)}">` +
       `<div class="rec-head"><span class="rec-type">${esc(e.type)}</span><span class="rec-id">${esc(e.id)}</span></div>` +
       `<p class="rec-sum">${esc(e.summary)}</p>` +
       `<p class="rec-meta">${meta}</p>` +

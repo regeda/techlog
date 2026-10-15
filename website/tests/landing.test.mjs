@@ -410,3 +410,17 @@ test('typing: the command line types, and so do the session dividers and every o
   assert.match(css, /\.sh-typing::after \{/, 'the caret is styled');
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[^\n]*\.sh-typing::after/, 'only the caret blink stops under reduced motion, not the typing');
 });
+
+test('each demo event type has its own colour: a coloured border and a badge for the event name', () => {
+  const out = renderDemoCards(chain);
+  assert.deepEqual([...out.matchAll(/class="rec-card" id="rec-\d" data-rec="\d" data-type="([^"]+)"/g)].map((m) => m[1]), chain.map((e) => e.type));
+  const colour = {};
+  for (const m of css.matchAll(/\.rec-card\[data-type="([^"]+)"\] \{ --ev: var\((--[a-z]+)\); \}/g)) colour[m[1]] = m[2];
+  assert.deepEqual(Object.keys(colour).sort(), chain.map((e) => e.type).sort(), 'every demo event type is coloured');
+  assert.equal(new Set(Object.values(colour)).size, 3, 'three different colours');
+  assert.equal(colour['change.implemented'], '--ok', 'a change is green');
+  assert.ok(!Object.values(colour).includes('--hyp'), 'purple stays reserved for the hypothesis link');
+  assert.match(css, /\.rec-card \{[^}]*border: 1px solid var\(--ev, var\(--line-strong\)\)/, 'the card border takes the event colour');
+  assert.match(css, /\.rec-type \{[^}]*background: color-mix\(in srgb, var\(--ev[^}]*color: var\(--ev/, 'the event name is a coloured badge');
+  assert.match(css, /\.rec-type \{[^}]*var\(--ev, var\(--info\)\) 6%, var\(--bg-1\)/, 'a 6% tint keeps badge text at 4.5:1 or better in both themes');
+});
