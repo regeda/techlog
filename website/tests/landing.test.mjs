@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, mkdirSync, existsSync } from 'node:fs';
-import { build, highlightJson, highlightCode } from '../build.mjs';
+import { build, highlightJson, highlightCode, renderDemoCards } from '../build.mjs';
 
 mkdirSync('.test-out', { recursive: true });
 build({ srcDir: 'src', outDir: '.test-out/landing' });
@@ -79,23 +79,33 @@ test('landing: the logo lives in the header bar, and the motto is big, in two li
 
 
 
-test('landing: how it works is one simulated agent session; the layers follow in their own section', () => {
+test('landing: how it works is a split view of three sessions and the records they leave', () => {
   assert.match(how, /<h2>One history\. Every agent\.<\/h2>/);
   assert.doesNotMatch(how, /class="pipe"|class="events"|ev-chain/, 'the three cards and the event flow are gone');
   assert.match(how, /id="shell"[\s\S]*Simulated example/);
+  assert.match(how, /Agent session[\s\S]*Techlog records/, 'two labelled panes');
   const typed = [...how.matchAll(/class="sh-typed">([^<]*)</g)].map((m) => m[1]);
-  assert.ok(typed.includes('Merge PR #482 and release 3.8.0 as a canary'), 'two actions, one command');
-  assert.ok(typed.includes('Investigate PagerDuty alert P1-5521') && typed.includes('Rollback PR #482'), 'investigate and rollback are separate commands');
-  assert.ok(typed.includes('Write the postmortem for P1-5521 and create follow-ups in Jira'));
-  assert.deepEqual([...how.matchAll(/class="sh-l sh-rule">── ([^<]*) ──</g)].map((m) => m[1]), ['a new session, after 3 days', 'a new session, after 1 day', 'a new session, weeks later']);
-  assert.equal(typed.filter((c) => c === '/techlog:record').length, 4, 'one /techlog:record per batch of work');
-  assert.equal([...how.matchAll(/✓ recorded evt_/g)].length, 6, 'six events from four commands');
-  assert.doesNotMatch(how, /techlog_record_event/, 'the skill, not the raw tool, is what the demo shows');
-  assert.match(how, /Hypothesis|hypothesis/, 'an unproven cause stays a hypothesis');
-  assert.match(how, /It confirms the mitigation, not the cause/);
+  assert.deepEqual(typed.filter((c) => c !== '/techlog:record'), [
+    'Approve the spin-to-win design with a 20% cap',
+    'Merge PR #482',
+    'Investigate PagerDuty alert P1-5521',
+  ]);
+  assert.equal(typed.filter((c) => c === '/techlog:record').length, 3, 'one /techlog:record per session');
+  assert.deepEqual([...how.matchAll(/class="sh-l sh-rule">── ([^<]*) ──</g)].map((m) => m[1]), ['a new session, 2 days later', 'a new session, 3 days later']);
+  assert.equal((how.match(/class="sh-step"/g) || []).length, 3);
+  assert.deepEqual([...how.matchAll(/class="sh-l sh-res" data-rec="(\d)"/g)].map((m) => m[1]), ['1', '2', '3'], 'one record line per session, in order');
+  assert.deepEqual([...how.matchAll(/✓ recorded (evt_\w+)/g)].map((m) => m[1]), chain.map((e) => e.id), 'the transcript records the same events as the cards');
+  assert.equal((how.match(/class="rec-card"/g) || []).length, 3);
+  assert.match(how, /rec-hypothesis/, 'the unproven cause is shown as a hypothesis');
+  assert.doesNotMatch(how, /techlog_record_event|kubectl|gh pr|pd incident|jira issue/, 'no tool-call noise, and the skill rather than the raw tool is shown');
+  assert.doesNotMatch(how, /class="(rec-card|sh-step)"[^>]*\bhidden\b/, 'without JavaScript everything is visible');
   assert.match(how, /id="sh-play"[^>]*>▶ Run simulation/, 'starts idle with a call to run');
   const js = readFileSync('src/assets/js/shell.js', 'utf8');
   assert.doesNotMatch(js, /IntersectionObserver|autoplay/, 'does not start by itself');
+  assert.match(css, /@media \(max-width: 700px\)[^\n]*\.sh-panes/, 'the panes stack on a phone');
+});
+
+test('landing: the layers follow how it works in their own section', () => {
   const open = html.slice(html.indexOf('id="open"'), html.indexOf('id="start"'));
   assert.match(open, /<h2>Open by design\. Built for agents\.<\/h2>/);
   assert.ok(html.indexOf('id="open"') > html.indexOf('id="how"'));
@@ -335,4 +345,68 @@ test('every "Try Techlog" link on every page leads to the same URL, without a fr
   }
   assert.ok(count >= 6, `found ${count} Try Techlog links (the header on every page)`);
   assert.deepEqual([...urls], ['welcome.html']);
+});
+
+const chain = JSON.parse(readFileSync('src/examples/demo-chain.json', 'utf8'));
+
+test('renderDemoCards: one card per event, links marked by basis, JSON from the same event', () => {
+  const out = renderDemoCards(chain);
+  assert.equal((out.match(/class="rec-card"/g) || []).length, 3);
+  assert.equal((out.match(/class="rec-link rec-confirmed"/g) || []).length, 2);
+  assert.equal((out.match(/class="rec-link rec-hypothesis"/g) || []).length, 1);
+  assert.deepEqual([...out.matchAll(/data-rec="(\d)"/g)].map((m) => m[1]), ['1', '2', '3']);
+  for (const e of chain) {
+    assert.ok(out.includes(e.id), `${e.id} is shown`);
+    assert.ok(out.includes(e.summary), `${e.id} summary is shown`);
+  }
+  assert.equal((out.match(/<details class="rec-json">/g) || []).length, 3);
+  assert.match(out, /<mark class="rec-hl">[\s\S]*links[\s\S]*<\/mark>/, 'the links field is highlighted in the JSON');
+});
+
+test('renderDemoCards: escapes event text and copes with an event that has no sources', () => {
+  const evil = { ...chain[0], summary: '<b>x</b> & "y"' };
+  delete evil.sources;
+  const out = renderDemoCards([evil]);
+  assert.doesNotMatch(out, /<b>x/);
+  assert.match(out, /&lt;b&gt;x&lt;\/b&gt; &amp; &quot;y&quot;/);
+  assert.match(out, /class="rec-card"/);
+});
+
+test('the {{demo-cards}} directive is expanded in the built landing page', () => {
+  assert.doesNotMatch(html, /\{\{demo-cards/);
+});
+
+test('shell.js: one session at a time, cards accumulate, 45 seconds, reduced motion, no autoplay', () => {
+  const js = readFileSync('src/assets/js/shell.js', 'utf8');
+  assert.match(js, /TARGET_MS = 45000/);
+  assert.match(js, /sh-cur/, 'only the current session is shown on the left');
+  assert.match(js, /data-rec/, 'cards are tied to the record line of their session');
+  assert.doesNotMatch(js, /matchMedia|prefers-reduced-motion/, 'typing is the point of the demo, so it is never skipped');
+  assert.doesNotMatch(js, /IntersectionObserver|autoplay/);
+});
+
+test('the record cards stay inside their pane: the list column may shrink below the JSON width', () => {
+  assert.match(css, /\.rec-list \{[^}]*grid-template-columns: minmax\(0, 1fr\)/);
+});
+
+test('review fixes: the record list follows the newest card, a card lands before the wipe, and the dead controls stay hidden without JS', () => {
+  const js = readFileSync('src/assets/js/shell.js', 'utf8');
+  assert.match(js, /list\.scrollTop = list\.scrollHeight/, 'the records pane scrolls to the newest card');
+  assert.match(js, /CARD_DWELL_MS/, 'the session stays visible for a beat after its card lands');
+  assert.match(css, /\.sh-ctl\[hidden\] \{ display: none; \}/, 'the control bar honours hidden when JavaScript never unhides it');
+});
+
+test('the hiding rules of the demo only apply once JavaScript has added .sh-js', () => {
+  const hiding = css.split('\n').filter((l) => /display: none/.test(l) && /\.(rec-card|sh-step|sh-l)\b/.test(l));
+  assert.ok(hiding.length >= 3, 'the three hiding rules exist');
+  for (const l of hiding) assert.match(l, /^\.sh-js /, `without .sh-js the demo would hide in a no-JS browser: ${l}`);
+});
+
+test('typing: the command line types, and so do the session dividers and every output line', () => {
+  const js = readFileSync('src/assets/js/shell.js', 'utf8');
+  assert.match(js, /OUT_TYPE_MS/, 'output lines are typed');
+  assert.match(js, /DIVIDER_TYPE_MS/, 'a new-session divider is typed more slowly so it is noticed');
+  assert.match(js, /sh-typing/, 'the line being typed carries a caret');
+  assert.match(css, /\.sh-typing::after \{/, 'the caret is styled');
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[^\n]*\.sh-typing::after/, 'only the caret blink stops under reduced motion, not the typing');
 });

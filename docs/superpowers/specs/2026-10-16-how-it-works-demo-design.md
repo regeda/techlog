@@ -78,9 +78,9 @@ Mobile: the panes stack, the transcript above the chain.
   `IntersectionObserver`). It starts idle with a call to run.
 - Target length about 45 seconds, down from 90.
 - Without JavaScript all three cards are visible statically, with their links.
-- `prefers-reduced-motion` is respected: no typing animation or glow.
+- Typing is the point of the demo and is never skipped: the command line types each command, and every output line and each new-session divider is typed too (the divider more slowly, so a new session is noticed). Under `prefers-reduced-motion` only the glow and the caret blink stop.
 - Accessibility: the transcript keeps `role="log"`; cards are real elements with
-  accessible names; the JSON toggle is a button with `aria-expanded`.
+  accessible names; the JSON toggle is a native `<details>`/`<summary>`, which works without JavaScript and exposes its expanded state to assistive tech.
 
 ### Data and drift
 
@@ -111,7 +111,7 @@ text, is unchanged unless the new demo makes a sentence untrue.
 - Data: `demo-chain.json` events validate against the core schema; the card
   text and the JSON come from the same file.
 - Behaviour: starts idle, no autoplay, seek reaches the end state with all
-  cards visible, the JSON toggle flips `aria-expanded`.
+  cards visible, each card has a `<details>` JSON toggle (checked by hand in a browser, since the suite has no DOM).
 - Static fallback: with JS off all cards are visible.
 
 ### Out of scope

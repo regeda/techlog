@@ -166,3 +166,17 @@ test('mcp tools: the five implemented tools with object input schemas', () => {
   assert.equal(byId[idOf(7)].type, ver.request.params.arguments.event.type);
   assert.ok(ver.request.params.arguments.event.evidence.length, 'the verification carries its evidence');
 });
+
+test('the demo chain validates and links only to earlier demo events', () => {
+  const chain = load('demo-chain.json');
+  assert.deepEqual(chain.map((e) => e.type), ['decision.made', 'change.implemented', 'incident.opened']);
+  const seen = new Set();
+  for (const e of chain) {
+    assert.deepEqual(validate(schema, e), [], e.id);
+    assert.ok(e.sources && e.sources[0], `${e.id} needs a source for its card`);
+    for (const l of e.links ?? []) assert.ok(seen.has(l.target), `${e.id} links to ${l.target}, which is not an earlier demo event`);
+    seen.add(e.id);
+  }
+  assert.deepEqual(chain[1].links.map((l) => `${l.rel}:${l.basis}`), ['implements:confirmed']);
+  assert.deepEqual(chain[2].links.map((l) => `${l.rel}:${l.basis}`), ['observed_after:confirmed', 'caused_by:hypothesis']);
+});

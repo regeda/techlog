@@ -168,6 +168,32 @@ export function highlightCode(lang, text) {
   return out + esc(text.slice(last));
 }
 
+// renderDemoCards turns the demo chain into the "Techlog records" cards of the
+// landing page: one <li> per event. The summary, the links and the JSON behind
+// "Show JSON" all come from the same event, so they cannot disagree. The links
+// field is marked in the JSON so a visitor sees what the arrows mean.
+export function renderDemoCards(events) {
+  return events.map((e, i) => {
+    const n = i + 1;
+    const src = e.sources && e.sources[0];
+    const meta = `${esc(e.time)}${src ? ` · ${esc(src.kind)}: ${esc(src.ref)}` : ''}`;
+    const links = (e.links || []).map((l) =>
+      `<li class="rec-link rec-${esc(l.basis)}"><span class="rec-rel">${esc(l.rel)}</span> <span aria-hidden="true">→</span> <code>${esc(l.target)}</code> <span class="rec-basis">${esc(l.basis)}</span></li>`).join('');
+    const lines = JSON.stringify(e, null, 2).split('\n');
+    const from = lines.indexOf('  "links": [');
+    const to = from < 0 ? -1 : lines.indexOf('  ],', from);
+    const json = lines.map(highlightJson);
+    if (from >= 0 && to >= 0) { json[from] = `<mark class="rec-hl">${json[from]}`; json[to] += '</mark>'; }
+    return `<li class="rec-card" id="rec-${n}" data-rec="${n}">` +
+      `<div class="rec-head"><span class="rec-type">${esc(e.type)}</span><span class="rec-id">${esc(e.id)}</span></div>` +
+      `<p class="rec-sum">${esc(e.summary)}</p>` +
+      `<p class="rec-meta">${meta}</p>` +
+      (links ? `<ul class="rec-links" aria-label="Links to earlier events">${links}</ul>` : '') +
+      `<details class="rec-json"><summary>Show JSON</summary><pre><code class="language-json">${json.join('\n')}</code></pre></details>` +
+      `</li>`;
+  }).join('\n');
+}
+
 function render(template, vars, ctx) {
   let out = template.replace(/\{\{>\s*([\w-]+)\s*\}\}/g, (_, name) => {
     if (!(name in ctx.partials)) throw new Error(`${vars.__file}: missing partial "${name}"`);
@@ -184,6 +210,8 @@ function render(template, vars, ctx) {
     const data = JSON.stringify(JSON.parse(readExample(ctx, file, vars.__file))).replace(/</g, '\\u003c');
     return `<script type="application/json" id="${id}">${data}</script>`;
   });
+  out = out.replace(/\{\{demo-cards\s+([^\s}]+)\s*\}\}/g, (_, file) =>
+    renderDemoCards(JSON.parse(readExample(ctx, file, vars.__file))));
   return out;
 }
 
