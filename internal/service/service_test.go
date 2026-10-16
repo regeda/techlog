@@ -21,10 +21,14 @@ var (
 	idRe     = regexp.MustCompile(`^evt_[0-9A-Z]{12}$`)
 )
 
+// testSkew is the clock skew newService pins, so no test depends on the
+// default. Any positive value below 30 minutes works.
+const testSkew = 5 * time.Minute
+
 func newService(t *testing.T) (*service.Service, *fakeStore) {
 	t.Helper()
 	fs := newFakeStore()
-	svc, err := service.New(fs, service.WithClock(func() time.Time { return fixedNow }))
+	svc, err := service.New(fs, service.WithClock(func() time.Time { return fixedNow }), service.WithClockSkew(testSkew))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -346,9 +350,9 @@ func TestRecordRejectsFutureTime(t *testing.T) {
 		name, time string
 		ok         bool
 	}{
-		{"at the skew boundary", "2026-03-12T10:05:00Z", true},
+		{"at the skew boundary", fixedNow.Add(testSkew).Format(time.RFC3339), true},
 		{"offset text reads later but is past", "2026-03-12T11:30:00+02:00", true},
-		{"one second over the skew", "2026-03-12T10:05:01Z", false},
+		{"one second over the skew", fixedNow.Add(testSkew + time.Second).Format(time.RFC3339), false},
 		{"offset instant is in the future", "2026-03-12T12:30:00+02:00", false},
 	}
 	for _, c := range cases {
@@ -463,7 +467,7 @@ func TestRecordRejectsTimeBeforeLinkTarget(t *testing.T) {
 func TestRecordReportsAllTimeProblems(t *testing.T) {
 	svc, _ := newService(t)
 	d := testutil.Doc("alpha", "proposal.recorded", "p", testutil.Link("motivated_by", "evt_000000000000"))
-	d["time"] = "2026-03-12T10:05:01Z"
+	d["time"] = fixedNow.Add(testSkew + time.Second).Format(time.RFC3339)
 	_, err := svc.Record(ctx, d, service.MethodHuman)
 	paths := problemPaths(err)
 	if !slices.Contains(paths, "/time") || !slices.Contains(paths, "/links/0/target") {
@@ -485,12 +489,13 @@ func TestRecordSkipsTimeChecksOnBadTime(t *testing.T) {
 func TestRecordStampedTimeRaisedToLinkTarget(t *testing.T) {
 	svc, _ := newService(t)
 	d := testutil.Doc("alpha", "problem.reported", "target")
-	d["time"] = "2026-03-12T10:04:00Z"
+	inRange := fixedNow.Add(testSkew - time.Minute).Format(time.RFC3339)
+	d["time"] = inRange
 	target := record(t, svc, d)
 
 	linked := testutil.Doc("alpha", "proposal.recorded", "p", testutil.Link("motivated_by", target.ID))
 	delete(linked, "time")
-	if ev := record(t, svc, linked); ev.Time != "2026-03-12T10:04:00Z" {
+	if ev := record(t, svc, linked); ev.Time != inRange {
 		t.Errorf("linked stamp = %q, want raised to the target's time", ev.Time)
 	}
 	plain := testutil.Doc("alpha", "problem.reported", "plain")
@@ -562,7 +567,7 @@ func TestImportAppliesTimeRules(t *testing.T) {
 		d["provenance"] = map[string]any{"recorded_by": "user:test", "method": service.MethodHuman}
 		return d
 	}
-	if _, _, err := svc.Import(ctx, []map[string]any{withID("evt_IMPORTFUTURE", "2026-03-12T10:05:01Z")}); !slices.Contains(problemPaths(err), "/time") {
+	if _, _, err := svc.Import(ctx, []map[string]any{withID("evt_IMPORTFUTURE", fixedNow.Add(testSkew+time.Second).Format(time.RFC3339))}); !slices.Contains(problemPaths(err), "/time") {
 		t.Errorf("future time: got %v", err)
 	}
 	first := withID("evt_IMPORTFIRST0", "2026-03-10T12:00:00Z")
@@ -577,5 +582,24 @@ func TestImportAppliesTimeRules(t *testing.T) {
 	d, err := svc.Get(ctx, "evt_IMPORTOFFSET")
 	if err != nil || d.Event.Time != "2026-03-11T10:00:00Z" {
 		t.Errorf("offset time stored as %q, %v", d.Event.Time, err)
+	}
+}
+
+func TestDefaultClockSkewApplies(t *testing.T) {
+	svc, err := service.New(newFakeStore(), service.WithClock(func() time.Time { return fixedNow }))
+	if err != nil {
+		t.Fatal(err)
+	}
+	at := func(ts time.Time) error {
+		d := testutil.Doc("alpha", "problem.reported", "p")
+		d["time"] = ts.Format(time.RFC3339)
+		_, err := svc.Record(ctx, d, service.MethodHuman)
+		return err
+	}
+	if err := at(fixedNow.Add(service.DefaultClockSkew)); err != nil {
+		t.Errorf("now + default skew must be accepted: %v", err)
+	}
+	if err := at(fixedNow.Add(service.DefaultClockSkew + time.Second)); !slices.Contains(problemPaths(err), "/time") {
+		t.Errorf("now + default skew + 1s must be rejected at /time, got %v", err)
 	}
 }
