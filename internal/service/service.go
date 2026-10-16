@@ -180,6 +180,7 @@ func (s *Service) prepare(ctx context.Context, doc map[string]any, now time.Time
 		ev.Time = evTime.UTC().Format(time.RFC3339Nano)
 	}
 	var latestTarget time.Time
+	latestIdx := -1
 	for i, l := range ev.Links {
 		target, err := s.store.Get(ctx, l.Target)
 		if errors.Is(err, store.ErrNotFound) {
@@ -196,7 +197,7 @@ func (s *Service) prepare(ctx context.Context, doc map[string]any, now time.Time
 			continue
 		}
 		if targetTime.After(latestTarget) {
-			latestTarget = targetTime
+			latestTarget, latestIdx = targetTime, i
 		}
 		if !stamped && evTime.Before(targetTime) {
 			problems = append(problems, event.Problem{
@@ -205,7 +206,14 @@ func (s *Service) prepare(ctx context.Context, doc map[string]any, now time.Time
 			})
 		}
 	}
-	if stamped && evErr == nil && latestTarget.After(evTime) {
+	if stamped && evErr == nil && latestTarget.After(now.Add(s.skew)) {
+		// A stamp is never pushed past the clock plus the skew: the target is
+		// out of range and the event cannot follow it.
+		problems = append(problems, event.Problem{
+			Path:    fmt.Sprintf("/links/%d", latestIdx),
+			Message: fmt.Sprintf("linked event %s is dated %s, too far ahead of the clock for a server-stamped time", ev.Links[latestIdx].Target, latestTarget.UTC().Format(time.RFC3339Nano)),
+		})
+	} else if stamped && evErr == nil && latestTarget.After(evTime) {
 		ev.Time = latestTarget.UTC().Format(time.RFC3339Nano)
 	}
 	if len(problems) > 0 {

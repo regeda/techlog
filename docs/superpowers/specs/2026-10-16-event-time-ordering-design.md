@@ -1,7 +1,7 @@
 # Event time ordering — design
 
 Date: 2026-10-16
-Status: approved in conversation, pending written-spec review
+Status: approved; implemented on feat/event-time-ordering
 Problem: Techlog event `evt_MVATV0VCEFGG` (`problem.reported`, system `techlog`, component `record_event`)
 
 ## Problem
@@ -83,8 +83,9 @@ Both checks run for every `Record` call, whether it came from HTTP or MCP.
 
 - **Server-stamped time.** When the client sends no `time`, the server stamps `s.now()`.
   That time is exempt from the future check. If a link target is dated later than the stamp
-  (possible only when it was stored within the skew), the stamp is raised to the latest
-  target time, so an event without a time is never rejected for its time.
+  and not later than now plus the skew, the stamp is raised to the latest target time. A target
+  dated beyond that (only legacy events can be) cannot be followed by a stamp, so the event is
+  rejected at `/links/<i>` rather than silently given a far-future time.
 - **Bad time.** If `time` fails schema validation or parsing, both new checks are skipped, so
   one bad time gives one problem.
 - **Target times.** `prepare()` already calls `store.Get` for each target, which returns the

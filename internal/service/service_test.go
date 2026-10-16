@@ -539,3 +539,43 @@ func TestLinkIgnoresTimeOrder(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestRecordStampNotRaisedBeyondSkew(t *testing.T) {
+	svc, fs := newService(t)
+	if err := fs.Insert(ctx, event.Event{ID: "evt_FARFUTURETGT", Time: "2027-01-01T00:00:00Z"}); err != nil {
+		t.Fatal(err)
+	}
+	d := testutil.Doc("alpha", "proposal.recorded", "p", testutil.Link("motivated_by", "evt_FARFUTURETGT"))
+	delete(d, "time")
+	_, err := svc.Record(ctx, d, service.MethodHuman)
+	if !slices.Contains(problemPaths(err), "/links/0") {
+		t.Fatalf("want /links/0, got %v", err)
+	}
+}
+
+func TestImportAppliesTimeRules(t *testing.T) {
+	svc, _ := newService(t)
+	withID := func(id, ts string, links ...map[string]any) map[string]any {
+		d := testutil.Doc("alpha", "problem.reported", id, links...)
+		d["id"], d["time"] = id, ts
+		d["schema_version"] = event.SchemaVersion
+		d["provenance"] = map[string]any{"recorded_by": "user:test", "method": service.MethodHuman}
+		return d
+	}
+	if _, _, err := svc.Import(ctx, []map[string]any{withID("evt_IMPORTFUTURE", "2026-03-12T10:05:01Z")}); !slices.Contains(problemPaths(err), "/time") {
+		t.Errorf("future time: got %v", err)
+	}
+	first := withID("evt_IMPORTFIRST0", "2026-03-10T12:00:00Z")
+	back := withID("evt_IMPORTBACK00", "2026-03-10T11:00:00Z", testutil.Link("motivated_by", "evt_IMPORTFIRST0"))
+	if _, _, err := svc.Import(ctx, []map[string]any{first, back}); !slices.Contains(problemPaths(err), "/links/0") {
+		t.Errorf("backward link: got %v", err)
+	}
+	off := withID("evt_IMPORTOFFSET", "2026-03-11T12:00:00+02:00")
+	if _, _, err := svc.Import(ctx, []map[string]any{off}); err != nil {
+		t.Fatal(err)
+	}
+	d, err := svc.Get(ctx, "evt_IMPORTOFFSET")
+	if err != nil || d.Event.Time != "2026-03-11T10:00:00Z" {
+		t.Errorf("offset time stored as %q, %v", d.Event.Time, err)
+	}
+}
