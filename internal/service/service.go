@@ -25,7 +25,7 @@ const (
 const maxIDAttempts = 5
 
 // DefaultClockSkew is how far ahead of the server clock an event time may be.
-const DefaultClockSkew = 5 * time.Minute
+const DefaultClockSkew = 5 * time.Second
 
 type Service struct {
 	store     store.Store

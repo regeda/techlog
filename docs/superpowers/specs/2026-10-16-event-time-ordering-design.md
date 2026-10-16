@@ -44,8 +44,8 @@ cannot claim to have happened in the future.
 | Question | Decision |
 |---|---|
 | Where is it enforced | `service.Record`, in `prepare()`, after schema validation (approach A) |
-| Future limit | `now + skew`; skew defaults to 5 minutes |
-| Skew setting | A server option, default 5m; `0` means no tolerance |
+| Future limit | `now + skew`; skew defaults to 5 seconds |
+| Skew setting | A server option, default 5s; `0` means no tolerance |
 | Which links | Every link on the new event, whatever its `rel` |
 | Equal times | Allowed (an event may have the same time as a link target) |
 | Links added by `Link` | No ordering rule |
@@ -105,7 +105,7 @@ change, and then ends in the existing duplicate result.
 
 ## Configuration
 
-- `service.WithClockSkew(d time.Duration)` option, default 5 minutes.
+- `service.WithClockSkew(d time.Duration)` option, default 5 seconds.
 - The server exposes it as a configuration option. Its name and form follow however the
   server is configured today; the builder picks them. A negative value is a startup error
   (my call).

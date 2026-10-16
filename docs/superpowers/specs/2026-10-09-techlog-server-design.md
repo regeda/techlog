@@ -124,7 +124,7 @@ enforced by a test.
 5. Check rules a schema cannot express: every link target exists, a
    `caused_by` link carries an explicit `basis` (other links default to
    `confirmed`), `time` is not later than the server clock plus the allowed
-   skew (`serve -clock-skew`, default 5 minutes), and `time` is not earlier
+   skew (`serve -clock-skew`, default 5 seconds), and `time` is not earlier
    than the time of any linked event. Times are compared as instants and
    stored as UTC with `Z`; see `2026-10-16-event-time-ordering-design.md`.
 6. Insert.
