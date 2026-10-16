@@ -121,9 +121,12 @@ enforced by a test.
 3. Assign `id` (`evt_` plus 12 characters from `[0-9A-Z]`, time-sortable). A
    client-supplied `id` is ignored.
 4. Validate against the JSON Schema.
-5. Check rules a schema cannot express: every link target exists, and a
+5. Check rules a schema cannot express: every link target exists, a
    `caused_by` link carries an explicit `basis` (other links default to
-   `confirmed`).
+   `confirmed`), `time` is not later than the server clock plus the allowed
+   skew (`serve -clock-skew`, default 5 minutes), and `time` is not earlier
+   than the time of any linked event. Times are compared as instants and
+   stored as UTC with `Z`; see `2026-10-16-event-time-ordering-design.md`.
 6. Insert.
 
 Because the service does this, the HTTP API and MCP behave identically.

@@ -71,6 +71,8 @@ To record several related events, such as the story of a piece of work, record t
 1. **The time the source of the change records.** For a commit, read it from git: `git log -1 --format=%aI <sha>` (author time) or `%cI` (commit time, when the change was merged or rebased). For a pull request, its merge time. For a release, the deploy time. For an alert or incident, the time on the alert or the ticket. This holds even for something that has just happened: if a source has a timestamp, use it.
 2. **The current time, only if the source has no timestamp** or there is no source (a decision taken in this conversation, a finding you just made). Leave `time` out and the server stamps the moment of recording, or send the current time yourself with a zone.
 
+A time must not be in the future and must not be earlier than the time of any event the new one links to: the server rejects such an event. Then fix the time or the link; do not work around it.
+
 Never invent a time and never guess one from memory. If the source gives only a date or an approximate time, use what it gives and say so in the summary or when you report to the user.
 
 ## Links and honesty

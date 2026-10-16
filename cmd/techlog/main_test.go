@@ -46,3 +46,11 @@ func TestSeedCommandIsRepeatable(t *testing.T) {
 		t.Fatalf("second seed = %q, %v", out, err)
 	}
 }
+
+func TestServeRejectsNegativeClockSkew(t *testing.T) {
+	db := filepath.Join(t.TempDir(), "x.db")
+	_, err := runCmd(t, "serve", "--db", db, "--clock-skew", "-1s")
+	if err == nil || !strings.Contains(err.Error(), "clock skew") {
+		t.Fatalf("negative skew: %v", err)
+	}
+}

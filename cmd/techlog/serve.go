@@ -23,6 +23,7 @@ import (
 func runServe(ctx context.Context, args []string, out io.Writer) error {
 	fs := flag.NewFlagSet("serve", flag.ContinueOnError)
 	addr := fs.String("addr", "localhost:8080", "listen address; use :8080 to listen on all interfaces")
+	skew := fs.Duration("clock-skew", service.DefaultClockSkew, "how far ahead of the server clock an event time may be")
 	sf := addStoreFlags(fs)
 	if err := fs.Parse(args); err != nil {
 		return err
@@ -33,7 +34,7 @@ func runServe(ctx context.Context, args []string, out io.Writer) error {
 		return err
 	}
 	defer func() { _ = st.Close() }()
-	svc, err := service.New(st)
+	svc, err := service.New(st, service.WithClockSkew(*skew))
 	if err != nil {
 		return err
 	}
