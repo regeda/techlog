@@ -167,9 +167,9 @@ func (s *Service) prepare(ctx context.Context, doc map[string]any, now time.Time
 	}
 
 	var problems []event.Problem
-	evTime, err := ev.ParsedTime()
-	if err != nil {
-		problems = append(problems, event.Problem{Path: "/time", Message: err.Error()})
+	evTime, evErr := ev.ParsedTime()
+	if evErr != nil {
+		problems = append(problems, event.Problem{Path: "/time", Message: evErr.Error()})
 	} else {
 		if !stamped && evTime.After(now.Add(s.skew)) {
 			problems = append(problems, event.Problem{
@@ -179,15 +179,34 @@ func (s *Service) prepare(ctx context.Context, doc map[string]any, now time.Time
 		}
 		ev.Time = evTime.UTC().Format(time.RFC3339Nano)
 	}
+	var latestTarget time.Time
 	for i, l := range ev.Links {
-		if _, err := s.store.Get(ctx, l.Target); errors.Is(err, store.ErrNotFound) {
+		target, err := s.store.Get(ctx, l.Target)
+		if errors.Is(err, store.ErrNotFound) {
 			problems = append(problems, event.Problem{
 				Path:    fmt.Sprintf("/links/%d/target", i),
 				Message: fmt.Sprintf("event %s does not exist", l.Target),
 			})
+			continue
 		} else if err != nil {
 			return event.Event{}, err
 		}
+		targetTime, terr := target.ParsedTime()
+		if terr != nil || evErr != nil {
+			continue
+		}
+		if targetTime.After(latestTarget) {
+			latestTarget = targetTime
+		}
+		if !stamped && evTime.Before(targetTime) {
+			problems = append(problems, event.Problem{
+				Path:    fmt.Sprintf("/links/%d", i),
+				Message: fmt.Sprintf("time %s is earlier than %s, the time of linked event %s", ev.Time, target.Time, l.Target),
+			})
+		}
+	}
+	if stamped && evErr == nil && latestTarget.After(evTime) {
+		ev.Time = latestTarget.UTC().Format(time.RFC3339Nano)
 	}
 	if len(problems) > 0 {
 		return event.Event{}, &InvalidError{Problems: problems}

@@ -415,3 +415,127 @@ func TestClockSkewOption(t *testing.T) {
 		t.Error("negative skew must make New fail")
 	}
 }
+
+func TestRecordRejectsTimeBeforeLinkTarget(t *testing.T) {
+	svc, _ := newService(t)
+	target := record(t, svc, testutil.Doc("alpha", "problem.reported", "target")) // 2026-03-10T09:00:00Z
+	later := record(t, svc, func() map[string]any {
+		d := testutil.Doc("alpha", "problem.reported", "later")
+		d["time"] = "2026-03-10T12:00:00Z"
+		return d
+	}())
+	at := func(ts string, links ...map[string]any) error {
+		d := testutil.Doc("alpha", "proposal.recorded", "p", links...)
+		d["time"] = ts
+		_, err := svc.Record(ctx, d, service.MethodHuman)
+		return err
+	}
+	t.Run("one second before", func(t *testing.T) {
+		if err := at("2026-03-10T08:59:59Z", testutil.Link("motivated_by", target.ID)); !slices.Contains(problemPaths(err), "/links/0") {
+			t.Fatalf("got %v", err)
+		}
+	})
+	t.Run("equal time passes", func(t *testing.T) {
+		if err := at("2026-03-10T09:00:00Z", testutil.Link("motivated_by", target.ID)); err != nil {
+			t.Fatal(err)
+		}
+	})
+	t.Run("offset instant before", func(t *testing.T) {
+		if err := at("2026-03-10T10:59:00+02:00", testutil.Link("motivated_by", target.ID)); !slices.Contains(problemPaths(err), "/links/0") {
+			t.Fatalf("got %v", err)
+		}
+	})
+	t.Run("only the offending link is reported", func(t *testing.T) {
+		err := at("2026-03-10T10:00:00Z", testutil.Link("motivated_by", target.ID), testutil.Link("relates_to", later.ID))
+		paths := problemPaths(err)
+		if !slices.Contains(paths, "/links/1") || slices.Contains(paths, "/links/0") {
+			t.Fatalf("paths = %v", paths)
+		}
+	})
+	t.Run("dangling target reports only the target", func(t *testing.T) {
+		err := at("2026-03-01T00:00:00Z", testutil.Link("motivated_by", "evt_000000000000"))
+		if paths := problemPaths(err); !slices.Equal(paths, []string{"/links/0/target"}) {
+			t.Fatalf("paths = %v", paths)
+		}
+	})
+}
+
+func TestRecordReportsAllTimeProblems(t *testing.T) {
+	svc, _ := newService(t)
+	d := testutil.Doc("alpha", "proposal.recorded", "p", testutil.Link("motivated_by", "evt_000000000000"))
+	d["time"] = "2026-03-12T10:05:01Z"
+	_, err := svc.Record(ctx, d, service.MethodHuman)
+	paths := problemPaths(err)
+	if !slices.Contains(paths, "/time") || !slices.Contains(paths, "/links/0/target") {
+		t.Fatalf("paths = %v", paths)
+	}
+}
+
+func TestRecordSkipsTimeChecksOnBadTime(t *testing.T) {
+	svc, _ := newService(t)
+	target := record(t, svc, testutil.Doc("alpha", "problem.reported", "target"))
+	d := testutil.Doc("alpha", "proposal.recorded", "p", testutil.Link("motivated_by", target.ID))
+	d["time"] = "2026-03-11T10:12:00" // no zone
+	_, err := svc.Record(ctx, d, service.MethodHuman)
+	if !slices.Equal(problemPaths(err), []string{"/time"}) {
+		t.Fatalf("paths = %v", problemPaths(err))
+	}
+}
+
+func TestRecordStampedTimeRaisedToLinkTarget(t *testing.T) {
+	svc, _ := newService(t)
+	d := testutil.Doc("alpha", "problem.reported", "target")
+	d["time"] = "2026-03-12T10:04:00Z"
+	target := record(t, svc, d)
+
+	linked := testutil.Doc("alpha", "proposal.recorded", "p", testutil.Link("motivated_by", target.ID))
+	delete(linked, "time")
+	if ev := record(t, svc, linked); ev.Time != "2026-03-12T10:04:00Z" {
+		t.Errorf("linked stamp = %q, want raised to the target's time", ev.Time)
+	}
+	plain := testutil.Doc("alpha", "problem.reported", "plain")
+	delete(plain, "time")
+	if ev := record(t, svc, plain); ev.Time != "2026-03-12T10:00:00Z" {
+		t.Errorf("plain stamp = %q, want the clock", ev.Time)
+	}
+}
+
+func TestRecordComparesOffsetTargetAsInstant(t *testing.T) {
+	svc, fs := newService(t)
+	if err := fs.Insert(ctx, event.Event{ID: "evt_OFFSETTARGET", Time: "2026-03-10T12:00:00+02:00"}); err != nil {
+		t.Fatal(err)
+	}
+	at := func(ts string) error {
+		d := testutil.Doc("alpha", "proposal.recorded", "p", testutil.Link("motivated_by", "evt_OFFSETTARGET"))
+		d["time"] = ts
+		_, err := svc.Record(ctx, d, service.MethodHuman)
+		return err
+	}
+	if err := at("2026-03-10T09:59:00Z"); !slices.Contains(problemPaths(err), "/links/0") {
+		t.Errorf("09:59Z is before 10:00Z, got %v", err)
+	}
+	if err := at("2026-03-10T10:00:00Z"); err != nil {
+		t.Errorf("10:00Z equals the target, got %v", err)
+	}
+}
+
+func TestRecordSkipsLinkCheckForUnparsableTargetTime(t *testing.T) {
+	svc, fs := newService(t)
+	if err := fs.Insert(ctx, event.Event{ID: "evt_BADTIMETARGE", Time: "not a time"}); err != nil {
+		t.Fatal(err)
+	}
+	d := testutil.Doc("alpha", "proposal.recorded", "p", testutil.Link("motivated_by", "evt_BADTIMETARGE"))
+	record(t, svc, d)
+}
+
+func TestLinkIgnoresTimeOrder(t *testing.T) {
+	svc, _ := newService(t)
+	early := testutil.Doc("alpha", "problem.reported", "early")
+	early["time"] = "2026-03-01T00:00:00Z"
+	late := testutil.Doc("alpha", "problem.reported", "late")
+	late["time"] = "2026-03-02T00:00:00Z"
+	a, b := record(t, svc, early), record(t, svc, late)
+	if _, err := svc.Link(ctx, service.LinkInput{Source: a.ID, Target: b.ID, Rel: "relates_to"}); err != nil {
+		t.Fatal(err)
+	}
+}
