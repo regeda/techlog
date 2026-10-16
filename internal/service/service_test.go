@@ -340,3 +340,78 @@ func TestRecordValidationBeatsDuplicate(t *testing.T) {
 		t.Fatalf("got %v, want a validation error, not a duplicate", err)
 	}
 }
+
+func TestRecordRejectsFutureTime(t *testing.T) {
+	cases := []struct {
+		name, time string
+		ok         bool
+	}{
+		{"at the skew boundary", "2026-03-12T10:05:00Z", true},
+		{"offset text reads later but is past", "2026-03-12T11:30:00+02:00", true},
+		{"one second over the skew", "2026-03-12T10:05:01Z", false},
+		{"offset instant is in the future", "2026-03-12T12:30:00+02:00", false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			svc, fs := newService(t)
+			d := testutil.Doc("alpha", "problem.reported", "p")
+			d["time"] = c.time
+			_, err := svc.Record(ctx, d, service.MethodHuman)
+			if c.ok {
+				if err != nil {
+					t.Fatalf("want accepted, got %v", err)
+				}
+				return
+			}
+			if !slices.Contains(problemPaths(err), "/time") {
+				t.Fatalf("want an InvalidError with /time, got %v", err)
+			}
+			if fs.inserts != 0 {
+				t.Error("a rejected event must not reach the store")
+			}
+		})
+	}
+}
+
+func TestRecordStoresTimeAsUTC(t *testing.T) {
+	cases := []struct{ in, want string }{
+		{"2026-03-11T12:00:00+02:00", "2026-03-11T10:00:00Z"},
+		{"2026-03-11T10:00:00.250+00:00", "2026-03-11T10:00:00.25Z"},
+	}
+	for _, c := range cases {
+		svc, _ := newService(t)
+		d := testutil.Doc("alpha", "problem.reported", "p")
+		d["time"] = c.in
+		ev := record(t, svc, d)
+		if ev.Time != c.want {
+			t.Errorf("time %q stored as %q, want %q", c.in, ev.Time, c.want)
+		}
+	}
+}
+
+func TestClockSkewOption(t *testing.T) {
+	clock := service.WithClock(func() time.Time { return fixedNow })
+	try := func(t *testing.T, skew time.Duration, at time.Time) error {
+		t.Helper()
+		svc, err := service.New(newFakeStore(), clock, service.WithClockSkew(skew))
+		if err != nil {
+			t.Fatal(err)
+		}
+		d := testutil.Doc("alpha", "problem.reported", "p")
+		d["time"] = at.Format(time.RFC3339)
+		_, err = svc.Record(ctx, d, service.MethodHuman)
+		return err
+	}
+	if err := try(t, 0, fixedNow); err != nil {
+		t.Errorf("zero skew, time == now: %v", err)
+	}
+	if err := try(t, 0, fixedNow.Add(time.Second)); !slices.Contains(problemPaths(err), "/time") {
+		t.Errorf("zero skew, now+1s: want /time, got %v", err)
+	}
+	if err := try(t, time.Hour, fixedNow.Add(59*time.Minute)); err != nil {
+		t.Errorf("1h skew, now+59m: %v", err)
+	}
+	if _, err := service.New(newFakeStore(), service.WithClockSkew(-time.Second)); err == nil {
+		t.Error("negative skew must make New fail")
+	}
+}

@@ -24,10 +24,14 @@ const (
 
 const maxIDAttempts = 5
 
+// DefaultClockSkew is how far ahead of the server clock an event time may be.
+const DefaultClockSkew = 5 * time.Minute
+
 type Service struct {
 	store     store.Store
 	validator *event.Validator
 	now       func() time.Time
+	skew      time.Duration
 	entropy   io.Reader
 }
 
@@ -36,14 +40,21 @@ type Option func(*Service)
 // WithClock replaces time.Now, for tests.
 func WithClock(now func() time.Time) Option { return func(s *Service) { s.now = now } }
 
+// WithClockSkew sets how far ahead of the clock an event time may be. Zero
+// allows none; a negative value makes New fail.
+func WithClockSkew(d time.Duration) Option { return func(s *Service) { s.skew = d } }
+
 func New(st store.Store, opts ...Option) (*Service, error) {
 	v, err := event.NewValidator()
 	if err != nil {
 		return nil, err
 	}
-	s := &Service{store: st, validator: v, now: time.Now, entropy: rand.Reader}
+	s := &Service{store: st, validator: v, now: time.Now, skew: DefaultClockSkew, entropy: rand.Reader}
 	for _, o := range opts {
 		o(s)
+	}
+	if s.skew < 0 {
+		return nil, fmt.Errorf("clock skew must not be negative, got %s", s.skew)
 	}
 	return s, nil
 }
@@ -58,14 +69,16 @@ func (s *Service) Record(ctx context.Context, doc map[string]any, method string)
 	if err != nil {
 		return event.Event{}, &BadRequestError{Msg: "event is not valid JSON: " + err.Error()}
 	}
-	applyDefaults(doc, method, s.now())
-	id, err := event.NewID(s.now(), s.entropy)
+	now := s.now()
+	stamped := isBlank(doc["time"])
+	applyDefaults(doc, method, now)
+	id, err := event.NewID(now, s.entropy)
 	if err != nil {
 		return event.Event{}, err
 	}
 	doc["id"] = id
 
-	ev, err := s.prepare(ctx, doc)
+	ev, err := s.prepare(ctx, doc, now, stamped)
 	if err != nil {
 		return event.Event{}, err
 	}
@@ -134,7 +147,7 @@ func isBlank(v any) bool {
 
 // prepare validates doc (which already has an id) and decodes it. It reports
 // schema problems and unresolvable link targets together.
-func (s *Service) prepare(ctx context.Context, doc map[string]any) (event.Event, error) {
+func (s *Service) prepare(ctx context.Context, doc map[string]any, now time.Time, stamped bool) (event.Event, error) {
 	if err := s.validator.Validate(doc); err != nil {
 		var ve *event.ValidationError
 		if errors.As(err, &ve) {
@@ -154,8 +167,17 @@ func (s *Service) prepare(ctx context.Context, doc map[string]any) (event.Event,
 	}
 
 	var problems []event.Problem
-	if _, err := ev.ParsedTime(); err != nil {
+	evTime, err := ev.ParsedTime()
+	if err != nil {
 		problems = append(problems, event.Problem{Path: "/time", Message: err.Error()})
+	} else {
+		if !stamped && evTime.After(now.Add(s.skew)) {
+			problems = append(problems, event.Problem{
+				Path:    "/time",
+				Message: fmt.Sprintf("time %s is in the future, beyond the allowed clock skew of %s", ev.Time, s.skew),
+			})
+		}
+		ev.Time = evTime.UTC().Format(time.RFC3339Nano)
 	}
 	for i, l := range ev.Links {
 		if _, err := s.store.Get(ctx, l.Target); errors.Is(err, store.ErrNotFound) {
@@ -263,7 +285,7 @@ func (s *Service) Import(ctx context.Context, docs []map[string]any) (inserted, 
 		if err != nil {
 			return inserted, skipped, &BadRequestError{Msg: "event is not valid JSON: " + err.Error()}
 		}
-		ev, err := s.prepare(ctx, doc)
+		ev, err := s.prepare(ctx, doc, s.now(), false)
 		if err != nil {
 			return inserted, skipped, err
 		}
