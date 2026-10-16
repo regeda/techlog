@@ -63,6 +63,7 @@ func TestSmoke(t *testing.T) {
 
 	doc := testutil.Doc("promo-api", "decision.made", "Smoke test decision",
 		testutil.Link("relates_to", "evt_01J9K2A0P011"))
+	doc["time"] = "2026-03-20T09:00:00Z" // after the linked seed event
 	res, err := cs.CallTool(ctx, &mcp.CallToolParams{Name: "techlog_record_event", Arguments: map[string]any{"event": doc}})
 	if err != nil || res.IsError {
 		t.Fatalf("record over MCP: err=%v result=%+v", err, res)
