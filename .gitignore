@@ -10,7 +10,8 @@ node_modules/
 share/
 
 # local tooling
-.claude/settings.local.json
+.claude/
+docs/superpowers/plans/
 .DS_Store
 
 # build output
