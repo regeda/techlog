@@ -167,14 +167,16 @@ test('mcp tools: the five implemented tools with object input schemas', () => {
   assert.ok(ver.request.params.arguments.event.evidence.length, 'the verification carries its evidence');
 });
 
-test('the demo chain validates, links only to earlier events, and never runs backward in time', () => {
+test('the demo chain is three connected events: problem, decision, change', () => {
   const chain = load('demo-chain.json');
-  assert.deepEqual(chain.map((e) => e.type), ['problem.reported', 'proposal.recorded', 'decision.made', 'change.implemented', 'incident.opened', 'mitigation.applied']);
+  assert.deepEqual(chain.map((e) => e.type), ['problem.reported', 'decision.made', 'change.implemented']);
   const seen = new Map();
   for (const e of chain) {
     assert.deepEqual(validate(schema, e), [], e.id);
-    assert.ok(e.sources && e.sources[0], `${e.id} needs a source for its card`);
+    assert.ok(e.sources && e.sources[0], `${e.id} needs a source for its row`);
     assert.equal(e.subject.system, 'promo-api', `${e.id} is about the fictional promo-api, never techlog`);
+    const headline = e.extensions?.['org.techlog.demo']?.headline;
+    assert.ok(typeof headline === 'string' && headline.length > 0 && headline.length <= 70, `${e.id} needs a headline of at most 70 characters`);
     for (const l of e.links ?? []) {
       assert.ok(seen.has(l.target), `${e.id} links to ${l.target}, which is not an earlier demo event`);
       assert.ok(Date.parse(e.time) >= Date.parse(seen.get(l.target)), `${e.id} is earlier than ${l.target}`);
@@ -182,12 +184,5 @@ test('the demo chain validates, links only to earlier events, and never runs bac
     seen.set(e.id, e.time);
   }
   const rels = (i) => (chain[i].links ?? []).map((l) => `${l.rel}:${l.basis}`);
-  assert.deepEqual(rels(0), []);
-  assert.deepEqual(rels(1), ['motivated_by:confirmed']);
-  assert.deepEqual(rels(2), ['decides:confirmed']);
-  assert.deepEqual(rels(3), ['implements:confirmed']);
-  assert.deepEqual(rels(4), ['observed_after:confirmed', 'caused_by:hypothesis']);
-  assert.deepEqual(rels(5), ['mitigates:confirmed', 'relates_to:confirmed']);
-  assert.equal(chain[4].status, 'open', 'the incident stays open: events are append-only');
-  assert.ok(chain[1].extensions['org.techlog.proposal'].alternatives_considered.length >= 1, 'the proposal keeps its rejected option');
+  assert.deepEqual([rels(0), rels(1), rels(2)], [[], ['relates_to:confirmed'], ['implements:confirmed']]);
 });

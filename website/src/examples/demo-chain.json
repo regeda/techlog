@@ -10,32 +10,12 @@
     "status": "recorded",
     "summary": "New visitors keep asking for a first-order offer and retention is flat; the promo-api has nothing to give them.",
     "sources": [{ "kind": "ticket", "ref": "support-desk#1182" }],
+    "extensions": { "org.techlog.demo": { "headline": "The need: a first-order offer to lift retention" } },
     "provenance": { "recorded_by": "agent:claude-code", "method": "agent_submitted" }
   },
   {
     "schema_version": "0.1-draft",
     "id": "evt_01J9K2D00002",
-    "idempotency_key": "demo-spin-proposal",
-    "type": "proposal.recorded",
-    "time": "2026-03-09T15:30:00Z",
-    "actor": { "kind": "ai_agent", "id": "agent:claude-code", "on_behalf_of": "user:a.novak" },
-    "subject": { "system": "promo-api", "component": "spin-service" },
-    "status": "proposed",
-    "summary": "Offer one spin-to-win per new account with the discount capped at 20%; rejected: uncapped spins.",
-    "sources": [{ "kind": "spec", "ref": "docs/specs/spin-to-win.md" }],
-    "links": [{ "rel": "motivated_by", "target": "evt_01J9K2D00001", "basis": "confirmed" }],
-    "extensions": {
-      "org.techlog.proposal": {
-        "alternatives_considered": [
-          { "option": "Uncapped spins", "rejected_because": "invites abuse and deep discounts" }
-        ]
-      }
-    },
-    "provenance": { "recorded_by": "agent:claude-code", "method": "agent_submitted" }
-  },
-  {
-    "schema_version": "0.1-draft",
-    "id": "evt_01J9K2D00003",
     "idempotency_key": "demo-spin-decision",
     "type": "decision.made",
     "time": "2026-03-10T14:05:00Z",
@@ -44,12 +24,13 @@
     "status": "recorded",
     "summary": "Approved spin-to-win: one spin per new account, discount capped at 20%.",
     "sources": [{ "kind": "spec", "ref": "docs/specs/spin-to-win.md" }],
-    "links": [{ "rel": "decides", "target": "evt_01J9K2D00002", "basis": "confirmed" }],
+    "links": [{ "rel": "relates_to", "target": "evt_01J9K2D00001", "basis": "confirmed" }],
+    "extensions": { "org.techlog.demo": { "headline": "Approved: spin-to-win with the discount capped at 20%" } },
     "provenance": { "recorded_by": "agent:claude-code", "method": "agent_submitted" }
   },
   {
     "schema_version": "0.1-draft",
-    "id": "evt_01J9K2D00004",
+    "id": "evt_01J9K2D00003",
     "idempotency_key": "demo-spin-pr-482-merged",
     "type": "change.implemented",
     "time": "2026-03-10T16:40:00Z",
@@ -58,41 +39,8 @@
     "status": "recorded",
     "summary": "PR #482 merged: spin-to-win with the 20% cap.",
     "sources": [{ "kind": "git.pr", "ref": "promo-api#482" }],
-    "links": [{ "rel": "implements", "target": "evt_01J9K2D00003", "basis": "confirmed" }],
-    "provenance": { "recorded_by": "agent:claude-code", "method": "agent_submitted" }
-  },
-  {
-    "schema_version": "0.1-draft",
-    "id": "evt_01J9K2D00005",
-    "idempotency_key": "demo-spin-5xx-incident",
-    "type": "incident.opened",
-    "time": "2026-03-13T13:38:00Z",
-    "actor": { "kind": "ai_agent", "id": "agent:claude-code", "on_behalf_of": "user:a.novak" },
-    "subject": { "system": "promo-api", "component": "spin-service", "environment": "production" },
-    "status": "open",
-    "summary": "5xx ratio on /spin reached 6.2%, above the 1.0% rollback threshold.",
-    "sources": [{ "kind": "alert", "ref": "alert://promo-api/high-error-rate/a-5521" }],
-    "links": [
-      { "rel": "observed_after", "target": "evt_01J9K2D00004", "basis": "confirmed" },
-      { "rel": "caused_by", "target": "evt_01J9K2D00004", "basis": "hypothesis" }
-    ],
-    "provenance": { "recorded_by": "agent:claude-code", "method": "agent_submitted" }
-  },
-  {
-    "schema_version": "0.1-draft",
-    "id": "evt_01J9K2D00006",
-    "idempotency_key": "demo-spin-rollback-mitigation",
-    "type": "mitigation.applied",
-    "time": "2026-03-13T13:52:00Z",
-    "actor": { "kind": "ai_agent", "id": "agent:claude-code", "on_behalf_of": "user:a.novak" },
-    "subject": { "system": "promo-api", "component": "spin-service", "environment": "production" },
-    "status": "mitigated",
-    "summary": "Rollback of PR #482 applied to cut the 5xx ratio; the 20% cap decision stands and the cap is reopened for review.",
-    "sources": [{ "kind": "git.pr", "ref": "promo-api#489" }],
-    "links": [
-      { "rel": "mitigates", "target": "evt_01J9K2D00005", "basis": "confirmed" },
-      { "rel": "relates_to", "target": "evt_01J9K2D00004", "basis": "confirmed" }
-    ],
+    "links": [{ "rel": "implements", "target": "evt_01J9K2D00002", "basis": "confirmed" }],
+    "extensions": { "org.techlog.demo": { "headline": "PR #482 implements the 20% cap" } },
     "provenance": { "recorded_by": "agent:claude-code", "method": "agent_submitted" }
   }
 ]
