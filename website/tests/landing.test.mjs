@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, mkdirSync, existsSync } from 'node:fs';
-import { build, highlightJson, highlightCode, renderDemoCards } from '../build.mjs';
+import { build, highlightJson, highlightCode, renderDemoEvents } from '../build.mjs';
 
 mkdirSync('.test-out', { recursive: true });
 build({ srcDir: 'src', outDir: '.test-out/landing' });
@@ -351,30 +351,39 @@ test('every "Try Techlog" link on every page leads to the same URL, without a fr
 
 const chain = JSON.parse(readFileSync('src/examples/demo-chain.json', 'utf8'));
 
-test('renderDemoCards: one card per event, links marked by basis, JSON from the same event', () => {
-  const out = renderDemoCards(chain);
-  assert.equal((out.match(/class="rec-card"/g) || []).length, 6);
-  assert.equal((out.match(/class="rec-link rec-confirmed"/g) || []).length, 6);
-  assert.equal((out.match(/class="rec-link rec-hypothesis"/g) || []).length, 1);
-  assert.deepEqual([...out.matchAll(/data-rec="(\d)"/g)].map((m) => m[1]), ['1', '2', '3', '4', '5', '6']);
+test('renderDemoEvents: one closed row per event, with the minimum details behind a click', () => {
+  const out = renderDemoEvents(chain);
+  assert.equal((out.match(/class="cmp-event"/g) || []).length, 3);
+  assert.deepEqual([...out.matchAll(/data-type="([^"]+)"/g)].map((m) => m[1]), chain.map((e) => e.type), 'rows follow the data order');
+  assert.equal((out.match(/<details/g) || []).length, 3);
+  assert.doesNotMatch(out, /<details[^>]*\bopen\b/, 'every row starts closed');
+  assert.deepEqual([...out.matchAll(/class="cmp-edate">([^<]*)</g)].map((m) => m[1]), ['Mar 9', 'Mar 10', 'Mar 10']);
   for (const e of chain) {
-    assert.ok(out.includes(e.id), `${e.id} is shown`);
-    assert.ok(out.includes(e.summary), `${e.id} summary is shown`);
+    assert.ok(out.includes(e.extensions['org.techlog.demo'].headline), `${e.type} headline is in its row`);
+    assert.ok(out.includes(e.summary.replace(/&/g, '&amp;')) || out.includes(e.summary), `${e.type} summary is in its details`);
+    assert.ok(out.includes(`${e.sources[0].kind}: ${e.sources[0].ref}`), `${e.type} source is shown`);
   }
-  assert.doesNotMatch(out, /<details|Show JSON|rec-hl|<pre/, 'no JSON toggle on the cards');
+  const words = out.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+  assert.match(words, /relates_to → problem\.reported confirmed/, 'the decision names the event it relates to, by type');
+  assert.match(words, /implements → decision\.made confirmed/);
+  assert.equal((out.match(/class="cmp-elink"/g) || []).length, 2, 'the problem has no link');
+  assert.doesNotMatch(out, /<pre|Show JSON|rec-json|evt_/, 'no JSON and no ids');
 });
 
-test('renderDemoCards: escapes event text and copes with an event that has no sources', () => {
-  const evil = { ...chain[0], summary: '<b>x</b> & "y"' };
+test('renderDemoEvents: escapes event text and copes with an event that has no sources', () => {
+  const evil = { ...chain[0], summary: '<b>x</b> & "y"', extensions: { 'org.techlog.demo': { headline: '<i>h</i>' } } };
   delete evil.sources;
-  const out = renderDemoCards([evil]);
-  assert.doesNotMatch(out, /<b>x/);
+  const out = renderDemoEvents([evil]);
+  assert.doesNotMatch(out, /<b>x|<i>h/);
   assert.match(out, /&lt;b&gt;x&lt;\/b&gt; &amp; &quot;y&quot;/);
-  assert.match(out, /class="rec-card"/);
+  assert.match(out, /&lt;i&gt;h&lt;\/i&gt;/);
+  assert.doesNotMatch(out, /cmp-esrc/);
+  assert.match(out, /class="cmp-event"/);
 });
 
-test('the {{demo-cards}} directive is expanded in the built landing page', () => {
-  assert.doesNotMatch(html, /\{\{demo-cards/);
+test('the {{demo-events}} directive is expanded in the built landing page', () => {
+  assert.doesNotMatch(html, /\{\{demo-(events|cards)/);
+  assert.match(html, /class="cmp-event"/);
 });
 
 test('shell.js: sessions accumulate, cards accumulate, 80 seconds, reduced motion, no autoplay', () => {

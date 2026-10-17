@@ -168,22 +168,24 @@ export function highlightCode(lang, text) {
   return out + esc(text.slice(last));
 }
 
-// renderDemoCards turns the demo chain into the "Techlog records" cards of the
-// landing page: one <li> per event. The summary and the links come from the
-// same event, so they cannot disagree.
-export function renderDemoCards(events) {
-  return events.map((e, i) => {
-    const n = i + 1;
+// renderDemoEvents turns the demo chain into the rows of the "With Techlog"
+// pane of the landing page: one closed <details> per event. The collapsed row
+// is the type, the date and a one-line headline (extensions["org.techlog.demo"]);
+// opening it shows the summary, the links in words and the source. The summary,
+// links and source come from the same event, so they cannot disagree.
+export function renderDemoEvents(events) {
+  const typeOf = Object.fromEntries(events.map((e) => [e.id, e.type]));
+  const fmt = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  return events.map((e) => {
     const src = e.sources && e.sources[0];
-    const meta = `${esc(e.time)}${src ? ` · ${esc(src.kind)}: ${esc(src.ref)}` : ''}`;
+    const headline = e.extensions?.['org.techlog.demo']?.headline ?? e.summary;
     const links = (e.links || []).map((l) =>
-      `<li class="rec-link rec-${esc(l.basis)}"><span class="rec-rel">${esc(l.rel)}</span> <span aria-hidden="true">→</span> <code>${esc(l.target)}</code> <span class="rec-basis">${esc(l.basis)}</span></li>`).join('');
-    return `<li class="rec-card" id="rec-${n}" data-rec="${n}" data-type="${esc(e.type)}">` +
-      `<div class="rec-head"><span class="rec-type">${esc(e.type)}</span><span class="rec-id">${esc(e.id)}</span></div>` +
-      `<p class="rec-sum">${esc(e.summary)}</p>` +
-      `<p class="rec-meta">${meta}</p>` +
-      (links ? `<ul class="rec-links" aria-label="Links to earlier events">${links}</ul>` : '') +
-      `</li>`;
+      `<p class="cmp-elink">${esc(l.rel)} <span aria-hidden="true">→</span> ${esc(typeOf[l.target] ?? 'an earlier event')} <span class="cmp-ebasis">${esc(l.basis)}</span></p>`).join('');
+    return `<li class="cmp-event" data-type="${esc(e.type)}"><details class="cmp-details">` +
+      `<summary><span class="cmp-etype">${esc(e.type)}</span><span class="cmp-edate">${esc(fmt.format(new Date(e.time)))}</span><span class="cmp-eline">${esc(headline)}</span></summary>` +
+      `<div class="cmp-edetail"><p class="cmp-esum">${esc(e.summary)}</p>${links}` +
+      (src ? `<p class="cmp-esrc">${esc(src.kind)}: ${esc(src.ref)}</p>` : '') +
+      `</div></details></li>`;
   }).join('\n');
 }
 
@@ -203,8 +205,8 @@ function render(template, vars, ctx) {
     const data = JSON.stringify(JSON.parse(readExample(ctx, file, vars.__file))).replace(/</g, '\\u003c');
     return `<script type="application/json" id="${id}">${data}</script>`;
   });
-  out = out.replace(/\{\{demo-cards\s+([^\s}]+)\s*\}\}/g, (_, file) =>
-    renderDemoCards(JSON.parse(readExample(ctx, file, vars.__file))));
+  out = out.replace(/\{\{demo-events\s+([^\s}]+)\s*\}\}/g, (_, file) =>
+    renderDemoEvents(JSON.parse(readExample(ctx, file, vars.__file))));
   return out;
 }
 
