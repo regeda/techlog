@@ -85,7 +85,7 @@ test('landing: how it works is a split view of five sessions and the records the
   assert.match(how, /id="shell"[\s\S]*Simulated example/);
   assert.match(how, /Agent session[\s\S]*Techlog records/, 'two labelled panes');
   const typed = [...how.matchAll(/class="sh-typed">([^<]*)</g)].map((m) => m[1]);
-  assert.deepEqual(typed, ['/techlog:welcome', '/techlog:problem', '/techlog:proposal', 'Approved. Plan it.', 'Merge PR #482', '/techlog:record', 'Investigate PagerDuty alert P1-5521', '/techlog:record']);
+  assert.deepEqual(typed, ['/techlog:welcome', '/techlog:problem', 'yes', '/techlog:proposal', 'Approved. Plan it.', 'Merge PR #482', '/techlog:record', 'Investigate PagerDuty alert P1-5521', '/techlog:record']);
   assert.deepEqual([...how.matchAll(/class="sh-l sh-rule">── ([^<]*) ──</g)].map((m) => m[1]), ['a new session, the same day', 'a new session, 1 day later', 'a new session, 1 day later', 'a new session, 3 days later']);
   assert.equal((how.match(/class="sh-step"/g) || []).length, 5);
   assert.deepEqual([...how.matchAll(/class="sh-l sh-res" data-rec="(\d)"/g)].map((m) => m[1]), ['1', '2', '3', '4', '5', '6'], 'one record line per event, in order');
@@ -432,4 +432,19 @@ test('the trace highlight is a pure function of time, so seeking back unlights i
   assert.match(js, /it\.cls \|\| 'sh-on'/, 'render toggles the item class from the time');
   assert.equal((js.match(/rec-trace/g) || []).length, 1, 'rec-trace is only ever set through those items');
   assert.match(css, /\.rec-card\.rec-trace \{[^}]*box-shadow/, 'a traced card is outlined in its event colour');
+});
+
+test('the records pane follows the trace: each lit card is scrolled into view, then the newest card again', () => {
+  const js = readFileSync('src/assets/js/shell.js', 'utf8');
+  assert.match(js, /focus\.cls/, 'a trace item that was lit last decides where the list scrolls');
+  assert.match(js, /getBoundingClientRect/, 'the lit card is scrolled to by its position in the list');
+  assert.match(js, /400 \* slow/, 'the cascade is slow enough to follow');
+  assert.match(css, /\.rec-card\.rec-trace \{[^}]*box-shadow: 0 0 0 3px/, 'the ring is strong enough to see');
+});
+
+test('copy: the caption names the corrective action, not a fix, and the problem is confirmed by the user before it is recorded', () => {
+  assert.match(how, /the corrective action lands in the same chain/);
+  assert.doesNotMatch(how, /the fix lands/);
+  const problemStep = how.split('class="sh-step"')[2];
+  assert.ok(problemStep.indexOf('sh-typed">yes<') > 0 && problemStep.indexOf('sh-typed">yes<') < problemStep.indexOf('data-rec="1"'), 'a typed yes comes before the record line');
 });

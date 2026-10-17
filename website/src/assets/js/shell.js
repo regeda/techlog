@@ -1,5 +1,5 @@
 (function () {
-  // simulated demo on a timeline: three agent sessions on the left, the records they leave in Techlog on the right.
+  // simulated demo on a timeline: five agent sessions on the left, the records they leave in Techlog on the right.
   // The agent pane shows one session at a time (a new session starts empty); the record cards only ever accumulate.
   // The whole run is a pure function of time, so the bar can seek.
   var fig = document.getElementById('shell');
@@ -72,7 +72,7 @@
         // a line that names its trace lights those cards one after another once it has been typed (newest card first)
         var trace = l.getAttribute('data-trace');
         if (trace) trace.split(',').forEach(function (n, i) {
-          if (cardEls[Number(n) - 1]) items.push({ el: cardEls[Number(n) - 1], at: it.at + it.dur + i * 150 * slow, cls: 'rec-trace' });
+          if (cardEls[Number(n) - 1]) items.push({ el: cardEls[Number(n) - 1], at: it.at + it.dur + i * 400 * slow, cls: 'rec-trace' });
         });
       });
       t += gap; steps.push(step);
@@ -87,10 +87,12 @@
   function fmt(ms) { var s = Math.round(ms / 1000); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
 
   function render() {
-    var typing = '';
+    var typing = '', focus = null;
     items.forEach(function (it) {
       var on = pos >= it.at, c = it.cls || 'sh-on';
       if (it.el.classList.contains(c) !== on) it.el.classList.toggle(c, on);
+      // the item in the records pane that came on last decides where that pane scrolls
+      if (on && it.el.parentNode === list && (!focus || it.at >= focus.at)) focus = it;
       if (it.cmd && pos >= it.start && pos < it.send) typing = it.full.slice(0, Math.floor((pos - it.start) / TYPE_MS));
       if (it.nodes) {
         var n = Math.max(0, Math.min(it.chars, Math.floor((pos - it.at) / it.cms)));
@@ -107,7 +109,9 @@
     });
     text.textContent = typing;
     body.scrollTop = body.scrollHeight;
+    // a lit trace card is scrolled to, so the walk back to the problem can be followed; otherwise the newest card
     list.scrollTop = list.scrollHeight;
+    if (focus && focus.cls) list.scrollTop = focus.el.getBoundingClientRect().top - list.getBoundingClientRect().top + list.scrollTop;
     seek.value = String(Math.round(pos / total * 1000));
     clock.textContent = fmt(pos) + ' / ' + fmt(total);
     seek.setAttribute('aria-valuetext', fmt(pos) + ' of ' + fmt(total));
