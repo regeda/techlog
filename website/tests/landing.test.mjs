@@ -414,3 +414,11 @@ test('shell.js: typed text keeps its place (the untyped tail stays in layout), a
   assert.match(css, /\.sh-typing \.cmp-on::after \{/, 'the caret follows the typed text, not the hidden tail');
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[^\n]*\.sh-typing \.cmp-on::after/, 'only the caret blink stops under reduced motion');
 });
+
+test('review fixes: a row shows that it opens, and the caret takes no inline space so a line never wraps while it types', () => {
+  assert.match(css, /\.cmp-details summary \{[^}]*list-style: none/, 'the browser marker is replaced by our own');
+  assert.match(css, /\.cmp-details summary::-webkit-details-marker \{ display: none; \}/, 'Safari does not draw a second marker');
+  assert.match(css, /\.cmp-details summary::before \{[^}]*content: "▸"/, 'a closed row shows a chevron');
+  assert.match(css, /\.cmp-details\[open\] summary::before \{[^}]*content: "▾"/, 'an open row shows it turned down');
+  assert.match(css, /\.sh-typing \.cmp-on::after \{[^}]*margin: 0 -\.6em 0 0/, 'the caret overlaps the hidden tail instead of pushing it');
+});
