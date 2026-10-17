@@ -375,9 +375,9 @@ test('the {{demo-cards}} directive is expanded in the built landing page', () =>
   assert.doesNotMatch(html, /\{\{demo-cards/);
 });
 
-test('shell.js: one session at a time, cards accumulate, 45 seconds, reduced motion, no autoplay', () => {
+test('shell.js: one session at a time, cards accumulate, 60 seconds, reduced motion, no autoplay', () => {
   const js = readFileSync('src/assets/js/shell.js', 'utf8');
-  assert.match(js, /TARGET_MS = 45000/);
+  assert.match(js, /TARGET_MS = 60000/);
   assert.match(js, /sh-cur/, 'only the current session is shown on the left');
   assert.match(js, /data-rec/, 'cards are tied to the record line of their session');
   assert.doesNotMatch(js, /matchMedia|prefers-reduced-motion/, 'typing is the point of the demo, so it is never skipped');
@@ -423,4 +423,13 @@ test('each demo event type has its own colour: a coloured border and a badge for
   assert.match(css, /\.rec-card \{[^}]*border: 1px solid var\(--ev, var\(--line-strong\)\)/, 'the card border takes the event colour');
   assert.match(css, /\.rec-type \{[^}]*background: color-mix\(in srgb, var\(--ev[^}]*color: var\(--ev/, 'the event name is a coloured badge');
   assert.match(css, /\.rec-type \{[^}]*var\(--ev, var\(--info\)\) 6%, var\(--bg-1\)/, 'a 6% tint keeps badge text at 4.5:1 or better in both themes');
+});
+
+test('the trace highlight is a pure function of time, so seeking back unlights it', () => {
+  const js = readFileSync('src/assets/js/shell.js', 'utf8');
+  assert.match(js, /data-trace/, 'the incident line names the cards its trace passes through');
+  assert.match(js, /cls: 'rec-trace'/, 'traced cards get their class through timed items');
+  assert.match(js, /it\.cls \|\| 'sh-on'/, 'render toggles the item class from the time');
+  assert.equal((js.match(/rec-trace/g) || []).length, 1, 'rec-trace is only ever set through those items');
+  assert.match(css, /\.rec-card\.rec-trace \{[^}]*box-shadow/, 'a traced card is outlined in its event colour');
 });

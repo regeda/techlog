@@ -191,6 +191,7 @@
 .rec-card[data-type="change.implemented"] { --ev: var(--ok); }
 .rec-card[data-type="incident.opened"] { --ev: var(--danger); }
 .rec-card[data-type="mitigation.applied"] { --ev: var(--orange); }
+.rec-card.rec-trace { box-shadow: 0 0 0 2px var(--ev, var(--line-strong)); }
 .rec-head { display: flex; justify-content: space-between; gap: var(--s-3); flex-wrap: wrap; font: 700 var(--fs-xs) var(--font-mono); }
 .rec-type { padding: 0 var(--s-2); border: 1px solid var(--ev, var(--info)); border-radius: 999px; background: color-mix(in srgb, var(--ev, var(--info)) 6%, var(--bg-1)); color: var(--ev, var(--info)); }
 .rec-id { color: var(--text-2); }

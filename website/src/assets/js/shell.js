@@ -13,7 +13,7 @@
   var clock = document.getElementById('sh-time');
   // typing and output delays scale with one factor; the pause after a new-session divider is absolute.
   // The factor is solved so the whole run lasts TARGET_MS, pauses included.
-  var TARGET_MS = 45000, SESSION_PAUSE_MS = 2000;
+  var TARGET_MS = 60000, SESSION_PAUSE_MS = 2000;
   // the session stays on screen this long after its record lands, so the card and the wipe are two beats
   var CARD_DWELL_MS = 1000;
   var TYPE_MS = 30, LEAD_MS = 350, OUT_TYPE_MS = 12, DIVIDER_TYPE_MS = 45;   // per character: commands, output lines, session dividers
@@ -69,6 +69,11 @@
         // the record card appears just after the line that says the event was recorded
         var rec = l.getAttribute('data-rec');
         if (rec && cardEls[Number(rec) - 1]) items.push({ el: cardEls[Number(rec) - 1], at: it.at + 300 * slow });
+        // a line that names its trace lights those cards one after another once it has been typed (newest card first)
+        var trace = l.getAttribute('data-trace');
+        if (trace) trace.split(',').forEach(function (n, i) {
+          if (cardEls[Number(n) - 1]) items.push({ el: cardEls[Number(n) - 1], at: it.at + it.dur + i * 150 * slow, cls: 'rec-trace' });
+        });
       });
       t += gap; steps.push(step);
     });
@@ -84,8 +89,8 @@
   function render() {
     var typing = '';
     items.forEach(function (it) {
-      var on = pos >= it.at;
-      if (it.el.classList.contains('sh-on') !== on) it.el.classList.toggle('sh-on', on);
+      var on = pos >= it.at, c = it.cls || 'sh-on';
+      if (it.el.classList.contains(c) !== on) it.el.classList.toggle(c, on);
       if (it.cmd && pos >= it.start && pos < it.send) typing = it.full.slice(0, Math.floor((pos - it.start) / TYPE_MS));
       if (it.nodes) {
         var n = Math.max(0, Math.min(it.chars, Math.floor((pos - it.at) / it.cms)));
