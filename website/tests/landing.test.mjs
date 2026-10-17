@@ -392,3 +392,25 @@ test('comparison styles: space is reserved, panes stretch and stack, the pane la
   assert.deepEqual(colour, { 'problem.reported': '--warn', 'decision.made': '--info', 'change.implemented': '--ok' });
   assert.doesNotMatch(css, /\.(rec-|sh-body|sh-step|sh-l\b|sh-user|sh-rule|sh-input|sh-panes|sh-pane)/, 'the old CLI demo styles are gone');
 });
+
+const shellJs = readFileSync('src/assets/js/shell.js', 'utf8');
+
+test('shell.js: plays the comparison out on Run in 30 seconds, starts by itself never, and is a pure function of time', () => {
+  assert.match(shellJs, /TARGET_MS = 30000/);
+  assert.match(shellJs, /\.cmp-t, \.cmp-event/, 'the timeline is the question, the answers and the event rows in document order');
+  assert.doesNotMatch(shellJs, /IntersectionObserver|autoplay/, 'does not start by itself');
+  assert.doesNotMatch(shellJs, /matchMedia|prefers-reduced-motion/, 'typing is the point of the demo, so it is never skipped');
+  assert.match(shellJs, /function render\(\)/);
+  assert.match(shellJs, /addEventListener\('input'/, 'the seek bar scrubs');
+  assert.match(shellJs, /sh-idle/, 'starts idle with a call to run');
+});
+
+test('shell.js: typed text keeps its place (the untyped tail stays in layout), and rows are the visitor\'s to open', () => {
+  assert.match(shellJs, /cmp-on/);
+  assert.match(shellJs, /cmp-off/);
+  assert.match(shellJs, /sh-typing/);
+  assert.doesNotMatch(shellJs, /pointer-events|\.remove\(\)|display\s*=|\.open\s*=|setAttribute\('open'/, 'a row is never disabled, removed or opened or closed by the script');
+  assert.doesNotMatch(shellJs, /sh-step|data-trace|tablist|sh-view/, 'nothing of the old CLI demo');
+  assert.match(css, /\.sh-typing \.cmp-on::after \{/, 'the caret follows the typed text, not the hidden tail');
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[^\n]*\.sh-typing \.cmp-on::after/, 'only the caret blink stops under reduced motion');
+});

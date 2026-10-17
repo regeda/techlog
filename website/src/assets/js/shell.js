@@ -1,77 +1,44 @@
 (function () {
-  // simulated demo on a timeline: four agent sessions on the left, the records they leave in Techlog on the right.
-  // The agent pane keeps every session it has shown (the agent has no memory, the page does); the record cards only ever accumulate.
-  // The whole run is a pure function of time, so the bar can seek.
+  // simulated demo on a timeline: one question, then the answer of an agent without Techlog and the answer of an agent with it.
+  // The question, the answers and the event rows are played in document order: text is typed, rows appear one after another.
+  // The whole run is a pure function of time, so the bar can seek. Nothing is removed or disabled: every row can be opened at any time.
   var fig = document.getElementById('shell');
   if (!fig) return;
-  var body = fig.querySelector('.sh-body');
-  var input = document.getElementById('sh-input');
-  var text = document.getElementById('sh-text');
   var ctl = document.getElementById('sh-ctl');
   var playBtn = document.getElementById('sh-play');
   var seek = document.getElementById('sh-seek');
   var clock = document.getElementById('sh-time');
-  // typing and output delays scale with one factor; the pause after a new-session divider is absolute.
-  // The factor is solved so the whole run lasts TARGET_MS, pauses included.
-  var TARGET_MS = 80000, SESSION_PAUSE_MS = 2000;
-  // a pause after a session's record lands, so the card is seen before the next session starts
-  var CARD_DWELL_MS = 1000;
-  var TYPE_MS = 30, LEAD_MS = 350, OUT_TYPE_MS = 12, DIVIDER_TYPE_MS = 45;   // per character: commands, output lines, session dividers
-  var items = [], steps = [], total = 0;
-  var stepEls = fig.querySelectorAll('.sh-step');
-  var cardEls = fig.querySelectorAll('.rec-card');
+  // typing and pauses scale with one factor, solved so the whole run lasts TARGET_MS
+  var TARGET_MS = 30000;
+  var LEAD_MS = 400, TYPE_MS = 18, BLOCK_GAP_MS = 350, EVENT_GAP_MS = 900, TAIL_MS = 600;
+  var els = fig.querySelectorAll('.cmp-t, .cmp-event');
+  var items = [], total = 0;
 
-  // the text nodes of an output line with their full text, so the line can be filled in character by character
-  function textNodes(el) {
-    if (el._nodes) return el._nodes;
-    var out = [], w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-    while (w.nextNode()) out.push({ node: w.currentNode, full: w.currentNode.data });
-    el._nodes = out;
-    return out;
-  }
-  function setTyped(it, n) {
-    var left = n;
-    it.nodes.forEach(function (p) {
-      var k = Math.max(0, Math.min(p.full.length, left));
-      p.node.data = p.full.slice(0, k); left -= k;
-    });
+  // typed text is split once into the part typed so far and the rest: the rest stays in the layout (hidden),
+  // so wrapping and height never change while it types
+  function prepare(el) {
+    if (el._it) return el._it;
+    var full = el.textContent, on = document.createElement('span'), off = document.createElement('span');
+    on.className = 'cmp-on'; off.className = 'cmp-off';
+    el.textContent = ''; el.appendChild(on); el.appendChild(off); off.textContent = full;
+    el._it = { on: on, off: off, full: full, chars: full.length };
+    return el._it;
   }
 
   function layout(slow) {
-    TYPE_MS = 30 * slow; LEAD_MS = 350 * slow; OUT_TYPE_MS = 12 * slow; DIVIDER_TYPE_MS = 45 * slow;
-    var gap = 600 * slow, t = 400;
-    items = []; steps = [];
-    stepEls.forEach(function (st) {
-      // a new session's divider shows at once, right after the last line; typing starts SESSION_PAUSE_MS later
-      if (st.querySelector('.sh-rule')) t += CARD_DWELL_MS - gap;
-      var step = { el: st, first: -1 };
-      st.querySelectorAll('.sh-l').forEach(function (l) {
-        var it = { el: l, step: step };
-        if (l.classList.contains('sh-user')) {
-          it.cmd = true;
-          it.full = l.querySelector('.sh-typed').textContent.trim();
-          it.start = t + LEAD_MS;
-          it.send = it.start + it.full.length * TYPE_MS + 300 * slow;
-          it.at = it.send;
-          t = it.send + 450 * slow;
-        } else {
-          // output is typed too: the line appears empty at it.at and fills in over it.dur
-          it.at = t;
-          it.nodes = textNodes(l);
-          it.chars = it.nodes.reduce(function (n, p) { return n + p.full.length; }, 0);
-          it.cms = l.classList.contains('sh-rule') ? DIVIDER_TYPE_MS : OUT_TYPE_MS;
-          it.dur = it.chars * it.cms;
-          t += it.dur + (l.classList.contains('sh-rule') ? SESSION_PAUSE_MS - LEAD_MS : slow * (l.classList.contains('sh-tool') ? 550 : l.classList.contains('sh-say') ? 450 : 300));
-        }
-        if (step.first < 0) step.first = it.at;
-        items.push(it);
-        // the record card appears just after the line that says the event was recorded
-        var rec = l.getAttribute('data-rec');
-        if (rec && cardEls[Number(rec) - 1]) items.push({ el: cardEls[Number(rec) - 1], at: it.at + 300 * slow });
-      });
-      t += gap; steps.push(step);
+    var t = LEAD_MS;
+    items = [];
+    els.forEach(function (el) {
+      if (el.classList.contains('cmp-event')) {
+        items.push({ el: el, at: t });
+        t += EVENT_GAP_MS * slow;
+        return;
+      }
+      var p = prepare(el), it = { el: el, on: p.on, off: p.off, full: p.full, chars: p.chars, at: t, cms: TYPE_MS * slow };
+      items.push(it);
+      t += p.chars * it.cms + BLOCK_GAP_MS * slow;
     });
-    return t;
+    return t + TAIL_MS * slow;
   }
   var t1 = layout(1), t2 = layout(2);       // total time is linear in the factor
   var slope = t2 - t1, fixed = t1 - slope;
@@ -81,26 +48,16 @@
   function fmt(ms) { var s = Math.round(ms / 1000); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
 
   function render() {
-    var typing = '';
     items.forEach(function (it) {
       var on = pos >= it.at;
       if (it.el.classList.contains('sh-on') !== on) it.el.classList.toggle('sh-on', on);
-      if (it.cmd && pos >= it.start && pos < it.send) typing = it.full.slice(0, Math.floor((pos - it.start) / TYPE_MS));
-      if (it.nodes) {
+      if (it.on) {
         var n = Math.max(0, Math.min(it.chars, Math.floor((pos - it.at) / it.cms)));
-        if (it.shown !== n) { setTyped(it, n); it.shown = n; }
+        if (it.shown !== n) { it.on.textContent = it.full.slice(0, n); it.off.textContent = it.full.slice(n); it.shown = n; }
         var typingNow = on && n < it.chars;
         if (it.el.classList.contains('sh-typing') !== typingNow) it.el.classList.toggle('sh-typing', typingNow);
       }
     });
-    var cur = -1;
-    steps.forEach(function (s, i) { if (pos >= s.first) cur = i; });
-    // a session is shown once it is reached and then stays: the agent pane keeps its history
-    steps.forEach(function (s, i) {
-      if (s.el.classList.contains('sh-on') !== (i <= cur)) s.el.classList.toggle('sh-on', i <= cur);
-    });
-    text.textContent = typing;
-    body.scrollTop = body.scrollHeight;
     seek.value = String(Math.round(pos / total * 1000));
     clock.textContent = fmt(pos) + ' / ' + fmt(total);
     seek.setAttribute('aria-valuetext', fmt(pos) + ' of ' + fmt(total));
@@ -132,7 +89,7 @@
   });
   seek.addEventListener('change', function () { if (wasPlaying) { wasPlaying = false; play(); } });
 
-  // starts idle: nothing is shown until the visitor presses the glowing button
-  fig.classList.add('sh-js'); ctl.hidden = false; input.hidden = false;
+  // starts idle: nothing is typed until the visitor presses the glowing button
+  fig.classList.add('sh-js'); ctl.hidden = false;
   render(); label();
 })();
