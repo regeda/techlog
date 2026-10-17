@@ -8,8 +8,10 @@
   var playBtn = document.getElementById('sh-play');
   var seek = document.getElementById('sh-seek');
   var clock = document.getElementById('sh-time');
-  // typing and pauses scale with one factor, solved so the whole run lasts TARGET_MS
-  var TARGET_MS = 30000;
+  // typing and gaps scale with one factor, solved so the whole run lasts TARGET_MS, the fixed pauses included
+  var TARGET_MS = 45000;
+  // fixed pauses (not scaled): after the question and after the left pane, so the visitor can read
+  var PAUSE_MS = 3000;
   var LEAD_MS = 400, TYPE_MS = 18, BLOCK_GAP_MS = 350, EVENT_GAP_MS = 900, TAIL_MS = 600;
   var els = fig.querySelectorAll('.cmp-t, .cmp-event');
   var items = [], total = 0;
@@ -28,7 +30,9 @@
   function layout(slow) {
     var t = LEAD_MS;
     items = [];
-    els.forEach(function (el) {
+    els.forEach(function (el, i) {
+      var next = els[i + 1], group = el.closest('.cmp-q, .cmp-without');
+      var pause = group && !(next && group.contains(next)) ? PAUSE_MS : 0;
       if (el.classList.contains('cmp-event')) {
         items.push({ el: el, at: t });
         t += EVENT_GAP_MS * slow;
@@ -36,7 +40,7 @@
       }
       var p = prepare(el), it = { el: el, on: p.on, off: p.off, full: p.full, chars: p.chars, at: t, cms: TYPE_MS * slow };
       items.push(it);
-      t += p.chars * it.cms + BLOCK_GAP_MS * slow;
+      t += p.chars * it.cms + BLOCK_GAP_MS * slow + pause;
     });
     return t + TAIL_MS * slow;
   }

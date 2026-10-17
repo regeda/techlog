@@ -81,12 +81,13 @@ test('landing: the logo lives in the header bar, and the motto is big, in two li
 
 test('landing: how it works asks the same question without and with Techlog, and the events are rows', () => {
   assert.match(how, /<h2>One history\. Every agent\.<\/h2>/);
-  assert.match(how, /id="shell"[\s\S]*Simulated example/);
+  assert.doesNotMatch(how, /Simulated example|badge-simulated/, 'no simulated badge');
   assert.match(how, /Press Run to ask the same question twice\./);
   assert.equal((how.match(/Why do we enforce a 20% discount cap\? I need to change the pricing logic\./g) || []).length, 1, 'one question for both panes');
   assert.ok(how.indexOf('Without Techlog') > 0 && how.indexOf('Without Techlog') < how.indexOf('With Techlog'), 'the pane without Techlog comes first');
   assert.match(how, /aria-label="Without Techlog"[\s\S]*aria-label="With Techlog"/);
-  assert.match(how, /\(using Techlog\)/);
+  assert.match(how, /\(Techlog MCP\)/);
+  assert.doesNotMatch(how, /\(using Techlog\)/);
   assert.equal((how.match(/class="cmp-event"/g) || []).length, 3, 'three events in the right pane');
   const without = how.slice(how.indexOf('aria-label="Without Techlog"'), how.indexOf('aria-label="With Techlog"'));
   assert.equal((without.match(/<li class="cmp-t">/g) || []).length, 4, 'four suggestions where to look, without Techlog');
@@ -395,8 +396,9 @@ test('comparison styles: space is reserved, panes stretch and stack, the pane la
 
 const shellJs = readFileSync('src/assets/js/shell.js', 'utf8');
 
-test('shell.js: plays the comparison out on Run in 30 seconds, starts by itself never, and is a pure function of time', () => {
-  assert.match(shellJs, /TARGET_MS = 30000/);
+test('shell.js: plays the comparison out on Run in 45 seconds with 3 s pauses, starts by itself never, and is a pure function of time', () => {
+  assert.match(shellJs, /TARGET_MS = 45000/);
+  assert.match(shellJs, /PAUSE_MS = 3000/, 'a 3 s pause after the question and after the left pane');
   assert.match(shellJs, /\.cmp-t, \.cmp-event/, 'the timeline is the question, the answers and the event rows in document order');
   assert.doesNotMatch(shellJs, /IntersectionObserver|autoplay/, 'does not start by itself');
   assert.doesNotMatch(shellJs, /matchMedia|prefers-reduced-motion/, 'typing is the point of the demo, so it is never skipped');
