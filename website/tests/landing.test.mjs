@@ -86,13 +86,14 @@ test('landing: how it works is a split view of four sessions and the records the
   assert.match(how, /Agent session[\s\S]*Techlog records/, 'two labelled panes');
   const typed = [...how.matchAll(/class="sh-typed">([^<]*)</g)].map((m) => m[1]);
   assert.deepEqual(typed, ['/techlog:problem', 'yes', '/techlog:proposal', 'Approved. Plan it.', 'Merge PR #482', '/techlog:record', 'Investigate PagerDuty alert P1-5521', '/techlog:record']);
-  assert.deepEqual([...how.matchAll(/class="sh-l sh-rule">── ([^<]*) ──</g)].map((m) => m[1]), ['a new session, 1 day later', 'a new session, 1 day later', 'a new session, 3 days later']);
+  assert.deepEqual([...how.matchAll(/class="sh-l sh-rule">── ([^<]*) ──</g)].map((m) => m[1]), ['a new session, today later', 'a new session, 1 day later', 'a new session, 3 days later']);
   assert.equal((how.match(/class="sh-step"/g) || []).length, 4);
   assert.deepEqual([...how.matchAll(/class="sh-l sh-res" data-rec="(\d)"/g)].map((m) => m[1]), ['1', '2', '3', '4', '5', '6'], 'one record line per event, in order');
   assert.doesNotMatch(how, /techlog:welcome/, 'welcome is not part of the demo');
   assert.doesNotMatch(how, /data-trace/, 'the incident trace is text only, with no highlight animation');
   assert.match(how, /quick context: incident/, 'the quick context line stays');
-  assert.deepEqual([...how.matchAll(/class="sh-step" data-tab="([^"]*)"/g)].map((m) => m[1]), ['problem', 'proposal', 'decision · change', 'incident · mitigation'], 'each session is a tab labelled by the Techlog state it leaves');
+  assert.doesNotMatch(how, /data-tab|sh-tabs/, 'no tabs on the left: the sessions simply stay');
+  assert.doesNotMatch(how, /Show JSON|rec-json/, 'the cards show no JSON');
   assert.doesNotMatch(how, /resolved/i, 'the incident is never claimed resolved');
   assert.match(how, /four sessions/);
   assert.deepEqual([...how.matchAll(/✓ recorded (evt_\w+)/g)].map((m) => m[1]), chain.map((e) => e.id), 'the transcript records the same events as the cards');
@@ -360,8 +361,7 @@ test('renderDemoCards: one card per event, links marked by basis, JSON from the 
     assert.ok(out.includes(e.id), `${e.id} is shown`);
     assert.ok(out.includes(e.summary), `${e.id} summary is shown`);
   }
-  assert.equal((out.match(/<details class="rec-json">/g) || []).length, 6);
-  assert.match(out, /<mark class="rec-hl">[\s\S]*links[\s\S]*<\/mark>/, 'the links field is highlighted in the JSON');
+  assert.doesNotMatch(out, /<details|Show JSON|rec-hl|<pre/, 'no JSON toggle on the cards');
 });
 
 test('renderDemoCards: escapes event text and copes with an event that has no sources', () => {
@@ -377,11 +377,10 @@ test('the {{demo-cards}} directive is expanded in the built landing page', () =>
   assert.doesNotMatch(html, /\{\{demo-cards/);
 });
 
-test('shell.js: one session at a time, cards accumulate, 80 seconds, reduced motion, no autoplay', () => {
+test('shell.js: sessions accumulate, cards accumulate, 80 seconds, reduced motion, no autoplay', () => {
   const js = readFileSync('src/assets/js/shell.js', 'utf8');
   assert.match(js, /TARGET_MS = 80000/);
-  assert.match(js, /sh-cur/, 'only the current session is shown on the left');
-  assert.match(js, /data-rec/, 'cards are tied to the record line of their session');
+    assert.match(js, /data-rec/, 'cards are tied to the record line of their session');
   assert.doesNotMatch(js, /matchMedia|prefers-reduced-motion/, 'typing is the point of the demo, so it is never skipped');
   assert.doesNotMatch(js, /IntersectionObserver|autoplay/);
 });
@@ -392,14 +391,13 @@ test('the record cards stay inside their pane: the list column may shrink below 
 
 test('review fixes: the record list follows the newest card, a card lands before the wipe, and the dead controls stay hidden without JS', () => {
   const js = readFileSync('src/assets/js/shell.js', 'utf8');
-  assert.match(js, /list\.scrollTop = list\.scrollHeight/, 'the records pane scrolls to the newest card');
   assert.match(js, /CARD_DWELL_MS/, 'the session stays visible for a beat after its card lands');
   assert.match(css, /\.sh-ctl\[hidden\] \{ display: none; \}/, 'the control bar honours hidden when JavaScript never unhides it');
 });
 
 test('the hiding rules of the demo only apply once JavaScript has added .sh-js', () => {
-  const hiding = css.split('\n').filter((l) => /display: none/.test(l) && /\.(rec-card|sh-step|sh-l)\b/.test(l));
-  assert.ok(hiding.length >= 3, 'the three hiding rules exist');
+  const hiding = css.split('\n').filter((l) => /display: none|visibility: hidden/.test(l) && /\.(rec-card|sh-step|sh-l)\b/.test(l));
+  assert.ok(hiding.length >= 3, 'the three hiding rules exist (two with display: none, the cards with visibility)');
   for (const l of hiding) assert.match(l, /^\.sh-js /, `without .sh-js the demo would hide in a no-JS browser: ${l}`);
 });
 
@@ -427,21 +425,29 @@ test('each demo event type has its own colour: a coloured border and a badge for
   assert.match(css, /\.rec-type \{[^}]*var\(--ev, var\(--info\)\) 6%, var\(--bg-1\)/, 'a 6% tint keeps badge text at 4.5:1 or better in both themes');
 });
 
-test('no trace animation: the cards are never highlighted as connected and the records pane only follows the newest card', () => {
+test('no trace animation: the cards are never highlighted as connected', () => {
   const js = readFileSync('src/assets/js/shell.js', 'utf8');
   assert.doesNotMatch(js, /data-trace|rec-trace|focus|getBoundingClientRect/);
   assert.doesNotMatch(css, /rec-trace/);
-  assert.match(js, /list\.scrollTop = list\.scrollHeight/);
 });
 
-test('the agent pane keeps its history: every session is a tab, the shown one follows the run until a visitor picks another', () => {
+test('the agent pane never erases a session: every reached session stays, in order, and the pane scrolls', () => {
   const js = readFileSync('src/assets/js/shell.js', 'utf8');
-  assert.match(js, /setAttribute\('role', 'tab'\)/, 'tabs are buttons with the tab role');
-  assert.match(js, /sh-view/, 'the shown session is marked');
-  assert.match(js, /pick/, 'a visitor can pick a session');
-  assert.match(css, /\.sh-js \.sh-step:not\(\.sh-view\) \{ display: none; \}/, 'only the shown session is displayed, and only with JavaScript');
-  assert.match(css, /\.sh-tabs \{/);
-  assert.match(css, /\.sh-tab\[aria-selected="true"\]/);
+  assert.doesNotMatch(js, /sh-cur|sh-view|pick|tablist|role', 'tab'/, 'no tabs and no one-session-at-a-time view');
+  assert.match(css, /\.sh-js \.sh-step:not\(\.sh-on\) \{ display: none; \}/, 'a session shows once it is reached and then stays');
+  assert.doesNotMatch(css, /sh-tab|sh-view|sh-cur/);
+  assert.match(js, /body\.scrollTop = body\.scrollHeight/, 'the pane follows the newest line, older sessions stay above it');
+});
+
+test('the records pane has no scroll: all six cards fit, their space is reserved, and nothing in it toggles open', () => {
+  const js = readFileSync('src/assets/js/shell.js', 'utf8');
+  assert.doesNotMatch(js, /list\.scrollTop|rec-list/, 'the script never scrolls the records');
+  const listRule = css.match(/\n\.rec-list \{[^}]*\}/)[0];
+  assert.doesNotMatch(listRule, /overflow|height/, 'no fixed height and no scrolling on the records list');
+  assert.doesNotMatch(css.match(/@media \(max-width: 700px\)[^\n]*/)[0], /\.rec-list \{[^}]*(max-)?height/, 'nor on a phone');
+  assert.match(css, /\.sh-js \.rec-card:not\(\.sh-on\) \{ visibility: hidden; \}/, 'an unreached card still takes its place, so the pane never grows or jumps');
+  assert.doesNotMatch(css, /rec-json|rec-hl/);
+  assert.match(css, /\.sh-pane-agent \.sh-body \{[^}]*flex: 1 1 0/, 'the left pane takes the height of the right one');
 });
 
 test('copy: the caption names the corrective action, not a fix, and the problem is confirmed by the user before it is recorded', () => {

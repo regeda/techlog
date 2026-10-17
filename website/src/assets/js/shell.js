@@ -1,6 +1,6 @@
 (function () {
-  // simulated demo on a timeline: four agent sessions on the left (kept as tabs), the records they leave in Techlog on the right.
-  // The agent pane shows one session at a time (a new session starts empty); the record cards only ever accumulate.
+  // simulated demo on a timeline: four agent sessions on the left, the records they leave in Techlog on the right.
+  // The agent pane keeps every session it has shown (the agent has no memory, the page does); the record cards only ever accumulate.
   // The whole run is a pure function of time, so the bar can seek.
   var fig = document.getElementById('shell');
   if (!fig) return;
@@ -14,13 +14,12 @@
   // typing and output delays scale with one factor; the pause after a new-session divider is absolute.
   // The factor is solved so the whole run lasts TARGET_MS, pauses included.
   var TARGET_MS = 80000, SESSION_PAUSE_MS = 2000;
-  // the session stays on screen this long after its record lands, so the card and the wipe are two beats
+  // a pause after a session's record lands, so the card is seen before the next session starts
   var CARD_DWELL_MS = 1000;
   var TYPE_MS = 30, LEAD_MS = 350, OUT_TYPE_MS = 12, DIVIDER_TYPE_MS = 45;   // per character: commands, output lines, session dividers
   var items = [], steps = [], total = 0;
   var stepEls = fig.querySelectorAll('.sh-step');
   var cardEls = fig.querySelectorAll('.rec-card');
-  var list = fig.querySelector('.rec-list');
 
   // the text nodes of an output line with their full text, so the line can be filled in character by character
   function textNodes(el) {
@@ -78,19 +77,6 @@
   var slope = t2 - t1, fixed = t1 - slope;
   total = layout(Math.max(0.5, (TARGET_MS - fixed) / slope));
 
-  var pick = null;                          // a session a visitor chose to read, or null while the run decides
-  var tabsEl = document.createElement('div');
-  tabsEl.className = 'sh-tabs'; tabsEl.setAttribute('role', 'tablist'); tabsEl.setAttribute('aria-label', 'Sessions, labelled by the state they leave in Techlog');
-  var tabs = steps.map(function (s, i) {
-    var b = document.createElement('button');
-    b.type = 'button'; b.className = 'sh-tab'; b.setAttribute('role', 'tab'); b.hidden = true;
-    b.textContent = s.el.getAttribute('data-tab') || 'session ' + (i + 1);
-    b.addEventListener('click', function () { pause(); pick = i; render(); body.scrollTop = 0; });
-    tabsEl.appendChild(b);
-    return b;
-  });
-  body.parentNode.insertBefore(tabsEl, body);
-
   var pos = 0, playing = false, last = 0, raf = 0, wasPlaying = false;
   function fmt(ms) { var s = Math.round(ms / 1000); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
 
@@ -109,21 +95,12 @@
     });
     var cur = -1;
     steps.forEach(function (s, i) { if (pos >= s.first) cur = i; });
-    // the session on show is the running one, unless a visitor picked another tab; no session is ever removed
-    var view = pick !== null ? pick : cur;
+    // a session is shown once it is reached and then stays: the agent pane keeps its history
     steps.forEach(function (s, i) {
       if (s.el.classList.contains('sh-on') !== (i <= cur)) s.el.classList.toggle('sh-on', i <= cur);
-      if (s.el.classList.contains('sh-cur') !== (i === cur)) s.el.classList.toggle('sh-cur', i === cur);
-      if (s.el.classList.contains('sh-view') !== (i === view)) s.el.classList.toggle('sh-view', i === view);
-      var tab = tabs[i];
-      tab.hidden = i > cur;
-      tab.setAttribute('aria-selected', String(i === view));
-      if (tab.classList.contains('sh-tab-cur') !== (i === cur)) tab.classList.toggle('sh-tab-cur', i === cur);
     });
     text.textContent = typing;
-    if (pick === null) body.scrollTop = body.scrollHeight;
-    // the records pane follows the newest card
-    list.scrollTop = list.scrollHeight;
+    body.scrollTop = body.scrollHeight;
     seek.value = String(Math.round(pos / total * 1000));
     clock.textContent = fmt(pos) + ' / ' + fmt(total);
     seek.setAttribute('aria-valuetext', fmt(pos) + ' of ' + fmt(total));
@@ -144,14 +121,14 @@
   }
   function play() {
     if (pos >= total) pos = 0;
-    pick = null; playing = true; label(); last = performance.now(); raf = requestAnimationFrame(tick);
+    playing = true; label(); last = performance.now(); raf = requestAnimationFrame(tick);
   }
   function pause() { playing = false; cancelAnimationFrame(raf); label(); }
 
   playBtn.addEventListener('click', function () { if (playing) pause(); else play(); });
   seek.addEventListener('input', function () {
     if (playing) { wasPlaying = true; pause(); }
-    pick = null; pos = Number(seek.value) / 1000 * total; render(); label();
+    pos = Number(seek.value) / 1000 * total; render(); label();
   });
   seek.addEventListener('change', function () { if (wasPlaying) { wasPlaying = false; play(); } });
 

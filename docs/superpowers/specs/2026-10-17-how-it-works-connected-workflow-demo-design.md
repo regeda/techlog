@@ -102,16 +102,21 @@ These amend the design above; where they conflict, they win.
 1. **No `/techlog:welcome` in the demo.** The story has four sessions (problem,
    proposal, decision and change, incident and mitigation); session 1 (setup) is
    dropped, and so are its divider and the "five sessions" copy.
-2. **The agent pane keeps its history.** Sessions are no longer wiped: each one
-   is a tab labelled by the Techlog state it leaves (`problem`, `proposal`,
-   `decision · change`, `incident · mitigation`). During the run the tab of the
-   running session is shown; a visitor can pause on any reached tab and read it,
-   and after the run all four stay readable. Playing or seeking hands control
-   back to the run. Tabs exist only with JavaScript; the no-JS page still shows
-   every session in full.
+2. **The agent pane keeps its history, without tabs.** Sessions are not wiped:
+   each one stays, stacked in order under its divider, and the pane follows the
+   newest line so older sessions can be scrolled back to, during the run and
+   after it. (An earlier follow-up used tabs labelled by Techlog state; the user
+   replaced them with this.)
 3. **No trace animation.** The cards are not highlighted as connected when the
    incident opens. The quick-context line in the transcript stays as text.
 4. **The run lasts 1:20** (`TARGET_MS = 80000`).
+5. **The second divider reads "a new session, today later"** (problem and
+   proposal are the same day); the demo times follow: proposal later on the
+   problem's day, decision and change 1 day later, incident 3 days after that.
+6. **The records pane has no scroll and no JSON.** All six cards fit in the pane
+   (an unreached card keeps its place, hidden, so nothing grows or jumps); the
+   left pane takes the right pane's height; "Show JSON" is removed from the cards
+   and from the caption.
 
 ### Foot caption
 

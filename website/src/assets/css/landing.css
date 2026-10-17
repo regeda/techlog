@@ -139,19 +139,14 @@
 .shell { margin: 0 0 var(--s-6); border: 1px solid var(--line-strong); border-radius: var(--r-3); background: var(--bg-0); color: var(--text-1); overflow: hidden; }
 .shell figcaption { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3); padding: var(--s-3) var(--s-5); background: var(--bg-2); border-bottom: 1px solid var(--line-strong); font: 700 var(--fs-sm) var(--font-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--text-1); }
 .shell .badge { margin: 0; }
+.sh-pane-agent .sh-body { flex: 1 1 0; min-height: 20rem; }
 .sh-body { height: 20rem; overflow: auto; padding: var(--s-4) var(--s-5); font: var(--fs-sm)/1.6 var(--font-mono); }
 .sh-step { margin-top: var(--s-4); }
 .sh-step:first-child { margin-top: 0; }
 .sh-l { white-space: pre-wrap; overflow-wrap: anywhere; }
 .sh-js .sh-l:not(.sh-on) { display: none; }
-.sh-js .sh-step:not(.sh-view) { display: none; }
-.sh-tabs { display: flex; flex-wrap: wrap; gap: var(--s-2); padding: var(--s-3) var(--s-5) 0; }
-.sh-tabs:not(:has(.sh-tab:not([hidden]))) { display: none; }
-.sh-tab { padding: 2px var(--s-3); border: 1px solid var(--line-strong); border-radius: 999px; background: var(--bg-1); color: var(--text-2); font: var(--fs-xs) var(--font-mono); cursor: pointer; }
-.sh-tab[hidden] { display: none; }
-.sh-tab[aria-selected="true"] { border-color: var(--accent); background: var(--accent-dim); color: var(--text-1); font-weight: 700; }
-.sh-tab-cur::before { content: "● "; color: var(--accent); }
-.sh-js .rec-card:not(.sh-on) { display: none; }
+.sh-js .sh-step:not(.sh-on) { display: none; }
+.sh-js .rec-card:not(.sh-on) { visibility: hidden; }
 .sh-rule { margin-bottom: var(--s-3); color: var(--text-2); text-align: center; }
 .sh-user { margin: var(--s-3) 0 var(--s-2); padding: var(--s-1) var(--s-3); border-radius: var(--r-1); background: var(--bg-3); color: var(--text-0); }
 .sh-gt { color: var(--accent); font-weight: 700; }
@@ -189,7 +184,7 @@
 .sh-pane + .sh-pane { border-left: 1px solid var(--line-strong); }
 .sh-pane-title { margin: 0; padding: var(--s-3) var(--s-5) 0; font: 700 var(--fs-xs) var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-1); }
 .sh-pane-note { margin-left: var(--s-2); font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--text-2); }
-.rec-list { list-style: none; margin: 0; padding: var(--s-4) var(--s-5); display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: var(--s-3); height: 24rem; overflow: auto; }
+.rec-list { list-style: none; margin: 0; padding: var(--s-4) var(--s-5); display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: var(--s-3); }
 .rec-card { padding: var(--s-3) var(--s-4); border: 1px solid var(--ev, var(--line-strong)); border-radius: var(--r-2); background: var(--bg-1); font: var(--fs-sm)/1.5 var(--font-sans); color: var(--text-1); }
 .rec-card[data-type="problem.reported"] { --ev: var(--warn); }
 .rec-card[data-type="proposal.recorded"] { --ev: var(--accent); }
@@ -206,8 +201,5 @@
 .rec-link { padding-left: var(--s-3); border-left: 3px solid var(--ok); font: var(--fs-xs) var(--font-mono); overflow-wrap: anywhere; }
 .rec-link.rec-hypothesis { border-left-style: dashed; border-left-color: var(--hyp); color: var(--hyp); }
 .rec-confirmed .rec-basis { color: var(--ok); }
-.rec-json summary { margin-top: var(--s-2); cursor: pointer; font: 600 var(--fs-xs) var(--font-mono); color: var(--accent); }
-.rec-json pre { margin: var(--s-2) 0 0; max-width: 100%; overflow: auto; font: var(--fs-xs)/1.5 var(--font-mono); }
-.rec-hl { background: color-mix(in srgb, var(--accent) 18%, transparent); }
-@media (max-width: 700px) { .sh-body, .shell figcaption, .sh-foot { padding-inline: var(--s-3); } .sh-input { margin-inline: var(--s-3); } .sh-ctl { padding-inline: var(--s-3); } .sh-body { height: 16rem; } .sh-panes { grid-template-columns: 1fr; } .sh-pane + .sh-pane { border-left: 0; border-top: 1px solid var(--line-strong); } .rec-list { height: auto; max-height: 24rem; padding-inline: var(--s-3); } .sh-pane-title { padding-inline: var(--s-3); } }
+@media (max-width: 700px) { .sh-body, .shell figcaption, .sh-foot { padding-inline: var(--s-3); } .sh-input { margin-inline: var(--s-3); } .sh-ctl { padding-inline: var(--s-3); } .sh-pane-agent .sh-body { flex: none; min-height: 0; height: 16rem; } .sh-panes { grid-template-columns: 1fr; } .sh-pane + .sh-pane { border-left: 0; border-top: 1px solid var(--line-strong); } .rec-list { padding-inline: var(--s-3); } .sh-pane-title { padding-inline: var(--s-3); } }
 @media (prefers-reduced-motion: reduce) { .sh-caret, .sh-typing::after, .sh-idle .sh-play { animation: none; } .sh-idle .sh-play { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent); } }
