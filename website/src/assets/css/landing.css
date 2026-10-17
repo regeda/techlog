@@ -185,9 +185,12 @@
 .sh-pane-note { margin-left: var(--s-2); font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--text-2); }
 .rec-list { list-style: none; margin: 0; padding: var(--s-4) var(--s-5); display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: var(--s-3); height: 24rem; overflow: auto; }
 .rec-card { padding: var(--s-3) var(--s-4); border: 1px solid var(--ev, var(--line-strong)); border-radius: var(--r-2); background: var(--bg-1); font: var(--fs-sm)/1.5 var(--font-sans); color: var(--text-1); }
+.rec-card[data-type="problem.reported"] { --ev: var(--warn); }
+.rec-card[data-type="proposal.recorded"] { --ev: var(--accent); }
 .rec-card[data-type="decision.made"] { --ev: var(--info); }
 .rec-card[data-type="change.implemented"] { --ev: var(--ok); }
 .rec-card[data-type="incident.opened"] { --ev: var(--danger); }
+.rec-card[data-type="mitigation.applied"] { --ev: var(--orange); }
 .rec-head { display: flex; justify-content: space-between; gap: var(--s-3); flex-wrap: wrap; font: 700 var(--fs-xs) var(--font-mono); }
 .rec-type { padding: 0 var(--s-2); border: 1px solid var(--ev, var(--info)); border-radius: 999px; background: color-mix(in srgb, var(--ev, var(--info)) 6%, var(--bg-1)); color: var(--ev, var(--info)); }
 .rec-id { color: var(--text-2); }

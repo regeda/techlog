@@ -79,23 +79,22 @@ test('landing: the logo lives in the header bar, and the motto is big, in two li
 
 
 
-test('landing: how it works is a split view of three sessions and the records they leave', () => {
+test('landing: how it works is a split view of five sessions and the records they leave', () => {
   assert.match(how, /<h2>One history\. Every agent\.<\/h2>/);
   assert.doesNotMatch(how, /class="pipe"|class="events"|ev-chain/, 'the three cards and the event flow are gone');
   assert.match(how, /id="shell"[\s\S]*Simulated example/);
   assert.match(how, /Agent session[\s\S]*Techlog records/, 'two labelled panes');
   const typed = [...how.matchAll(/class="sh-typed">([^<]*)</g)].map((m) => m[1]);
-  assert.deepEqual(typed.filter((c) => c !== '/techlog:record'), [
-    'Approve the spin-to-win design with a 20% cap',
-    'Merge PR #482',
-    'Investigate PagerDuty alert P1-5521',
-  ]);
-  assert.equal(typed.filter((c) => c === '/techlog:record').length, 3, 'one /techlog:record per session');
-  assert.deepEqual([...how.matchAll(/class="sh-l sh-rule">── ([^<]*) ──</g)].map((m) => m[1]), ['a new session, 2 days later', 'a new session, 3 days later']);
-  assert.equal((how.match(/class="sh-step"/g) || []).length, 3);
-  assert.deepEqual([...how.matchAll(/class="sh-l sh-res" data-rec="(\d)"/g)].map((m) => m[1]), ['1', '2', '3'], 'one record line per session, in order');
+  assert.deepEqual(typed, ['/techlog:welcome', '/techlog:problem', '/techlog:proposal', 'Approved. Plan it.', 'Merge PR #482', '/techlog:record', 'Investigate PagerDuty alert P1-5521', '/techlog:record']);
+  assert.deepEqual([...how.matchAll(/class="sh-l sh-rule">── ([^<]*) ──</g)].map((m) => m[1]), ['a new session, the same day', 'a new session, 1 day later', 'a new session, 1 day later', 'a new session, 3 days later']);
+  assert.equal((how.match(/class="sh-step"/g) || []).length, 5);
+  assert.deepEqual([...how.matchAll(/class="sh-l sh-res" data-rec="(\d)"/g)].map((m) => m[1]), ['1', '2', '3', '4', '5', '6'], 'one record line per event, in order');
+  assert.doesNotMatch(how.split('class="sh-step"')[1], /data-rec/, 'welcome is setup, not an event');
+  assert.equal((how.match(/data-trace="5,4,3,2,1"/g) || []).length, 1, 'the incident walks back to the problem once');
+  assert.doesNotMatch(how, /resolved/i, 'the incident is never claimed resolved');
+  assert.match(how, /five sessions/);
   assert.deepEqual([...how.matchAll(/✓ recorded (evt_\w+)/g)].map((m) => m[1]), chain.map((e) => e.id), 'the transcript records the same events as the cards');
-  assert.equal((how.match(/class="rec-card"/g) || []).length, 3);
+  assert.equal((how.match(/class="rec-card"/g) || []).length, 6);
   assert.match(how, /rec-hypothesis/, 'the unproven cause is shown as a hypothesis');
   assert.doesNotMatch(how, /techlog_record_event|kubectl|gh pr|pd incident|jira issue/, 'no tool-call noise, and the skill rather than the raw tool is shown');
   assert.doesNotMatch(how, /class="(rec-card|sh-step)"[^>]*\bhidden\b/, 'without JavaScript everything is visible');
@@ -351,15 +350,15 @@ const chain = JSON.parse(readFileSync('src/examples/demo-chain.json', 'utf8'));
 
 test('renderDemoCards: one card per event, links marked by basis, JSON from the same event', () => {
   const out = renderDemoCards(chain);
-  assert.equal((out.match(/class="rec-card"/g) || []).length, 3);
-  assert.equal((out.match(/class="rec-link rec-confirmed"/g) || []).length, 2);
+  assert.equal((out.match(/class="rec-card"/g) || []).length, 6);
+  assert.equal((out.match(/class="rec-link rec-confirmed"/g) || []).length, 6);
   assert.equal((out.match(/class="rec-link rec-hypothesis"/g) || []).length, 1);
-  assert.deepEqual([...out.matchAll(/data-rec="(\d)"/g)].map((m) => m[1]), ['1', '2', '3']);
+  assert.deepEqual([...out.matchAll(/data-rec="(\d)"/g)].map((m) => m[1]), ['1', '2', '3', '4', '5', '6']);
   for (const e of chain) {
     assert.ok(out.includes(e.id), `${e.id} is shown`);
     assert.ok(out.includes(e.summary), `${e.id} summary is shown`);
   }
-  assert.equal((out.match(/<details class="rec-json">/g) || []).length, 3);
+  assert.equal((out.match(/<details class="rec-json">/g) || []).length, 6);
   assert.match(out, /<mark class="rec-hl">[\s\S]*links[\s\S]*<\/mark>/, 'the links field is highlighted in the JSON');
 });
 
@@ -417,7 +416,8 @@ test('each demo event type has its own colour: a coloured border and a badge for
   const colour = {};
   for (const m of css.matchAll(/\.rec-card\[data-type="([^"]+)"\] \{ --ev: var\((--[a-z]+)\); \}/g)) colour[m[1]] = m[2];
   assert.deepEqual(Object.keys(colour).sort(), chain.map((e) => e.type).sort(), 'every demo event type is coloured');
-  assert.equal(new Set(Object.values(colour)).size, 3, 'three different colours');
+  assert.equal(new Set(Object.values(colour)).size, 6, 'six different colours');
+  assert.deepEqual(colour, { 'problem.reported': '--warn', 'proposal.recorded': '--accent', 'decision.made': '--info', 'change.implemented': '--ok', 'incident.opened': '--danger', 'mitigation.applied': '--orange' });
   assert.equal(colour['change.implemented'], '--ok', 'a change is green');
   assert.ok(!Object.values(colour).includes('--hyp'), 'purple stays reserved for the hypothesis link');
   assert.match(css, /\.rec-card \{[^}]*border: 1px solid var\(--ev, var\(--line-strong\)\)/, 'the card border takes the event colour');
