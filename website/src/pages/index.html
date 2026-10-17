@@ -46,32 +46,41 @@ description: Let AI write the code and keep the progress in Techlog. Reviews sto
       <p class="lead">Techlog connects the context scattered across agents, sessions, and engineering tools, so people and AI can understand how problems, decisions, changes, and incidents relate.</p>
     </div>
     <figure class="shell cs" id="shell" aria-labelledby="sh-cap">
-      <figcaption><span id="sh-cap">Sessions forget. Techlog remembers.</span><span class="badge badge-simulated">Simulated example</span></figcaption>
-      <div class="sh-panes">
-        <div class="sh-pane sh-pane-agent">
-          <p class="sh-pane-title">Agent session <span class="sh-pane-note">starts empty every time</span></p>
-          <div class="sh-body" tabindex="0" role="log" aria-label="Simulated agent transcript">
-            <div class="sh-idle-hint"><p>Press <strong>Run simulation</strong> to watch four sessions leave linked records.</p></div>
-<div class="sh-step"><div class="sh-l sh-user"><span class="sh-gt">&gt;</span> <span class="sh-typed">/techlog:problem</span></div><div class="sh-l sh-say"><span class="sh-dot">●</span> What kind of problem is this? A feature request.</div><div class="sh-l sh-say"><span class="sh-dot">●</span> Who needs it? New visitors: no first-order offer, retention is flat.</div><div class="sh-l sh-say"><span class="sh-dot">●</span> Draft problem.reported is ready. Record it?</div><div class="sh-l sh-user"><span class="sh-gt">&gt;</span> <span class="sh-typed">yes</span></div><div class="sh-l sh-tool"><span class="sh-dot">●</span> /techlog:record<span class="sh-args">(<span class="sh-k">problem.reported</span>)</span></div><div class="sh-l sh-res" data-rec="1"><span class="sh-elbow">⎿</span>  <span class="sh-ok">✓ recorded evt_01J9K2D00001</span></div></div>
-<div class="sh-step"><div class="sh-l sh-rule">── a new session, today later ──</div><div class="sh-l sh-user"><span class="sh-gt">&gt;</span> <span class="sh-typed">/techlog:proposal</span></div><div class="sh-l sh-say"><span class="sh-dot">●</span> Context confirmed. Design: one spin per new account, discount capped at 20%.</div><div class="sh-l sh-say"><span class="sh-dot">●</span> Rejected: uncapped spins.</div><div class="sh-l sh-tool"><span class="sh-dot">●</span> /techlog:record<span class="sh-args">(<span class="sh-k">proposal.recorded</span>)</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  link motivated_by → evt_01J9K2D00001 <span class="sh-ok">━━ confirmed</span></div><div class="sh-l sh-res" data-rec="2"><span class="sh-elbow">⎿</span>  <span class="sh-ok">✓ recorded evt_01J9K2D00002</span></div></div>
-<div class="sh-step"><div class="sh-l sh-rule">── a new session, 1 day later ──</div><div class="sh-l sh-user"><span class="sh-gt">&gt;</span> <span class="sh-typed">Approved. Plan it.</span></div><div class="sh-l sh-say"><span class="sh-dot">●</span> Standing rule: the decision is recorded before planning.</div><div class="sh-l sh-tool"><span class="sh-dot">●</span> /techlog:record<span class="sh-args">(<span class="sh-k">decision.made</span>)</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  link decides → evt_01J9K2D00002 <span class="sh-ok">━━ confirmed</span></div><div class="sh-l sh-res" data-rec="3"><span class="sh-elbow">⎿</span>  <span class="sh-ok">✓ recorded evt_01J9K2D00003</span></div><div class="sh-l sh-user"><span class="sh-gt">&gt;</span> <span class="sh-typed">Merge PR #482</span></div><div class="sh-l sh-say"><span class="sh-dot">●</span> Merged PR #482: spin-to-win with the 20% cap.</div><div class="sh-l sh-user"><span class="sh-gt">&gt;</span> <span class="sh-typed">/techlog:record</span></div><div class="sh-l sh-tool"><span class="sh-dot">●</span> /techlog:record<span class="sh-args">(<span class="sh-k">change.implemented</span>)</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  link implements → evt_01J9K2D00003 <span class="sh-ok">━━ confirmed</span></div><div class="sh-l sh-res" data-rec="4"><span class="sh-elbow">⎿</span>  <span class="sh-ok">✓ recorded evt_01J9K2D00004</span></div></div>
-<div class="sh-step"><div class="sh-l sh-rule">── a new session, 3 days later ──</div><div class="sh-l sh-user"><span class="sh-gt">&gt;</span> <span class="sh-typed">Investigate PagerDuty alert P1-5521</span></div><div class="sh-l sh-say"><span class="sh-dot">●</span> 5xx on /spin is at 6.2%, three days after PR #482. That does not prove the PR caused it.</div><div class="sh-l sh-user"><span class="sh-gt">&gt;</span> <span class="sh-typed">/techlog:record</span></div><div class="sh-l sh-tool"><span class="sh-dot">●</span> /techlog:record<span class="sh-args">(<span class="sh-k">incident.opened</span>)</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  link observed_after → evt_01J9K2D00004 <span class="sh-ok">━━ confirmed</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  link caused_by → evt_01J9K2D00004 <span class="sh-hyp">┅┅ hypothesis</span></div><div class="sh-l sh-res" data-rec="5"><span class="sh-elbow">⎿</span>  <span class="sh-ok">✓ recorded evt_01J9K2D00005</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  quick context: incident ⟵ change PR #482 ⟵ decision (20% cap) ⟵ proposal (rejected: uncapped spins) ⟵ problem</div><div class="sh-l sh-say"><span class="sh-dot">●</span> Corrective action: roll back PR #482, keep the decision, reopen the cap for review.</div><div class="sh-l sh-tool"><span class="sh-dot">●</span> /techlog:record<span class="sh-args">(<span class="sh-k">mitigation.applied</span>)</span></div><div class="sh-l sh-res"><span class="sh-elbow">⎿</span>  link mitigates → evt_01J9K2D00005 <span class="sh-ok">━━ confirmed</span></div><div class="sh-l sh-res" data-rec="6"><span class="sh-elbow">⎿</span>  <span class="sh-ok">✓ recorded evt_01J9K2D00006</span></div></div>
-          </div>
-          <div class="sh-input" id="sh-input" aria-hidden="true" hidden><span class="sh-gt">&gt;</span> <span class="sh-line"><span id="sh-text"></span><span class="sh-caret"></span></span></div>
-        </div>
-        <div class="sh-pane sh-pane-rec">
-          <p class="sh-pane-title">Techlog records <span class="sh-pane-note">kept across sessions</span></p>
-          <ol class="rec-list" aria-label="Events recorded in Techlog">
+      <figcaption><span id="sh-cap">Same question. Different answers.</span><span class="badge badge-simulated">Simulated example</span></figcaption>
+      <div class="cmp-q">
+        <p class="cmp-hint" id="cmp-hint">Press Run to ask the same question twice.</p>
+        <p class="cmp-who">You</p>
+        <p class="cmp-t">Why do we enforce a 20% discount cap? I need to change the pricing logic.</p>
+      </div>
+      <div class="cmp-panes">
+        <section class="cmp-pane cmp-without" aria-label="Without Techlog">
+          <p class="cmp-head"><span class="cmp-dot" aria-hidden="true"></span>Without Techlog <span class="cmp-note">no context</span></p>
+          <p class="cmp-who">AI Agent</p>
+          <p class="cmp-t">I don't have enough information about the original reasoning for the 20% discount cap.</p>
+          <p class="cmp-t">I can read the current code and tests, but not the design discussion or the business context. You might check:</p>
+          <ul class="cmp-list">
+            <li class="cmp-t">the original issue or requirement</li>
+            <li class="cmp-t">past design discussions</li>
+            <li class="cmp-t">related pull requests</li>
+            <li class="cmp-t">any business rules or policies</li>
+          </ul>
+        </section>
+        <section class="cmp-pane cmp-with" aria-label="With Techlog">
+          <p class="cmp-head"><span class="cmp-dot" aria-hidden="true"></span>With Techlog <span class="cmp-note">connected events</span></p>
+          <p class="cmp-who">AI Agent <span class="cmp-using">(using Techlog)</span></p>
+          <p class="cmp-t">Here is the chain behind the 20% cap, oldest first:</p>
+          <ol class="cmp-events" aria-label="Events found in Techlog">
 {{demo-events demo-chain.json}}
           </ol>
-        </div>
+          <p class="cmp-t cmp-close">The 20% cap is a business rule from an approved decision. Before changing the pricing logic, check the original problem and the tests that came with PR #482.</p>
+        </section>
       </div>
       <div class="sh-ctl" id="sh-ctl" hidden>
         <button type="button" class="sh-play" id="sh-play" aria-label="Run simulation">▶ Run simulation</button>
         <input type="range" class="sh-seek" id="sh-seek" min="0" max="1000" step="1" value="0" aria-label="Playback position">
         <span class="sh-time" id="sh-time" aria-hidden="true">0:00 / 0:00</span>
       </div>
-      <p class="sh-foot">Each command is one stage of one workflow and leaves a linked record: <code>/techlog:problem</code>, <code>/techlog:proposal</code>, then <code>/techlog:record</code> for the decision and the change. When an incident opens, Techlog walks it back to the problem in one trace and the corrective action lands in the same chain. An unproven cause stays a hypothesis.</p>
+      <p class="sh-foot">The same question, asked twice. Without Techlog the agent has to send you looking; with Techlog it finds the connected events, so the reasons behind the work are one answer away. Open an event to see what Techlog holds.</p>
     </figure>
     <script src="{{root}}assets/js/shell.js"></script>
   </div>

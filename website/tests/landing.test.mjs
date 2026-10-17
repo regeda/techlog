@@ -79,32 +79,22 @@ test('landing: the logo lives in the header bar, and the motto is big, in two li
 
 
 
-test('landing: how it works is a split view of four sessions and the records they leave', () => {
+test('landing: how it works asks the same question without and with Techlog, and the events are rows', () => {
   assert.match(how, /<h2>One history\. Every agent\.<\/h2>/);
-  assert.doesNotMatch(how, /class="pipe"|class="events"|ev-chain/, 'the three cards and the event flow are gone');
   assert.match(how, /id="shell"[\s\S]*Simulated example/);
-  assert.match(how, /Agent session[\s\S]*Techlog records/, 'two labelled panes');
-  const typed = [...how.matchAll(/class="sh-typed">([^<]*)</g)].map((m) => m[1]);
-  assert.deepEqual(typed, ['/techlog:problem', 'yes', '/techlog:proposal', 'Approved. Plan it.', 'Merge PR #482', '/techlog:record', 'Investigate PagerDuty alert P1-5521', '/techlog:record']);
-  assert.deepEqual([...how.matchAll(/class="sh-l sh-rule">── ([^<]*) ──</g)].map((m) => m[1]), ['a new session, today later', 'a new session, 1 day later', 'a new session, 3 days later']);
-  assert.equal((how.match(/class="sh-step"/g) || []).length, 4);
-  assert.deepEqual([...how.matchAll(/class="sh-l sh-res" data-rec="(\d)"/g)].map((m) => m[1]), ['1', '2', '3', '4', '5', '6'], 'one record line per event, in order');
-  assert.doesNotMatch(how, /techlog:welcome/, 'welcome is not part of the demo');
-  assert.doesNotMatch(how, /data-trace/, 'the incident trace is text only, with no highlight animation');
-  assert.match(how, /quick context: incident/, 'the quick context line stays');
-  assert.doesNotMatch(how, /data-tab|sh-tabs/, 'no tabs on the left: the sessions simply stay');
-  assert.doesNotMatch(how, /Show JSON|rec-json/, 'the cards show no JSON');
-  assert.doesNotMatch(how, /resolved/i, 'the incident is never claimed resolved');
-  assert.match(how, /four sessions/);
-  assert.deepEqual([...how.matchAll(/✓ recorded (evt_\w+)/g)].map((m) => m[1]), chain.map((e) => e.id), 'the transcript records the same events as the cards');
-  assert.equal((how.match(/class="rec-card"/g) || []).length, 6);
-  assert.match(how, /rec-hypothesis/, 'the unproven cause is shown as a hypothesis');
-  assert.doesNotMatch(how, /techlog_record_event|kubectl|gh pr|pd incident|jira issue/, 'no tool-call noise, and the skill rather than the raw tool is shown');
-  assert.doesNotMatch(how, /class="(rec-card|sh-step)"[^>]*\bhidden\b/, 'without JavaScript everything is visible');
+  assert.match(how, /Press Run to ask the same question twice\./);
+  assert.equal((how.match(/Why do we enforce a 20% discount cap\? I need to change the pricing logic\./g) || []).length, 1, 'one question for both panes');
+  assert.ok(how.indexOf('Without Techlog') > 0 && how.indexOf('Without Techlog') < how.indexOf('With Techlog'), 'the pane without Techlog comes first');
+  assert.match(how, /aria-label="Without Techlog"[\s\S]*aria-label="With Techlog"/);
+  assert.match(how, /\(using Techlog\)/);
+  assert.equal((how.match(/class="cmp-event"/g) || []).length, 3, 'three events in the right pane');
+  const without = how.slice(how.indexOf('aria-label="Without Techlog"'), how.indexOf('aria-label="With Techlog"'));
+  assert.equal((without.match(/<li class="cmp-t">/g) || []).length, 4, 'four suggestions where to look, without Techlog');
+  assert.match(how, /class="cmp-t cmp-close"[^>]*>[^<]*PR #482/, 'the closing answer names the PR');
+  assert.doesNotMatch(how, /<[a-z]+[^>]*class="cmp-[^"]*"[^>]*\shidden/, 'without JavaScript nothing of the comparison is hidden');
+  assert.doesNotMatch(how, /\/techlog:|sh-step|sh-rule|sh-typed|rec-card|rec-list|Show JSON|data-tab|data-trace|resolved|<pre/, 'none of the old CLI demo, no JSON, no claim of resolution');
   assert.match(how, /id="sh-play"[^>]*>▶ Run simulation/, 'starts idle with a call to run');
-  const js = readFileSync('src/assets/js/shell.js', 'utf8');
-  assert.doesNotMatch(js, /IntersectionObserver|autoplay/, 'does not start by itself');
-  assert.match(css, /@media \(max-width: 700px\)[^\n]*\.sh-panes/, 'the panes stack on a phone');
+  assert.doesNotMatch(how, /Ask a follow-up/, 'no inert follow-up input');
 });
 
 test('landing: the layers follow how it works in their own section', () => {
@@ -386,82 +376,19 @@ test('the {{demo-events}} directive is expanded in the built landing page', () =
   assert.match(html, /class="cmp-event"/);
 });
 
-test('shell.js: sessions accumulate, cards accumulate, 80 seconds, reduced motion, no autoplay', () => {
-  const js = readFileSync('src/assets/js/shell.js', 'utf8');
-  assert.match(js, /TARGET_MS = 80000/);
-    assert.match(js, /data-rec/, 'cards are tied to the record line of their session');
-  assert.doesNotMatch(js, /matchMedia|prefers-reduced-motion/, 'typing is the point of the demo, so it is never skipped');
-  assert.doesNotMatch(js, /IntersectionObserver|autoplay/);
-});
-
-test('the record cards stay inside their pane: the list column may shrink below the JSON width', () => {
-  assert.match(css, /\.rec-list \{[^}]*grid-template-columns: minmax\(0, 1fr\)/);
-});
-
-test('review fixes: the record list follows the newest card, a card lands before the wipe, and the dead controls stay hidden without JS', () => {
-  const js = readFileSync('src/assets/js/shell.js', 'utf8');
-  assert.match(js, /CARD_DWELL_MS/, 'the session stays visible for a beat after its card lands');
-  assert.match(css, /\.sh-ctl\[hidden\] \{ display: none; \}/, 'the control bar honours hidden when JavaScript never unhides it');
-});
-
-test('the hiding rules of the demo only apply once JavaScript has added .sh-js', () => {
-  const hiding = css.split('\n').filter((l) => /display: none|visibility: hidden/.test(l) && /\.(rec-card|sh-step|sh-l)\b/.test(l));
-  assert.ok(hiding.length >= 3, 'the three hiding rules exist (two with display: none, the cards with visibility)');
+test('comparison styles: space is reserved, panes stretch and stack, the pane labels carry the meaning', () => {
+  for (const rule of [/\.sh-js \.cmp-t:not\(\.sh-on\) \{ visibility: hidden; \}/, /\.sh-js \.cmp-event:not\(\.sh-on\) \{ visibility: hidden; \}/, /\.cmp-off \{ visibility: hidden; \}/]) {
+    assert.match(css, rule, `${rule} reserves space instead of removing it`);
+  }
+  const hiding = css.split('\n').filter((l) => /visibility: hidden/.test(l) && /\.cmp-(t|event)\b/.test(l));
   for (const l of hiding) assert.match(l, /^\.sh-js /, `without .sh-js the demo would hide in a no-JS browser: ${l}`);
-});
-
-test('typing: the command line types, and so do the session dividers and every output line', () => {
-  const js = readFileSync('src/assets/js/shell.js', 'utf8');
-  assert.match(js, /OUT_TYPE_MS/, 'output lines are typed');
-  assert.match(js, /DIVIDER_TYPE_MS/, 'a new-session divider is typed more slowly so it is noticed');
-  assert.match(js, /sh-typing/, 'the line being typed carries a caret');
-  assert.match(css, /\.sh-typing::after \{/, 'the caret is styled');
-  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[^\n]*\.sh-typing::after/, 'only the caret blink stops under reduced motion, not the typing');
-});
-
-test('each demo event type has its own colour: a coloured border and a badge for the event name', () => {
-  const out = renderDemoCards(chain);
-  assert.deepEqual([...out.matchAll(/class="rec-card" id="rec-\d" data-rec="\d" data-type="([^"]+)"/g)].map((m) => m[1]), chain.map((e) => e.type));
+  assert.match(css, /\.cmp-panes \{[^}]*align-items: stretch/);
+  assert.doesNotMatch(css.match(/\n\.cmp-pane \{[^}]*\}/)[0], /overflow|[^-]height/, 'no inner scrolling and no fixed height');
+  assert.match(css.match(/@media \(max-width: 700px\)[^\n]*\.cmp-panes[^\n]*/)[0], /\.cmp-panes \{ grid-template-columns: 1fr; \}/, 'panes stack on a phone');
+  assert.match(css, /\.cmp-edetail \{[^}]*overflow-wrap: anywhere/);
+  assert.match(how, /<span class="cmp-dot" aria-hidden="true">/, 'the dots are decoration; the label is text');
   const colour = {};
-  for (const m of css.matchAll(/\.rec-card\[data-type="([^"]+)"\] \{ --ev: var\((--[a-z]+)\); \}/g)) colour[m[1]] = m[2];
-  assert.deepEqual(Object.keys(colour).sort(), chain.map((e) => e.type).sort(), 'every demo event type is coloured');
-  assert.equal(new Set(Object.values(colour)).size, 6, 'six different colours');
-  assert.deepEqual(colour, { 'problem.reported': '--warn', 'proposal.recorded': '--accent', 'decision.made': '--info', 'change.implemented': '--ok', 'incident.opened': '--danger', 'mitigation.applied': '--orange' });
-  assert.equal(colour['change.implemented'], '--ok', 'a change is green');
-  assert.ok(!Object.values(colour).includes('--hyp'), 'purple stays reserved for the hypothesis link');
-  assert.match(css, /\.rec-card \{[^}]*border: 1px solid var\(--ev, var\(--line-strong\)\)/, 'the card border takes the event colour');
-  assert.match(css, /\.rec-type \{[^}]*background: color-mix\(in srgb, var\(--ev[^}]*color: var\(--ev/, 'the event name is a coloured badge');
-  assert.match(css, /\.rec-type \{[^}]*var\(--ev, var\(--info\)\) 6%, var\(--bg-1\)/, 'a 6% tint keeps badge text at 4.5:1 or better in both themes');
-});
-
-test('no trace animation: the cards are never highlighted as connected', () => {
-  const js = readFileSync('src/assets/js/shell.js', 'utf8');
-  assert.doesNotMatch(js, /data-trace|rec-trace|focus|getBoundingClientRect/);
-  assert.doesNotMatch(css, /rec-trace/);
-});
-
-test('the agent pane never erases a session: every reached session stays, in order, and the pane scrolls', () => {
-  const js = readFileSync('src/assets/js/shell.js', 'utf8');
-  assert.doesNotMatch(js, /sh-cur|sh-view|pick|tablist|role', 'tab'/, 'no tabs and no one-session-at-a-time view');
-  assert.match(css, /\.sh-js \.sh-step:not\(\.sh-on\) \{ display: none; \}/, 'a session shows once it is reached and then stays');
-  assert.doesNotMatch(css, /sh-tab|sh-view|sh-cur/);
-  assert.match(js, /body\.scrollTop = body\.scrollHeight/, 'the pane follows the newest line, older sessions stay above it');
-});
-
-test('the records pane has no scroll: all six cards fit, their space is reserved, and nothing in it toggles open', () => {
-  const js = readFileSync('src/assets/js/shell.js', 'utf8');
-  assert.doesNotMatch(js, /list\.scrollTop|rec-list/, 'the script never scrolls the records');
-  const listRule = css.match(/\n\.rec-list \{[^}]*\}/)[0];
-  assert.doesNotMatch(listRule, /overflow|height/, 'no fixed height and no scrolling on the records list');
-  assert.doesNotMatch(css.match(/@media \(max-width: 700px\)[^\n]*/)[0], /\.rec-list \{[^}]*(max-)?height/, 'nor on a phone');
-  assert.match(css, /\.sh-js \.rec-card:not\(\.sh-on\) \{ visibility: hidden; \}/, 'an unreached card still takes its place, so the pane never grows or jumps');
-  assert.doesNotMatch(css, /rec-json|rec-hl/);
-  assert.match(css, /\.sh-pane-agent \.sh-body \{[^}]*flex: 1 1 0/, 'the left pane takes the height of the right one');
-});
-
-test('copy: the caption names the corrective action, not a fix, and the problem is confirmed by the user before it is recorded', () => {
-  assert.match(how, /the corrective action lands in the same chain/);
-  assert.doesNotMatch(how, /the fix lands/);
-  const problemStep = how.split('class="sh-step"')[1];
-  assert.ok(problemStep.indexOf('sh-typed">yes<') > 0 && problemStep.indexOf('sh-typed">yes<') < problemStep.indexOf('data-rec="1"'), 'a typed yes comes before the record line');
+  for (const m of css.matchAll(/\.cmp-event\[data-type="([^"]+)"\] \{ --ev: var\((--[a-z]+)\); \}/g)) colour[m[1]] = m[2];
+  assert.deepEqual(colour, { 'problem.reported': '--warn', 'decision.made': '--info', 'change.implemented': '--ok' });
+  assert.doesNotMatch(css, /\.(rec-|sh-body|sh-step|sh-l\b|sh-user|sh-rule|sh-input|sh-panes|sh-pane)/, 'the old CLI demo styles are gone');
 });
