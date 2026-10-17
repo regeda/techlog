@@ -79,20 +79,22 @@ test('landing: the logo lives in the header bar, and the motto is big, in two li
 
 
 
-test('landing: how it works is a split view of five sessions and the records they leave', () => {
+test('landing: how it works is a split view of four sessions and the records they leave', () => {
   assert.match(how, /<h2>One history\. Every agent\.<\/h2>/);
   assert.doesNotMatch(how, /class="pipe"|class="events"|ev-chain/, 'the three cards and the event flow are gone');
   assert.match(how, /id="shell"[\s\S]*Simulated example/);
   assert.match(how, /Agent session[\s\S]*Techlog records/, 'two labelled panes');
   const typed = [...how.matchAll(/class="sh-typed">([^<]*)</g)].map((m) => m[1]);
-  assert.deepEqual(typed, ['/techlog:welcome', '/techlog:problem', 'yes', '/techlog:proposal', 'Approved. Plan it.', 'Merge PR #482', '/techlog:record', 'Investigate PagerDuty alert P1-5521', '/techlog:record']);
-  assert.deepEqual([...how.matchAll(/class="sh-l sh-rule">── ([^<]*) ──</g)].map((m) => m[1]), ['a new session, the same day', 'a new session, 1 day later', 'a new session, 1 day later', 'a new session, 3 days later']);
-  assert.equal((how.match(/class="sh-step"/g) || []).length, 5);
+  assert.deepEqual(typed, ['/techlog:problem', 'yes', '/techlog:proposal', 'Approved. Plan it.', 'Merge PR #482', '/techlog:record', 'Investigate PagerDuty alert P1-5521', '/techlog:record']);
+  assert.deepEqual([...how.matchAll(/class="sh-l sh-rule">── ([^<]*) ──</g)].map((m) => m[1]), ['a new session, 1 day later', 'a new session, 1 day later', 'a new session, 3 days later']);
+  assert.equal((how.match(/class="sh-step"/g) || []).length, 4);
   assert.deepEqual([...how.matchAll(/class="sh-l sh-res" data-rec="(\d)"/g)].map((m) => m[1]), ['1', '2', '3', '4', '5', '6'], 'one record line per event, in order');
-  assert.doesNotMatch(how.split('class="sh-step"')[1], /data-rec/, 'welcome is setup, not an event');
-  assert.equal((how.match(/data-trace="5,4,3,2,1"/g) || []).length, 1, 'the incident walks back to the problem once');
+  assert.doesNotMatch(how, /techlog:welcome/, 'welcome is not part of the demo');
+  assert.doesNotMatch(how, /data-trace/, 'the incident trace is text only, with no highlight animation');
+  assert.match(how, /quick context: incident/, 'the quick context line stays');
+  assert.deepEqual([...how.matchAll(/class="sh-step" data-tab="([^"]*)"/g)].map((m) => m[1]), ['problem', 'proposal', 'decision · change', 'incident · mitigation'], 'each session is a tab labelled by the Techlog state it leaves');
   assert.doesNotMatch(how, /resolved/i, 'the incident is never claimed resolved');
-  assert.match(how, /five sessions/);
+  assert.match(how, /four sessions/);
   assert.deepEqual([...how.matchAll(/✓ recorded (evt_\w+)/g)].map((m) => m[1]), chain.map((e) => e.id), 'the transcript records the same events as the cards');
   assert.equal((how.match(/class="rec-card"/g) || []).length, 6);
   assert.match(how, /rec-hypothesis/, 'the unproven cause is shown as a hypothesis');
@@ -375,9 +377,9 @@ test('the {{demo-cards}} directive is expanded in the built landing page', () =>
   assert.doesNotMatch(html, /\{\{demo-cards/);
 });
 
-test('shell.js: one session at a time, cards accumulate, 60 seconds, reduced motion, no autoplay', () => {
+test('shell.js: one session at a time, cards accumulate, 80 seconds, reduced motion, no autoplay', () => {
   const js = readFileSync('src/assets/js/shell.js', 'utf8');
-  assert.match(js, /TARGET_MS = 60000/);
+  assert.match(js, /TARGET_MS = 80000/);
   assert.match(js, /sh-cur/, 'only the current session is shown on the left');
   assert.match(js, /data-rec/, 'cards are tied to the record line of their session');
   assert.doesNotMatch(js, /matchMedia|prefers-reduced-motion/, 'typing is the point of the demo, so it is never skipped');
@@ -425,26 +427,26 @@ test('each demo event type has its own colour: a coloured border and a badge for
   assert.match(css, /\.rec-type \{[^}]*var\(--ev, var\(--info\)\) 6%, var\(--bg-1\)/, 'a 6% tint keeps badge text at 4.5:1 or better in both themes');
 });
 
-test('the trace highlight is a pure function of time, so seeking back unlights it', () => {
+test('no trace animation: the cards are never highlighted as connected and the records pane only follows the newest card', () => {
   const js = readFileSync('src/assets/js/shell.js', 'utf8');
-  assert.match(js, /data-trace/, 'the incident line names the cards its trace passes through');
-  assert.match(js, /cls: 'rec-trace'/, 'traced cards get their class through timed items');
-  assert.match(js, /it\.cls \|\| 'sh-on'/, 'render toggles the item class from the time');
-  assert.equal((js.match(/rec-trace/g) || []).length, 1, 'rec-trace is only ever set through those items');
-  assert.match(css, /\.rec-card\.rec-trace \{[^}]*box-shadow/, 'a traced card is outlined in its event colour');
+  assert.doesNotMatch(js, /data-trace|rec-trace|focus|getBoundingClientRect/);
+  assert.doesNotMatch(css, /rec-trace/);
+  assert.match(js, /list\.scrollTop = list\.scrollHeight/);
 });
 
-test('the records pane follows the trace: each lit card is scrolled into view, then the newest card again', () => {
+test('the agent pane keeps its history: every session is a tab, the shown one follows the run until a visitor picks another', () => {
   const js = readFileSync('src/assets/js/shell.js', 'utf8');
-  assert.match(js, /focus\.cls/, 'a trace item that was lit last decides where the list scrolls');
-  assert.match(js, /getBoundingClientRect/, 'the lit card is scrolled to by its position in the list');
-  assert.match(js, /400 \* slow/, 'the cascade is slow enough to follow');
-  assert.match(css, /\.rec-card\.rec-trace \{[^}]*box-shadow: 0 0 0 3px/, 'the ring is strong enough to see');
+  assert.match(js, /setAttribute\('role', 'tab'\)/, 'tabs are buttons with the tab role');
+  assert.match(js, /sh-view/, 'the shown session is marked');
+  assert.match(js, /pick/, 'a visitor can pick a session');
+  assert.match(css, /\.sh-js \.sh-step:not\(\.sh-view\) \{ display: none; \}/, 'only the shown session is displayed, and only with JavaScript');
+  assert.match(css, /\.sh-tabs \{/);
+  assert.match(css, /\.sh-tab\[aria-selected="true"\]/);
 });
 
 test('copy: the caption names the corrective action, not a fix, and the problem is confirmed by the user before it is recorded', () => {
   assert.match(how, /the corrective action lands in the same chain/);
   assert.doesNotMatch(how, /the fix lands/);
-  const problemStep = how.split('class="sh-step"')[2];
+  const problemStep = how.split('class="sh-step"')[1];
   assert.ok(problemStep.indexOf('sh-typed">yes<') > 0 && problemStep.indexOf('sh-typed">yes<') < problemStep.indexOf('data-rec="1"'), 'a typed yes comes before the record line');
 });

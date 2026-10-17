@@ -1,5 +1,5 @@
 (function () {
-  // simulated demo on a timeline: five agent sessions on the left, the records they leave in Techlog on the right.
+  // simulated demo on a timeline: four agent sessions on the left (kept as tabs), the records they leave in Techlog on the right.
   // The agent pane shows one session at a time (a new session starts empty); the record cards only ever accumulate.
   // The whole run is a pure function of time, so the bar can seek.
   var fig = document.getElementById('shell');
@@ -13,7 +13,7 @@
   var clock = document.getElementById('sh-time');
   // typing and output delays scale with one factor; the pause after a new-session divider is absolute.
   // The factor is solved so the whole run lasts TARGET_MS, pauses included.
-  var TARGET_MS = 60000, SESSION_PAUSE_MS = 2000;
+  var TARGET_MS = 80000, SESSION_PAUSE_MS = 2000;
   // the session stays on screen this long after its record lands, so the card and the wipe are two beats
   var CARD_DWELL_MS = 1000;
   var TYPE_MS = 30, LEAD_MS = 350, OUT_TYPE_MS = 12, DIVIDER_TYPE_MS = 45;   // per character: commands, output lines, session dividers
@@ -69,11 +69,6 @@
         // the record card appears just after the line that says the event was recorded
         var rec = l.getAttribute('data-rec');
         if (rec && cardEls[Number(rec) - 1]) items.push({ el: cardEls[Number(rec) - 1], at: it.at + 300 * slow });
-        // a line that names its trace lights those cards one after another once it has been typed (newest card first)
-        var trace = l.getAttribute('data-trace');
-        if (trace) trace.split(',').forEach(function (n, i) {
-          if (cardEls[Number(n) - 1]) items.push({ el: cardEls[Number(n) - 1], at: it.at + it.dur + i * 400 * slow, cls: 'rec-trace' });
-        });
       });
       t += gap; steps.push(step);
     });
@@ -83,16 +78,27 @@
   var slope = t2 - t1, fixed = t1 - slope;
   total = layout(Math.max(0.5, (TARGET_MS - fixed) / slope));
 
+  var pick = null;                          // a session a visitor chose to read, or null while the run decides
+  var tabsEl = document.createElement('div');
+  tabsEl.className = 'sh-tabs'; tabsEl.setAttribute('role', 'tablist'); tabsEl.setAttribute('aria-label', 'Sessions, labelled by the state they leave in Techlog');
+  var tabs = steps.map(function (s, i) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'sh-tab'; b.setAttribute('role', 'tab'); b.hidden = true;
+    b.textContent = s.el.getAttribute('data-tab') || 'session ' + (i + 1);
+    b.addEventListener('click', function () { pause(); pick = i; render(); body.scrollTop = 0; });
+    tabsEl.appendChild(b);
+    return b;
+  });
+  body.parentNode.insertBefore(tabsEl, body);
+
   var pos = 0, playing = false, last = 0, raf = 0, wasPlaying = false;
   function fmt(ms) { var s = Math.round(ms / 1000); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
 
   function render() {
-    var typing = '', focus = null;
+    var typing = '';
     items.forEach(function (it) {
-      var on = pos >= it.at, c = it.cls || 'sh-on';
-      if (it.el.classList.contains(c) !== on) it.el.classList.toggle(c, on);
-      // the item in the records pane that came on last decides where that pane scrolls
-      if (on && it.el.parentNode === list && (!focus || it.at >= focus.at)) focus = it;
+      var on = pos >= it.at;
+      if (it.el.classList.contains('sh-on') !== on) it.el.classList.toggle('sh-on', on);
       if (it.cmd && pos >= it.start && pos < it.send) typing = it.full.slice(0, Math.floor((pos - it.start) / TYPE_MS));
       if (it.nodes) {
         var n = Math.max(0, Math.min(it.chars, Math.floor((pos - it.at) / it.cms)));
@@ -103,15 +109,21 @@
     });
     var cur = -1;
     steps.forEach(function (s, i) { if (pos >= s.first) cur = i; });
+    // the session on show is the running one, unless a visitor picked another tab; no session is ever removed
+    var view = pick !== null ? pick : cur;
     steps.forEach(function (s, i) {
       if (s.el.classList.contains('sh-on') !== (i <= cur)) s.el.classList.toggle('sh-on', i <= cur);
       if (s.el.classList.contains('sh-cur') !== (i === cur)) s.el.classList.toggle('sh-cur', i === cur);
+      if (s.el.classList.contains('sh-view') !== (i === view)) s.el.classList.toggle('sh-view', i === view);
+      var tab = tabs[i];
+      tab.hidden = i > cur;
+      tab.setAttribute('aria-selected', String(i === view));
+      if (tab.classList.contains('sh-tab-cur') !== (i === cur)) tab.classList.toggle('sh-tab-cur', i === cur);
     });
     text.textContent = typing;
-    body.scrollTop = body.scrollHeight;
-    // a lit trace card is scrolled to, so the walk back to the problem can be followed; otherwise the newest card
+    if (pick === null) body.scrollTop = body.scrollHeight;
+    // the records pane follows the newest card
     list.scrollTop = list.scrollHeight;
-    if (focus && focus.cls) list.scrollTop = focus.el.getBoundingClientRect().top - list.getBoundingClientRect().top + list.scrollTop;
     seek.value = String(Math.round(pos / total * 1000));
     clock.textContent = fmt(pos) + ' / ' + fmt(total);
     seek.setAttribute('aria-valuetext', fmt(pos) + ' of ' + fmt(total));
@@ -132,14 +144,14 @@
   }
   function play() {
     if (pos >= total) pos = 0;
-    playing = true; label(); last = performance.now(); raf = requestAnimationFrame(tick);
+    pick = null; playing = true; label(); last = performance.now(); raf = requestAnimationFrame(tick);
   }
   function pause() { playing = false; cancelAnimationFrame(raf); label(); }
 
   playBtn.addEventListener('click', function () { if (playing) pause(); else play(); });
   seek.addEventListener('input', function () {
     if (playing) { wasPlaying = true; pause(); }
-    pos = Number(seek.value) / 1000 * total; render(); label();
+    pick = null; pos = Number(seek.value) / 1000 * total; render(); label();
   });
   seek.addEventListener('change', function () { if (wasPlaying) { wasPlaying = false; play(); } });
 

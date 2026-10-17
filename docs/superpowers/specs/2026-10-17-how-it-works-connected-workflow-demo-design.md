@@ -43,7 +43,7 @@ example" badge stays, and the static no-JS fallback stays.
 ### Story
 
 Fictional `promo-api` story (the demo is fictional; it is not Techlog's own
-system). Five agent sessions, six events.
+system). Four agent sessions (after the follow-ups below), six events.
 
 | # | Session | Command shown | Event added | Link to earlier event |
 |---|---------|---------------|-------------|-----------------------|
@@ -94,6 +94,24 @@ card in the Techlog pane.
   `website/` depends on those ids. Reuse the `timeline.json` shape
   (`extensions["org.techlog.proposal"].alternatives_considered`) for the rejected
   option and the 20% cap. (My call.)
+
+### Follow-ups after the first build (user, 2026-10-17)
+
+These amend the design above; where they conflict, they win.
+
+1. **No `/techlog:welcome` in the demo.** The story has four sessions (problem,
+   proposal, decision and change, incident and mitigation); session 1 (setup) is
+   dropped, and so are its divider and the "five sessions" copy.
+2. **The agent pane keeps its history.** Sessions are no longer wiped: each one
+   is a tab labelled by the Techlog state it leaves (`problem`, `proposal`,
+   `decision · change`, `incident · mitigation`). During the run the tab of the
+   running session is shown; a visitor can pause on any reached tab and read it,
+   and after the run all four stay readable. Playing or seeking hands control
+   back to the run. Tabs exist only with JavaScript; the no-JS page still shows
+   every session in full.
+3. **No trace animation.** The cards are not highlighted as connected when the
+   incident opens. The quick-context line in the transcript stays as text.
+4. **The run lasts 1:20** (`TARGET_MS = 80000`).
 
 ### Foot caption
 

@@ -144,7 +144,13 @@
 .sh-step:first-child { margin-top: 0; }
 .sh-l { white-space: pre-wrap; overflow-wrap: anywhere; }
 .sh-js .sh-l:not(.sh-on) { display: none; }
-.sh-js .sh-step:not(.sh-cur) { display: none; }
+.sh-js .sh-step:not(.sh-view) { display: none; }
+.sh-tabs { display: flex; flex-wrap: wrap; gap: var(--s-2); padding: var(--s-3) var(--s-5) 0; }
+.sh-tabs:not(:has(.sh-tab:not([hidden]))) { display: none; }
+.sh-tab { padding: 2px var(--s-3); border: 1px solid var(--line-strong); border-radius: 999px; background: var(--bg-1); color: var(--text-2); font: var(--fs-xs) var(--font-mono); cursor: pointer; }
+.sh-tab[hidden] { display: none; }
+.sh-tab[aria-selected="true"] { border-color: var(--accent); background: var(--accent-dim); color: var(--text-1); font-weight: 700; }
+.sh-tab-cur::before { content: "● "; color: var(--accent); }
 .sh-js .rec-card:not(.sh-on) { display: none; }
 .sh-rule { margin-bottom: var(--s-3); color: var(--text-2); text-align: center; }
 .sh-user { margin: var(--s-3) 0 var(--s-2); padding: var(--s-1) var(--s-3); border-radius: var(--r-1); background: var(--bg-3); color: var(--text-0); }
@@ -191,7 +197,6 @@
 .rec-card[data-type="change.implemented"] { --ev: var(--ok); }
 .rec-card[data-type="incident.opened"] { --ev: var(--danger); }
 .rec-card[data-type="mitigation.applied"] { --ev: var(--orange); }
-.rec-card.rec-trace { box-shadow: 0 0 0 3px var(--ev, var(--line-strong)); }
 .rec-head { display: flex; justify-content: space-between; gap: var(--s-3); flex-wrap: wrap; font: 700 var(--fs-xs) var(--font-mono); }
 .rec-type { padding: 0 var(--s-2); border: 1px solid var(--ev, var(--info)); border-radius: 999px; background: color-mix(in srgb, var(--ev, var(--info)) 6%, var(--bg-1)); color: var(--ev, var(--info)); }
 .rec-id { color: var(--text-2); }
