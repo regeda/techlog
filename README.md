@@ -71,7 +71,7 @@ plugin/                 the Claude plugin: skills, config, help pages
 ```bash
 make            # list the tasks
 make run        # build and serve; pass flags with ARGS="--addr :9090"
-make tools      # once: install golangci-lint (pinned in the Makefile)
+make tools      # once: install golangci-lint (into bin/, version pinned in the Makefile)
 make check      # lint and test; run before committing
 ```
 
