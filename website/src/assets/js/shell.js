@@ -14,7 +14,7 @@
   // typing and gaps scale with one factor, solved so the whole run lasts TARGET_MS, the fixed pauses included
   var TARGET_MS = 45000;
   // fixed pauses (not scaled): after the first prompt and after the first answer, so the visitor can read
-  var PAUSE_MS = 3000, SEND_MS = 300;
+  var PAUSE_MS = 1000, SEND_MS = 300;
   var LEAD_MS = 400, TYPE_MS = 18, BLOCK_GAP_MS = 350, EVENT_GAP_MS = 900, TAIL_MS = 600;
   var log = fig.querySelector('.cmp-log');
   var els = fig.querySelectorAll('.cmp-t, .cmp-event');
