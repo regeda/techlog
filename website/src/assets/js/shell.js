@@ -1,6 +1,6 @@
 (function () {
-  // simulated demo on a timeline: one question, then the answer of an agent without Techlog and the answer of an agent with it.
-  // The question, the answers and the event rows are played in document order: text is typed, rows appear one after another.
+  // simulated agent session on a timeline: a question, an answer without Techlog, /techlog:welcome, a better answer.
+  // Prompts are typed in the input at the bottom and then sent into the log; answers are typed in the log; rows appear one after another.
   // The whole run is a pure function of time, so the bar can seek. Nothing is removed or disabled: every row can be opened at any time.
   var fig = document.getElementById('shell');
   if (!fig) return;
@@ -8,10 +8,13 @@
   var playBtn = document.getElementById('sh-play');
   var seek = document.getElementById('sh-seek');
   var clock = document.getElementById('sh-time');
+  var input = document.getElementById('cmp-input');
+  var inputText = document.getElementById('cmp-input-text');
+  var ghost = document.getElementById('cmp-input-ghost');
   // typing and gaps scale with one factor, solved so the whole run lasts TARGET_MS, the fixed pauses included
   var TARGET_MS = 45000;
-  // fixed pauses (not scaled): after the question and after the left pane, so the visitor can read
-  var PAUSE_MS = 3000;
+  // fixed pauses (not scaled): after the first prompt and after the first answer, so the visitor can read
+  var PAUSE_MS = 3000, SEND_MS = 300;
   var LEAD_MS = 400, TYPE_MS = 18, BLOCK_GAP_MS = 350, EVENT_GAP_MS = 900, TAIL_MS = 600;
   var els = fig.querySelectorAll('.cmp-t, .cmp-event');
   var items = [], total = 0;
@@ -30,12 +33,18 @@
   function layout(slow) {
     var t = LEAD_MS;
     items = [];
-    els.forEach(function (el, i) {
-      var next = els[i + 1], group = el.closest('.cmp-q, .cmp-without');
-      var pause = group && !(next && group.contains(next)) ? PAUSE_MS : 0;
+    els.forEach(function (el) {
+      var pause = el.hasAttribute('data-pause') ? PAUSE_MS : 0;
       if (el.classList.contains('cmp-event')) {
         items.push({ el: el, at: t });
         t += EVENT_GAP_MS * slow;
+        return;
+      }
+      if (el.classList.contains('cmp-send')) {
+        // a prompt: typed in the input first, then it lands in the log whole
+        var full = el.textContent, cms = TYPE_MS * slow, sendAt = t + full.length * cms + SEND_MS * slow;
+        items.push({ el: el, send: true, full: full, chars: full.length, at: t, cms: cms, sendAt: sendAt });
+        t = sendAt + BLOCK_GAP_MS * slow + pause;
         return;
       }
       var p = prepare(el), it = { el: el, on: p.on, off: p.off, full: p.full, chars: p.chars, at: t, cms: TYPE_MS * slow };
@@ -44,6 +53,8 @@
     });
     return t + TAIL_MS * slow;
   }
+  // the input reserves the room of the longest prompt, so it never grows while a prompt is typed
+  fig.querySelectorAll('.cmp-send').forEach(function (el) { if (el.textContent.length > ghost.textContent.length) ghost.textContent = el.textContent; });
   var t1 = layout(1), t2 = layout(2);       // total time is linear in the factor
   var slope = t2 - t1, fixed = t1 - slope;
   total = layout(Math.max(0.5, (TARGET_MS - fixed) / slope));
@@ -52,7 +63,14 @@
   function fmt(ms) { var s = Math.round(ms / 1000); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
 
   function render() {
+    var typed = '', typingIn = false;
     items.forEach(function (it) {
+      if (it.send) {
+        var sent = pos >= it.sendAt;
+        if (it.el.classList.contains('sh-on') !== sent) it.el.classList.toggle('sh-on', sent);
+        if (pos >= it.at && !sent) { typed = it.full.slice(0, Math.min(it.chars, Math.floor((pos - it.at) / it.cms))); typingIn = true; }
+        return;
+      }
       var on = pos >= it.at;
       if (it.el.classList.contains('sh-on') !== on) it.el.classList.toggle('sh-on', on);
       if (it.on) {
@@ -62,6 +80,8 @@
         if (it.el.classList.contains('sh-typing') !== typingNow) it.el.classList.toggle('sh-typing', typingNow);
       }
     });
+    if (inputText.textContent !== typed) inputText.textContent = typed;
+    if (input.classList.contains('sh-typing') !== typingIn) input.classList.toggle('sh-typing', typingIn);
     seek.value = String(Math.round(pos / total * 1000));
     clock.textContent = fmt(pos) + ' / ' + fmt(total);
     seek.setAttribute('aria-valuetext', fmt(pos) + ' of ' + fmt(total));
@@ -94,6 +114,6 @@
   seek.addEventListener('change', function () { if (wasPlaying) { wasPlaying = false; play(); } });
 
   // starts idle: nothing is typed until the visitor presses the glowing button
-  fig.classList.add('sh-js'); ctl.hidden = false;
+  fig.classList.add('sh-js'); ctl.hidden = false; input.hidden = false;
   render(); label();
 })();

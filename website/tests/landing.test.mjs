@@ -79,23 +79,24 @@ test('landing: the logo lives in the header bar, and the motto is big, in two li
 
 
 
-test('landing: how it works asks the same question without and with Techlog, and the events are rows', () => {
+test('landing: how it works is one agent session: question, answer, /techlog:welcome, a better answer', () => {
   assert.match(how, /<h2>One history\. Every agent\.<\/h2>/);
   assert.doesNotMatch(how, /Simulated example|badge-simulated/, 'no simulated badge');
-  assert.match(how, /Press Run to ask the same question twice\./);
-  assert.equal((how.match(/Why do we enforce a 20% discount cap\? I need to change the pricing logic\./g) || []).length, 1, 'one question for both panes');
-  assert.ok(how.indexOf('Without Techlog') > 0 && how.indexOf('Without Techlog') < how.indexOf('With Techlog'), 'the pane without Techlog comes first');
-  assert.match(how, /aria-label="Without Techlog"[\s\S]*aria-label="With Techlog"/);
-  assert.match(how, /\(Techlog MCP\)/);
-  assert.doesNotMatch(how, /\(using Techlog\)/);
-  assert.equal((how.match(/class="cmp-event"/g) || []).length, 3, 'three events in the right pane');
-  const without = how.slice(how.indexOf('aria-label="Without Techlog"'), how.indexOf('aria-label="With Techlog"'));
-  assert.equal((without.match(/<li class="cmp-t">/g) || []).length, 4, 'four suggestions where to look, without Techlog');
+  assert.equal((how.match(/Why do we enforce a 20% discount cap\? I need to change the pricing logic\./g) || []).length, 1, 'the question is asked once');
+  assert.doesNotMatch(how, /aria-label="With(out)? Techlog"|cmp-pane|cmp-head|Press Run to ask the same question twice/, 'no two panes any more');
+  const log = how.slice(how.indexOf('class="cmp-log"'), how.indexOf('id="sh-ctl"'));
+  const order = ['Why do we enforce', "I don't have enough information", '/techlog:welcome', 'Techlog MCP connected', '(Techlog MCP)', 'class="cmp-event"', 'cmp-close'].map((w) => log.indexOf(w));
+  assert.ok(order.every((i) => i > 0) && order.every((i, k) => k === 0 || i > order[k - 1]), 'one story, in order: ' + order);
+  const before = log.slice(0, log.indexOf('/techlog:welcome'));
+  assert.doesNotMatch(before.replace(/<\/?[^>]+>/g, ' '), /techlog/i, 'no sign of Techlog before the visitor calls /techlog:welcome');
+  assert.equal((log.match(/class="cmp-event"/g) || []).length, 3, 'three events in the better answer');
+  assert.equal((before.match(/<li class="cmp-t[ "]/g) || []).length, 4, 'four suggestions where to look, before Techlog');
+  assert.equal((log.match(/class="cmp-t cmp-send"/g) || []).length, 2, 'two prompts are typed in the input and sent');
   assert.match(how, /class="cmp-t cmp-close"[^>]*>[^<]*PR #482/, 'the closing answer names the PR');
-  assert.doesNotMatch(how, /<[a-z]+[^>]*class="cmp-[^"]*"[^>]*\shidden/, 'without JavaScript nothing of the comparison is hidden');
-  assert.doesNotMatch(how, /\/techlog:|sh-step|sh-rule|sh-typed|rec-card|rec-list|Show JSON|data-tab|data-trace|resolved|<pre/, 'none of the old CLI demo, no JSON, no claim of resolution');
+  assert.match(how, /class="cmp-input"[^>]*\shidden/, 'the input at the bottom is drawn by the script only');
+  assert.doesNotMatch(how, /<[a-z]+[^>]*class="cmp-(t|msg|event|log)[^"]*"[^>]*\shidden/, 'without JavaScript nothing of the story is hidden');
+  assert.doesNotMatch(how, /sh-step|sh-rule|sh-typed|rec-card|rec-list|Show JSON|data-tab|data-trace|resolved|<pre/, 'none of the old CLI demo, no JSON, no claim of resolution');
   assert.match(how, /id="sh-play"[^>]*>▶ Run simulation/, 'starts idle with a call to run');
-  assert.doesNotMatch(how, /Ask a follow-up/, 'no inert follow-up input');
 });
 
 test('landing: the layers follow how it works in their own section', () => {
@@ -377,17 +378,15 @@ test('the {{demo-events}} directive is expanded in the built landing page', () =
   assert.match(html, /class="cmp-event"/);
 });
 
-test('comparison styles: space is reserved, panes stretch and stack, the pane labels carry the meaning', () => {
+test('comparison styles: space is reserved, the story is one column with the input at the bottom', () => {
   for (const rule of [/\.sh-js \.cmp-t:not\(\.sh-on\) \{ visibility: hidden; \}/, /\.sh-js \.cmp-event:not\(\.sh-on\) \{ visibility: hidden; \}/, /\.cmp-off \{ visibility: hidden; \}/]) {
     assert.match(css, rule, `${rule} reserves space instead of removing it`);
   }
   const hiding = css.split('\n').filter((l) => /visibility: hidden/.test(l) && /\.cmp-(t|event)\b/.test(l));
   for (const l of hiding) assert.match(l, /^\.sh-js /, `without .sh-js the demo would hide in a no-JS browser: ${l}`);
-  assert.match(css, /\.cmp-panes \{[^}]*align-items: stretch/);
-  assert.doesNotMatch(css.match(/\n\.cmp-pane \{[^}]*\}/)[0], /overflow|[^-]height/, 'no inner scrolling and no fixed height');
-  assert.match(css.match(/@media \(max-width: 700px\)[^\n]*\.cmp-panes[^\n]*/)[0], /\.cmp-panes \{ grid-template-columns: 1fr; \}/, 'panes stack on a phone');
+  assert.doesNotMatch(css.match(/\n\.cmp-log \{[^}]*\}/)[0], /overflow|[^-]height/, 'no inner scrolling and no fixed height');
+  assert.match(css, /\n\.cmp-input \{/, 'the input sits below the story');
   assert.match(css, /\.cmp-edetail \{[^}]*overflow-wrap: anywhere/);
-  assert.match(how, /<span class="cmp-dot" aria-hidden="true">/, 'the dots are decoration; the label is text');
   const colour = {};
   for (const m of css.matchAll(/\.cmp-event\[data-type="([^"]+)"\] \{ --ev: var\((--[a-z]+)\); \}/g)) colour[m[1]] = m[2];
   assert.deepEqual(colour, { 'problem.reported': '--warn', 'decision.made': '--info', 'change.implemented': '--ok' });
@@ -398,8 +397,9 @@ const shellJs = readFileSync('src/assets/js/shell.js', 'utf8');
 
 test('shell.js: plays the comparison out on Run in 45 seconds with 3 s pauses, starts by itself never, and is a pure function of time', () => {
   assert.match(shellJs, /TARGET_MS = 45000/);
-  assert.match(shellJs, /PAUSE_MS = 3000/, 'a 3 s pause after the question and after the left pane');
-  assert.match(shellJs, /\.cmp-t, \.cmp-event/, 'the timeline is the question, the answers and the event rows in document order');
+  assert.match(shellJs, /PAUSE_MS = 3000/, 'a 3 s pause after the question and after the first answer');
+  assert.match(shellJs, /cmp-input-text/, 'prompts are typed into the input at the bottom');
+  assert.match(shellJs, /\.cmp-t, \.cmp-event/, 'the timeline is the prompts, the answers and the event rows in document order');
   assert.doesNotMatch(shellJs, /IntersectionObserver|autoplay/, 'does not start by itself');
   assert.doesNotMatch(shellJs, /matchMedia|prefers-reduced-motion/, 'typing is the point of the demo, so it is never skipped');
   assert.match(shellJs, /function render\(\)/);
