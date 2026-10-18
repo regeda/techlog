@@ -175,8 +175,6 @@ test('the demo chain is three connected events: problem, decision, change', () =
     assert.deepEqual(validate(schema, e), [], e.id);
     assert.ok(e.sources && e.sources[0], `${e.id} needs a source for its row`);
     assert.equal(e.subject.system, 'promo-api', `${e.id} is about the fictional promo-api, never techlog`);
-    const headline = e.extensions?.['org.techlog.demo']?.headline;
-    assert.ok(typeof headline === 'string' && headline.length > 0 && headline.length <= 70, `${e.id} needs a headline of at most 70 characters`);
     for (const l of e.links ?? []) {
       assert.ok(seen.has(l.target), `${e.id} links to ${l.target}, which is not an earlier demo event`);
       assert.ok(Date.parse(e.time) >= Date.parse(seen.get(l.target)), `${e.id} is earlier than ${l.target}`);

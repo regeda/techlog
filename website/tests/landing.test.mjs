@@ -343,16 +343,14 @@ test('every "Try Techlog" link on every page leads to the same URL, without a fr
 
 const chain = JSON.parse(readFileSync('src/examples/demo-chain.json', 'utf8'));
 
-test('renderDemoEvents: one closed row per event, with the minimum details behind a click', () => {
+test('renderDemoEvents: one card per event with its full details shown, nothing to click', () => {
   const out = renderDemoEvents(chain);
   assert.equal((out.match(/class="cmp-event"/g) || []).length, 3);
   assert.deepEqual([...out.matchAll(/data-type="([^"]+)"/g)].map((m) => m[1]), chain.map((e) => e.type), 'rows follow the data order');
-  assert.equal((out.match(/<details/g) || []).length, 3);
-  assert.doesNotMatch(out, /<details[^>]*\bopen\b/, 'every row starts closed');
+  assert.doesNotMatch(out, /<details|<summary|<button|<a |tabindex|onclick/, 'a card is not interactive');
   assert.deepEqual([...out.matchAll(/class="cmp-edate">([^<]*)</g)].map((m) => m[1]), ['Mar 9', 'Mar 10', 'Mar 10']);
   for (const e of chain) {
-    assert.ok(out.includes(e.extensions['org.techlog.demo'].headline), `${e.type} headline is in its row`);
-    assert.ok(out.includes(e.summary.replace(/&/g, '&amp;')) || out.includes(e.summary), `${e.type} summary is in its details`);
+    assert.ok(out.includes(e.summary.replace(/&/g, '&amp;')) || out.includes(e.summary), `${e.type} summary is on its card`);
     assert.ok(out.includes(`${e.sources[0].kind}: ${e.sources[0].ref}`), `${e.type} source is shown`);
   }
   const words = out.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
@@ -363,14 +361,13 @@ test('renderDemoEvents: one closed row per event, with the minimum details behin
 });
 
 test('renderDemoEvents: escapes event text and copes with an event that has no sources', () => {
-  const evil = { ...chain[0], summary: '<b>x</b> & "y"', extensions: { 'org.techlog.demo': { headline: '<i>h</i>' } } };
-  delete evil.sources;
+  const evil = { ...chain[0], summary: '<b>x</b> & "y"', sources: [{ kind: '<i>h</i>', ref: 'r' }] };
   const out = renderDemoEvents([evil]);
   assert.doesNotMatch(out, /<b>x|<i>h/);
   assert.match(out, /&lt;b&gt;x&lt;\/b&gt; &amp; &quot;y&quot;/);
   assert.match(out, /&lt;i&gt;h&lt;\/i&gt;/);
-  assert.doesNotMatch(out, /cmp-esrc/);
   assert.match(out, /class="cmp-event"/);
+  assert.doesNotMatch(renderDemoEvents([{ ...chain[0], sources: undefined }]), /cmp-esrc/, 'no source, no source line');
 });
 
 test('the {{demo-events}} directive is expanded in the built landing page', () => {
@@ -420,10 +417,8 @@ test('shell.js: typed text keeps its place (the untyped tail is not shown), and 
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[^\n]*\.sh-typing \.cmp-on::after/, 'only the caret blink stops under reduced motion');
 });
 
-test('review fixes: a row shows that it opens, and the caret takes no inline space so a line never wraps while it types', () => {
-  assert.match(css, /\.cmp-details summary \{[^}]*list-style: none/, 'the browser marker is replaced by our own');
-  assert.match(css, /\.cmp-details summary::-webkit-details-marker \{ display: none; \}/, 'Safari does not draw a second marker');
-  assert.match(css, /\.cmp-details summary::before \{[^}]*content: "▸"/, 'a closed row shows a chevron');
-  assert.match(css, /\.cmp-details\[open\] summary::before \{[^}]*content: "▾"/, 'an open row shows it turned down');
+test('review fixes: a card is not a row to open, and the caret takes no inline space so a line never wraps while it types', () => {
+  assert.doesNotMatch(css, /cmp-details|summary/, 'cards are not rows to open');
+  assert.match(css, /\.cmp-card \{/);
   assert.match(css, /\.sh-typing \.cmp-on::after \{[^}]*margin: 0 -\.6em 0 0/, 'the caret overlaps the hidden tail instead of pushing it');
 });

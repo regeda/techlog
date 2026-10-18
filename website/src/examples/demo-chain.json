@@ -10,7 +10,6 @@
     "status": "recorded",
     "summary": "New visitors keep asking for a first-order offer and retention is flat; the promo-api has nothing to give them.",
     "sources": [{ "kind": "ticket", "ref": "support-desk#1182" }],
-    "extensions": { "org.techlog.demo": { "headline": "The need: a first-order offer to lift retention" } },
     "provenance": { "recorded_by": "agent:claude-code", "method": "agent_submitted" }
   },
   {
@@ -25,7 +24,6 @@
     "summary": "Approved spin-to-win: one spin per new account, discount capped at 20%.",
     "sources": [{ "kind": "spec", "ref": "docs/specs/spin-to-win.md" }],
     "links": [{ "rel": "relates_to", "target": "evt_01J9K2D00001", "basis": "confirmed" }],
-    "extensions": { "org.techlog.demo": { "headline": "Approved: spin-to-win with the discount capped at 20%" } },
     "provenance": { "recorded_by": "agent:claude-code", "method": "agent_submitted" }
   },
   {
@@ -40,7 +38,6 @@
     "summary": "PR #482 merged: spin-to-win with the 20% cap.",
     "sources": [{ "kind": "git.pr", "ref": "promo-api#482" }],
     "links": [{ "rel": "implements", "target": "evt_01J9K2D00002", "basis": "confirmed" }],
-    "extensions": { "org.techlog.demo": { "headline": "PR #482 implements the 20% cap" } },
     "provenance": { "recorded_by": "agent:claude-code", "method": "agent_submitted" }
   }
 ]

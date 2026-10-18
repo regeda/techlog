@@ -176,17 +176,13 @@
 .cmp-event[data-type="problem.reported"] { --ev: var(--warn); }
 .cmp-event[data-type="decision.made"] { --ev: var(--info); }
 .cmp-event[data-type="change.implemented"] { --ev: var(--ok); }
-.cmp-details { border: 1px solid var(--ev); border-radius: var(--r-2); background: var(--bg-1); }
-.cmp-details summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s-2); padding: var(--s-2) var(--s-3); cursor: pointer; list-style: none; font: var(--fs-sm)/1.4 var(--font-sans); }
-.cmp-details summary::-webkit-details-marker { display: none; }
-.cmp-details summary::before { content: "▸"; flex: none; color: var(--ev); }
-.cmp-details[open] summary::before { content: "▾"; }
+.cmp-card { padding: var(--s-2) var(--s-3); border: 1px solid var(--ev); border-radius: var(--r-2); background: var(--bg-1); }
 .cmp-etype { padding: 0 var(--s-2); border: 1px solid var(--ev); border-radius: 999px; background: color-mix(in srgb, var(--ev) 6%, var(--bg-1)); color: var(--ev); font: 700 var(--fs-xs) var(--font-mono); }
 .cmp-edate { font: var(--fs-xs) var(--font-mono); color: var(--text-2); }
-.cmp-eline { flex: 1 1 12rem; color: var(--text-0); }
-.cmp-edetail { padding: 0 var(--s-3) var(--s-3); overflow-wrap: anywhere; font: var(--fs-sm)/1.5 var(--font-sans); }
-.cmp-msg .cmp-edetail p { margin: 0; }
-.cmp-esum { margin-bottom: var(--s-2); color: var(--text-0); }
+.cmp-ehead { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s-2); margin: 0 0 var(--s-1); }
+.cmp-edetail { overflow-wrap: anywhere; font: var(--fs-sm)/1.5 var(--font-sans); }
+.cmp-msg .cmp-edetail p { margin: var(--s-1) 0 0; }
+.cmp-esum { color: var(--text-0); }
 .cmp-elink, .cmp-esrc { font: var(--fs-xs) var(--font-mono); color: var(--text-2); }
 .cmp-ebasis { color: var(--ok); }
 .sh-js .cmp-log { height: 22rem; overflow-y: auto; overscroll-behavior: contain; }

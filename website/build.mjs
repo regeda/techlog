@@ -168,24 +168,22 @@ export function highlightCode(lang, text) {
   return out + esc(text.slice(last));
 }
 
-// renderDemoEvents turns the demo chain into the rows of the "With Techlog"
-// pane of the landing page: one closed <details> per event. The collapsed row
-// is the type, the date and a one-line headline (extensions["org.techlog.demo"]);
-// opening it shows the summary, the links in words and the source. The summary,
-// links and source come from the same event, so they cannot disagree.
+// renderDemoEvents turns the demo chain into the cards of the agent's answer on
+// the landing page: one card per event, with its full details shown (type, date,
+// summary, links in words, source). Cards are plain text, nothing to click. The
+// summary, links and source come from the same event, so they cannot disagree.
 export function renderDemoEvents(events) {
   const typeOf = Object.fromEntries(events.map((e) => [e.id, e.type]));
   const fmt = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
   return events.map((e) => {
     const src = e.sources && e.sources[0];
-    const headline = e.extensions?.['org.techlog.demo']?.headline ?? e.summary;
     const links = (e.links || []).map((l) =>
       `<p class="cmp-elink">${esc(l.rel)} <span aria-hidden="true">→</span> ${esc(typeOf[l.target] ?? 'an earlier event')} <span class="cmp-ebasis">${esc(l.basis)}</span></p>`).join('');
-    return `<li class="cmp-event" data-type="${esc(e.type)}"><details class="cmp-details">` +
-      `<summary><span class="cmp-etype">${esc(e.type)}</span><span class="cmp-edate">${esc(fmt.format(new Date(e.time)))}</span><span class="cmp-eline">${esc(headline)}</span></summary>` +
+    return `<li class="cmp-event" data-type="${esc(e.type)}"><div class="cmp-card">` +
+      `<p class="cmp-ehead"><span class="cmp-etype">${esc(e.type)}</span><span class="cmp-edate">${esc(fmt.format(new Date(e.time)))}</span></p>` +
       `<div class="cmp-edetail"><p class="cmp-esum">${esc(e.summary)}</p>${links}` +
       (src ? `<p class="cmp-esrc">${esc(src.kind)}: ${esc(src.ref)}</p>` : '') +
-      `</div></details></li>`;
+      `</div></div></li>`;
   }).join('\n');
 }
 
