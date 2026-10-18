@@ -189,8 +189,10 @@
 .cmp-esum { margin-bottom: var(--s-2); color: var(--text-0); }
 .cmp-elink, .cmp-esrc { font: var(--fs-xs) var(--font-mono); color: var(--text-2); }
 .cmp-ebasis { color: var(--ok); }
-.sh-js .cmp-t:not(.sh-on) { visibility: hidden; }
-.sh-js .cmp-event:not(.sh-on) { visibility: hidden; }
-.cmp-off { visibility: hidden; }
+.sh-js .cmp-log { height: 22rem; overflow-y: auto; overscroll-behavior: contain; }
+.sh-js .cmp-t:not(.sh-on) { display: none; }
+.sh-js .cmp-event:not(.sh-on) { display: none; }
+.sh-js .cmp-msg:not(.sh-on), .sh-js .cmp-list:not(.sh-on), .sh-js .cmp-events:not(.sh-on) { display: none; }
+.cmp-off { display: none; }
 @media (max-width: 700px) { .shell figcaption, .sh-foot, .cmp-log, .sh-ctl { padding-inline: var(--s-3); } .cmp-input { margin-inline: var(--s-3); } }
 @media (prefers-reduced-motion: reduce) { .sh-typing .cmp-on::after, .cmp-input.sh-typing .cmp-input-text::after, .sh-idle .sh-play { animation: none; } .sh-idle .sh-play { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent); } }

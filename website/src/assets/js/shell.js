@@ -16,11 +16,11 @@
   // fixed pauses (not scaled): after the first prompt and after the first answer, so the visitor can read
   var PAUSE_MS = 3000, SEND_MS = 300;
   var LEAD_MS = 400, TYPE_MS = 18, BLOCK_GAP_MS = 350, EVENT_GAP_MS = 900, TAIL_MS = 600;
+  var log = fig.querySelector('.cmp-log');
   var els = fig.querySelectorAll('.cmp-t, .cmp-event');
-  var items = [], total = 0;
+  var items = [], groups = [], total = 0;
 
-  // typed text is split once into the part typed so far and the rest: the rest stays in the layout (hidden),
-  // so wrapping and height never change while it types
+  // typed text is split once into the part typed so far and the rest (not shown yet)
   function prepare(el) {
     if (el._it) return el._it;
     var full = el.textContent, on = document.createElement('span'), off = document.createElement('span');
@@ -51,6 +51,15 @@
       items.push(it);
       t += p.chars * it.cms + BLOCK_GAP_MS * slow + pause;
     });
+    // a message, a list or the event line shows when its first item does
+    groups = [];
+    items.forEach(function (it) {
+      var shows = it.send ? it.sendAt : it.at;
+      for (var g = it.el.closest('.cmp-msg, .cmp-list, .cmp-events'); g; g = g.parentElement && g.parentElement.closest('.cmp-msg, .cmp-list, .cmp-events')) {
+        var known = groups.filter(function (x) { return x.el === g; })[0];
+        if (!known) groups.push({ el: g, at: shows }); else if (shows < known.at) known.at = shows;
+      }
+    });
     return t + TAIL_MS * slow;
   }
   // the input reserves the room of the longest prompt, so it never grows while a prompt is typed
@@ -63,6 +72,7 @@
   function fmt(ms) { var s = Math.round(ms / 1000); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
 
   function render() {
+    var stick = log.scrollHeight - log.scrollTop - log.clientHeight < 40;   // follow the output unless the visitor scrolled up
     var typed = '', typingIn = false;
     items.forEach(function (it) {
       if (it.send) {
@@ -80,6 +90,11 @@
         if (it.el.classList.contains('sh-typing') !== typingNow) it.el.classList.toggle('sh-typing', typingNow);
       }
     });
+    groups.forEach(function (g) {
+      var on = pos >= g.at;
+      if (g.el.classList.contains('sh-on') !== on) g.el.classList.toggle('sh-on', on);
+    });
+    if (stick) log.scrollTop = log.scrollHeight;
     if (inputText.textContent !== typed) inputText.textContent = typed;
     if (input.classList.contains('sh-typing') !== typingIn) input.classList.toggle('sh-typing', typingIn);
     seek.value = String(Math.round(pos / total * 1000));

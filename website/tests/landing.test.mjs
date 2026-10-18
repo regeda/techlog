@@ -378,13 +378,15 @@ test('the {{demo-events}} directive is expanded in the built landing page', () =
   assert.match(html, /class="cmp-event"/);
 });
 
-test('comparison styles: space is reserved, the story is one column with the input at the bottom', () => {
-  for (const rule of [/\.sh-js \.cmp-t:not\(\.sh-on\) \{ visibility: hidden; \}/, /\.sh-js \.cmp-event:not\(\.sh-on\) \{ visibility: hidden; \}/, /\.cmp-off \{ visibility: hidden; \}/]) {
-    assert.match(css, rule, `${rule} reserves space instead of removing it`);
+test('comparison styles: the log is a fixed-height scroll area, items take room only once they show', () => {
+  for (const rule of [/\.sh-js \.cmp-t:not\(\.sh-on\) \{ display: none; \}/, /\.sh-js \.cmp-event:not\(\.sh-on\) \{ display: none; \}/, /\.sh-js \.cmp-msg:not\(\.sh-on\)[^{]*\{ display: none; \}/, /\.cmp-off \{ display: none; \}/]) {
+    assert.match(css, rule, `${rule} shows an item only when it is needed`);
   }
-  const hiding = css.split('\n').filter((l) => /visibility: hidden/.test(l) && /\.cmp-(t|event)\b/.test(l));
-  for (const l of hiding) assert.match(l, /^\.sh-js /, `without .sh-js the demo would hide in a no-JS browser: ${l}`);
-  assert.doesNotMatch(css.match(/\n\.cmp-log \{[^}]*\}/)[0], /overflow|[^-]height/, 'no inner scrolling and no fixed height');
+  const hiding = css.split('\n').filter((l) => /display: none/.test(l) && /\.cmp-(t|event|msg)\b/.test(l));
+  for (const l of hiding) assert.match(l, /^\.sh-js /, `without .sh-js the story would hide in a no-JS browser: ${l}`);
+  const log = css.match(/\.sh-js \.cmp-log \{[^}]*\}/)[0];
+  assert.match(log, /height: 22rem/, 'the demo is about 1.5 times lower than the full story');
+  assert.match(log, /overflow-y: auto/, 'the output scrolls');
   assert.match(css, /\n\.cmp-input \{/, 'the input sits below the story');
   assert.match(css, /\.cmp-edetail \{[^}]*overflow-wrap: anywhere/);
   const colour = {};
@@ -399,6 +401,7 @@ test('shell.js: plays the comparison out on Run in 45 seconds with 3 s pauses, s
   assert.match(shellJs, /TARGET_MS = 45000/);
   assert.match(shellJs, /PAUSE_MS = 3000/, 'a 3 s pause after the question and after the first answer');
   assert.match(shellJs, /cmp-input-text/, 'prompts are typed into the input at the bottom');
+  assert.match(shellJs, /scrollTop = [a-z.]*scrollHeight/, 'the log follows the newest output');
   assert.match(shellJs, /\.cmp-t, \.cmp-event/, 'the timeline is the prompts, the answers and the event rows in document order');
   assert.doesNotMatch(shellJs, /IntersectionObserver|autoplay/, 'does not start by itself');
   assert.doesNotMatch(shellJs, /matchMedia|prefers-reduced-motion/, 'typing is the point of the demo, so it is never skipped');
@@ -407,7 +410,7 @@ test('shell.js: plays the comparison out on Run in 45 seconds with 3 s pauses, s
   assert.match(shellJs, /sh-idle/, 'starts idle with a call to run');
 });
 
-test('shell.js: typed text keeps its place (the untyped tail stays in layout), and rows are the visitor\'s to open', () => {
+test('shell.js: typed text keeps its place (the untyped tail is not shown), and rows are the visitor\'s to open', () => {
   assert.match(shellJs, /cmp-on/);
   assert.match(shellJs, /cmp-off/);
   assert.match(shellJs, /sh-typing/);
