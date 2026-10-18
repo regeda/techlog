@@ -11,10 +11,9 @@
   var input = document.getElementById('cmp-input');
   var inputText = document.getElementById('cmp-input-text');
   var ghost = document.getElementById('cmp-input-ghost');
-  // typing and gaps scale with one factor, solved so the whole run lasts TARGET_MS, the fixed pauses included
+  // typing and gaps scale with one factor, solved so the whole run lasts TARGET_MS
   var TARGET_MS = 45000;
-  // fixed pauses (not scaled): after the first prompt and after the first answer, so the visitor can read
-  var PAUSE_MS = 1000, SEND_MS = 300;
+  var SEND_MS = 300;
   var LEAD_MS = 400, TYPE_MS = 18, BLOCK_GAP_MS = 350, EVENT_GAP_MS = 900, TAIL_MS = 600;
   var log = fig.querySelector('.cmp-log');
   var els = fig.querySelectorAll('.cmp-t, .cmp-event');
@@ -34,7 +33,6 @@
     var t = LEAD_MS;
     items = [];
     els.forEach(function (el) {
-      var pause = el.hasAttribute('data-pause') ? PAUSE_MS : 0;
       if (el.classList.contains('cmp-event')) {
         items.push({ el: el, at: t });
         t += EVENT_GAP_MS * slow;
@@ -44,12 +42,12 @@
         // a prompt: typed in the input first, then it lands in the log whole
         var full = el.textContent, cms = TYPE_MS * slow, sendAt = t + full.length * cms + SEND_MS * slow;
         items.push({ el: el, send: true, full: full, chars: full.length, at: t, cms: cms, sendAt: sendAt });
-        t = sendAt + BLOCK_GAP_MS * slow + pause;
+        t = sendAt + BLOCK_GAP_MS * slow;
         return;
       }
       var p = prepare(el), it = { el: el, on: p.on, off: p.off, full: p.full, chars: p.chars, at: t, cms: TYPE_MS * slow };
       items.push(it);
-      t += p.chars * it.cms + BLOCK_GAP_MS * slow + pause;
+      t += p.chars * it.cms + BLOCK_GAP_MS * slow;
     });
     // a message, a list or the event line shows when its first item does
     groups = [];

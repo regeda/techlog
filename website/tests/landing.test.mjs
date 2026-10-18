@@ -397,9 +397,9 @@ test('comparison styles: the log is a fixed-height scroll area, items take room 
 
 const shellJs = readFileSync('src/assets/js/shell.js', 'utf8');
 
-test('shell.js: plays the comparison out on Run in 45 seconds with 1 s pauses, starts by itself never, and is a pure function of time', () => {
+test('shell.js: plays the comparison out on Run in 45 seconds without pauses, starts by itself never, and is a pure function of time', () => {
   assert.match(shellJs, /TARGET_MS = 45000/);
-  assert.match(shellJs, /PAUSE_MS = 1000/, 'a 1 s pause after the question and after the first answer');
+  assert.doesNotMatch(shellJs, /PAUSE_MS|data-pause/, 'no fixed pauses between the steps');
   assert.match(shellJs, /cmp-input-text/, 'prompts are typed into the input at the bottom');
   assert.match(shellJs, /scrollTop = [a-z.]*scrollHeight/, 'the log follows the newest output');
   assert.match(shellJs, /\.cmp-t, \.cmp-event/, 'the timeline is the prompts, the answers and the event rows in document order');
