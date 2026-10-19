@@ -45,7 +45,7 @@ Build the event:
 - `summary`: one plain sentence, at most 280 characters: the approach chosen and the main option turned down.
 - `links`: `[{"rel": "motivated_by", "target": "<problem id>", "basis": "confirmed"}]`.
 - `evidence`: `[{"kind": "spec", "ref": "<path of the spec>"}]`. The rejected options stay in the spec.
-- `time`: the spec's commit time (`git log -1 --format=%aI -- <path>`) if it is committed, otherwise the current time.
+- `time`: the spec's commit time (`git log -1 --format=%aI -- <path>`) if it is committed, otherwise left out so the server stamps it; show it in the draft as `time: set by the server when recorded`.
 
 Show it as a short list and ask whether to record it. Record nothing until the user says yes. If they correct something, apply it and show the draft again.
 

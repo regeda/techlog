@@ -55,7 +55,8 @@ superpowers:
            names the approved approach. Its evidence is
            [{"kind": "spec", "ref": "<spec path>"}]. Its links are
            [{"rel": "decides", "target": "<proposal id>", "basis": "confirmed"}].
-           Its time is the current time: the user's approval is the decision.
+           Leave its time out: the user's approval is the decision, and the
+           server stamps the moment of recording.
            Its idempotency_key is decision-<system>-<spec file name without
            .md>, so the server rejects a second decision for the same spec.
         3. Show the draft and ask whether to record it.

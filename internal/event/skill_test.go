@@ -82,8 +82,8 @@ func TestSkillExplainsIdempotencyKeys(t *testing.T) {
 }
 
 // Time comes from the source of the change first (a git commit time, a merge or
-// deploy time, an alert time). Only when the source has no timestamp is the
-// current time used.
+// deploy time, an alert time). When the source has no timestamp, time is left out
+// and the server stamps it; the model never sends the conversation's date as a time.
 func TestSkillPrioritisesTheTimeOfTheSource(t *testing.T) {
 	b, err := os.ReadFile(skillPath)
 	if err != nil {
@@ -97,14 +97,21 @@ func TestSkillPrioritisesTheTimeOfTheSource(t *testing.T) {
 	}
 	sec := s[i:j]
 	src := strings.Index(sec, "The time the source of the change records")
-	cur := strings.Index(sec, "The current time, only if the source has no timestamp")
-	if src < 0 || cur < 0 || src > cur {
-		t.Errorf("the source's time must come first and the current time second:\n%s", sec)
+	none := strings.Index(sec, "No time, if the source has no timestamp")
+	if src < 0 || none < 0 || src > none {
+		t.Errorf("the source's time must come first and leaving time out second:\n%s", sec)
 	}
-	for _, want := range []string{"git log -1 --format=%aI", "commit time", "Never invent a time"} {
+	for _, want := range []string{
+		"git log -1 --format=%aI", "commit time", "Never invent a time",
+		"the server stamps the moment of recording",
+		"Never send the date from the conversation as a time",
+	} {
 		if !strings.Contains(sec, want) {
 			t.Errorf("the time section should mention %q", want)
 		}
+	}
+	if strings.Contains(s, "send the current time yourself") {
+		t.Error("the model has no clock: it must not be told to send the current time")
 	}
 	if strings.Contains(s, "Leave it out for something that has just happened") {
 		t.Error("the old rule (leave time out for anything recent) contradicts the new priority")

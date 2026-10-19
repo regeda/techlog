@@ -32,6 +32,7 @@ Build the draft event from the answers, following each node's `sets`:
 - `summary`: one plain sentence, at most 280 characters, that makes sense without context: what is wrong or needed, for whom, and the impact. Fold the answers into it and shorten it if it is too long.
 - `evidence`: the references the user gave (logs, traces, alerts, tickets). A Jira key `KEY-123` becomes `{"kind": "ticket", "ref": "jira://KEY-123"}`.
 - `links`: `relates_to` each similar event the user marked as related, with `basis` `confirmed`.
+- `time`: the time the user gave for when the problem was observed; otherwise show `time: set by the server when recorded`.
 
 Show the draft as a short list and ask whether to record it. Record nothing until the user says yes. If they correct something, apply it and show the draft again.
 
@@ -41,7 +42,7 @@ Call `techlog_search_events` with the `system`, `types` `["problem.reported"]` a
 
 ## 5. Record
 
-Use `techlog:record` to write the confirmed event. Take the idempotency key from the work item, for example `problem-<system>-<short-slug-of-the-summary>`. Use the time the user gives for when the problem was observed; otherwise the current time. Do not fetch the ticket to find a time. If the server rejects the event, show the corrected draft to the user again before you retry. Then tell the user the new event id and that `/techlog:proposal` is the next step.
+Use `techlog:record` to write the confirmed event. Take the idempotency key from the work item, for example `problem-<system>-<short-slug-of-the-summary>`. Use the time the user gives for when the problem was observed; otherwise leave `time` out so the server stamps it. Do not fetch the ticket to find a time. If the server rejects the event, show the corrected draft to the user again before you retry. Then tell the user the new event id and that `/techlog:proposal` is the next step.
 
 ## Rules
 
