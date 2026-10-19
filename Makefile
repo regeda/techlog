@@ -6,6 +6,7 @@ PORT ?= 8080
 PLUGIN := techlog
 SCOPE ?= user
 BIN_DIR := bin
+# keep in sync with .github/workflows/ci.yml
 GOLANGCI_LINT_VERSION := v2.15.0
 GOLANGCI_LINT ?= $(BIN_DIR)/golangci-lint
 

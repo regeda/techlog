@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: Test
+        run: make test
+      - name: Check install.sh
+        run: |
+          shellcheck install.sh scripts/install_test.sh
+          sh scripts/install_test.sh
+      - name: Lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          # keep in sync with GOLANGCI_LINT_VERSION in the Makefile
+          version: v2.15.0

@@ -18,7 +18,7 @@ did not state is **my call**, marked as such.
 
 ## Goals
 
-- Every pull request and every push to `main` runs `go test ./...` and
+- Every pull request and every push to `main` runs `make test` and
   golangci-lint on GitHub and reports pass or fail.
 - Pushing a tag `vX.Y.Z` builds `cmd/techlog` for Linux and macOS, on amd64 and
   arm64, and publishes them on a GitHub Release with checksums.
@@ -42,7 +42,6 @@ did not state is **my call**, marked as such.
 
 - A pipeline that disagrees with `make check`, so a change passes locally and
   fails on GitHub, or the other way round.
-- A release that can be published from a commit whose tests fail.
 - Floating tool versions that make CI red with no change in the repo.
 
 ## Constraints from the repo
@@ -65,7 +64,7 @@ Two workflows and one GoReleaser config.
 - Triggers: `pull_request`, and `push` to `main`.
 - One job on `ubuntu-latest` with `permissions: contents: read`.
 - Steps: checkout; `actions/setup-go` with `go-version-file: go.mod`;
-  `go test ./...`; golangci-lint through `golangci/golangci-lint-action`,
+  `make test`; golangci-lint through `golangci/golangci-lint-action`,
   pinned to `v2.15.0`.
 - A `concurrency` group per ref that cancels superseded runs on pull requests.
 - Tests run on Linux only (my call: the binary targets both, but the code is
@@ -86,8 +85,11 @@ from the Makefile in the workflow if that is simple and robust.
 ### `.github/workflows/release.yml`
 
 - Trigger: push of a tag matching `v*`.
-- Job `test` (the same test and lint steps as CI, so a tag cannot publish from a
-  red commit), then job `release` that `needs: test`.
+- One job, `release`, with no test or lint step of its own (the user's
+  decision: CI already tests every change before it reaches `main`, so the
+  release workflow only builds and publishes). A tag pushed on a commit that
+  CI has not passed can therefore still publish; maintainers tag a commit that
+  is green on `main`.
 - `release` has `permissions: contents: write`, checks out with
   `fetch-depth: 0` (GoReleaser needs tag history for the changelog), and runs
   `goreleaser/goreleaser-action` with `args: release --clean`, authenticated
@@ -109,8 +111,10 @@ from the Makefile in the workflow if that is simple and robust.
 ### Pinning
 
 Tools are pinned: golangci-lint `v2.15.0`, GoReleaser to a v2 release, Go from
-`go.mod`. GitHub Actions are pinned to a major tag (for example
-`actions/checkout@v4`), not to a commit SHA. My call: major tags keep the files
+`go.mod`. GitHub Actions are pinned to a major tag, not to a commit SHA. The majors in
+use, checked against each action's latest release on 2026-10-19:
+`actions/checkout@v7`, `actions/setup-go@v7`, `golangci/golangci-lint-action@v9`
+and `goreleaser/goreleaser-action@v7`. My call: major tags keep the files
 readable; SHA pinning is a hardening step for later.
 
 ### Releasing
@@ -165,12 +169,15 @@ asked for it; the behaviour below is my call unless noted.
   whatever the download returns.
 - **Reuse `make check` in CI.** `make lint` runs `--fix`, and it installs the
   linter with a `curl | sh` script. The official action is cached and does not
-  modify the tree.
+  modify the tree. CI does use `make test` (the user's decision), so tests run
+  the same command locally and on GitHub.
+- **A test and lint job before the release job.** It would stop a tag from
+  publishing a red commit, but the user chose to keep the release workflow to
+  building and publishing only.
 
 ## Left to the builder
 
-- Exact action major versions, in particular the `golangci-lint-action`
-  version that supports golangci-lint v2.
+- Moving to newer action majors as they appear.
 - Exact GoReleaser v2 version pin.
 - Whether to read the lint version from the Makefile.
 - Changelog filter wording.

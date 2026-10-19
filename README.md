@@ -66,6 +66,26 @@ plugin/                 the Claude plugin: skills, config, help pages
 2. Call `storetest.Run` from its tests. If the contract suite passes, the backend is correct.
 3. Add a case for it in `storeFlags.open` in `cmd/techlog/main.go`.
 
+## Install
+
+Install the latest released binary for Linux or macOS (amd64 or arm64):
+
+```bash
+curl -sSfL https://raw.githubusercontent.com/regeda/techlog/main/install.sh | sh
+```
+
+The script checks the download against the release's `checksums.txt` before it installs anything. It puts `techlog` in `$HOME/.local/bin` and tells you if that directory is not on your `PATH`. Set `INSTALL_DIR=/some/dir` to install elsewhere, or `VERSION=v1.2.3` to install a specific release.
+
+## Releasing
+
+Push a tag that starts with `v` and CI tests it, builds the binaries and publishes the release:
+
+```bash
+git tag vX.Y.Z && git push origin vX.Y.Z
+```
+
+A tag without the `v` prefix does nothing.
+
 ## Develop
 
 ```bash
