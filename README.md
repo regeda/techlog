@@ -2,7 +2,7 @@
 
 An append-only log of engineering events: what happened to a system, and what led to it. Techlog gives AI agents an MCP interface and everyone else an HTTP API and a web UI, on one port, from one binary.
 
-The event model and the ideas behind it are documented in [`website/`](website/). This directory also holds the Go server.
+The event model and the ideas behind it are documented on the [website](https://techlog-e7k.pages.dev/). This repository holds the Go server and the Claude plugin.
 
 ## Run it
 
@@ -28,9 +28,11 @@ That connects the tools: `techlog_search_events`, `techlog_get_system_history`, 
 Then install the plugin, which adds the `/techlog:problem`, `/techlog:proposal` and `/techlog:welcome` skills and the `techlog:record` skill that teaches Claude when to record an event, which type to use, and how to link it to earlier events:
 
 ```
-/plugin marketplace add /path/to/this/repo
+/plugin marketplace add regeda/techlog
 /plugin install techlog@techlog
 ```
+
+Working from a checkout of this repo, add the marketplace from the local path instead: `/plugin marketplace add /path/to/this/repo`.
 
 To try it without installing, start Claude Code with `claude --plugin-dir ./plugin`. `/techlog:welcome` explains the rest: connecting the server, switching the development plugin (default `superpowers`), and the config files in `plugin/config/`. `make plugin` installs it from this checkout and `make plugin-remove` undoes it.
 

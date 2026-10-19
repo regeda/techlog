@@ -1,4 +1,4 @@
-"""Record events in a local Techlog server. Start it first: make seed && make run."""
+"""Record events in a local Techlog server. Start it first: techlog seed && techlog serve."""
 import json
 import os
 import urllib.request

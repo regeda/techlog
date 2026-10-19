@@ -1,0 +1,28 @@
+---
+title: HTTP API
+description: The Techlog server's HTTP API: the routes to record, read, search and link events, and the shape of an error.
+layout: docs
+section: Integrate
+order: 3
+nav: HTTP API
+---
+<h1>HTTP API</h1>
+<div class="page-meta"><span class="badge badge-exists">Implemented · basic</span><span class="badge badge-proposed">Draft 0.1</span></div>
+<div class="callout callout-note"><p><strong>Basic, local, and unauthenticated.</strong> The API has no authentication, no signatures, and no authorization. The server listens on <code>localhost</code> unless you pass another address, so keep it on your machine or a trusted network. <a href="getting-started.html#install">Getting started</a> shows how to install and start the server.</p></div>
+
+<h2 id="routes">Routes</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Route</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><code>POST /api/v1/events</code></td><td>Record an event. The server assigns the id.</td></tr>
+    <tr><td><code>GET /api/v1/events/{id}</code></td><td>One event with its outgoing and incoming links.</td></tr>
+    <tr><td><code>GET /api/v1/events?q&amp;system&amp;type&amp;since&amp;until&amp;limit</code></td><td>Search, newest first. Default 20, at most 100.</td></tr>
+    <tr><td><code>GET /api/v1/systems</code></td><td>The known systems.</td></tr>
+    <tr><td><code>GET /api/v1/systems/{system}/history</code></td><td>The latest events of one system, oldest first. Default 50, at most 200.</td></tr>
+    <tr><td><code>POST /api/v1/links</code></td><td>Link two existing events.</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="errors">Errors</h2>
+<p>Errors share one shape: <code>{"error": {"code", "message", "details"}}</code>. The codes are <code>invalid_event</code> (422), <code>not_found</code> (404), <code>bad_request</code> (400), and <code>internal</code> (500). There is no update and no delete: events are immutable.</p>
+<nav class="pager" aria-label="Pager"><a href="claude-plugin.html">← Claude plugin</a><a href="policy.html">Workflow and policy →</a></nav>

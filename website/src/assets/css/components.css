@@ -14,6 +14,9 @@
 .nav a[aria-current="page"]:not(.btn) { box-shadow: 0 2px 0 var(--accent); }
 .nav a.btn-primary { color: var(--primary-ink); }
 .scrolled .nav a.btn { padding: .5rem .85rem; }
+.gh-link { display: inline-flex; align-items: center; color: var(--text-1); }
+.gh-link:hover { color: var(--text-0); }
+.gh-link svg { width: 20px; height: 20px; }
 .nav-toggle { display: none; margin-left: auto; background: transparent; color: var(--text-0); border: 1px solid var(--line-strong); border-radius: var(--r-2); padding: .5rem .8rem; font: 700 var(--fs-sm) var(--font-sans); cursor: pointer; }
 @media (max-width: 820px) {
   .nav-toggle { display: inline-flex; }

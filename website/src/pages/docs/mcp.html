@@ -14,9 +14,9 @@ nav: MCP integration
 <p>The Model Context Protocol (MCP) is how an agent talks to a tool. Techlog defines what the events mean and how the lifecycle fits together. An agent that already speaks MCP needs no custom client code to read history or record progress.</p>
 
 <h2 id="connect">Connect</h2>
-<p>Start the server (see <a href="server.html">Run the server</a>), then register it with Claude Code:</p>
+<p>Start the server (see <a href="getting-started.html#install">Getting started</a>), then register it with Claude Code:</p>
 {{code bash mcp-connect.sh}}
-<p>Use <code>localhost</code> or <code>127.0.0.1</code> in the URL. The server rejects requests whose <code>Host</code> header names another host, as a guard against DNS rebinding. The <code>techlog:record</code> skill teaches Claude when to record an event, which type to use, and how to link it to earlier events; <code>make plugin</code> installs it as part of the techlog plugin; see <a href="claude-plugin.html">Claude plugin</a>.</p>
+<p>Use <code>localhost</code> or <code>127.0.0.1</code> in the URL. The server rejects requests whose <code>Host</code> header names another host, as a guard against DNS rebinding. The <code>techlog:record</code> skill teaches Claude when to record an event, which type to use, and how to link it to earlier events; the techlog plugin installs it; see <a href="claude-plugin.html">Claude plugin</a>.</p>
 
 <h2 id="tools">Tools</h2>
 <p>Tool names use underscores, because some MCP clients accept only letters, digits, underscores, and hyphens.</p>

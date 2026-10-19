@@ -3,6 +3,7 @@ import { join, dirname, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ALLOWED_EXTERNAL_HOSTS = new Set(['cdn.jsdelivr.net']);
+const REPO_URL = 'https://github.com/regeda/techlog';
 
 function walk(dir) {
   const out = [];
@@ -36,7 +37,8 @@ export function checkLinks(siteDir) {
       }
       if (/^https?:\/\//.test(value)) {
         const host = new URL(value).host;
-        if (!ALLOWED_EXTERNAL_HOSTS.has(host)) problems.push(`${name}: external link not allowed: ${value}`);
+        const isRepo = value === REPO_URL || value.startsWith(`${REPO_URL}/`);
+        if (!ALLOWED_EXTERNAL_HOSTS.has(host) && !isRepo) problems.push(`${name}: external link not allowed: ${value}`);
         continue;
       }
       if (value.startsWith('/')) {
