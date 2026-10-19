@@ -52,7 +52,7 @@ Call `techlog_record_event` with `event` set to an object with these fields. Do 
 - `schema_version`: `"0.1-draft"`
 - `idempotency_key`: required. A stable string you choose, unique per actor, up to 128 characters. See "Retries and idempotency keys" below.
 - `type`, `status`: from the table above
-- `time`: when it happened, RFC 3339 with a zone, for example `2026-03-12T13:38:00Z`. Take it from the source of the change when it has one, and only otherwise use the current time. See "Which time to use" below.
+- `time`: when it happened, RFC 3339 with a zone, for example `2026-03-12T13:38:00Z`. Take it from the source of the change when it has one, and otherwise leave it out. See "Which time to use" below.
 - `actor`: `{"kind": "ai_agent", "id": "agent:claude-code", "on_behalf_of": "user:<who asked>"}`. Leave `on_behalf_of` out if you do not know who it is.
 - `subject`: `{"system": "...", "component": "..."}`; `component` and `environment` are optional
 - `summary`: one plain sentence, at most 280 characters, that makes sense without context
@@ -69,7 +69,7 @@ To record several related events, such as the story of a piece of work, record t
 `time` says when the thing happened, not when you recorded it. Pick it in this order:
 
 1. **The time the source of the change records.** For a commit, read it from git: `git log -1 --format=%aI <sha>` (author time) or `%cI` (commit time, when the change was merged or rebased). For a pull request, its merge time. For a release, the deploy time. For an alert or incident, the time on the alert or the ticket. This holds even for something that has just happened: if a source has a timestamp, use it.
-2. **The current time, only if the source has no timestamp** or there is no source (a decision taken in this conversation, a finding you just made). Leave `time` out and the server stamps the moment of recording, or send the current time yourself with a zone.
+2. **No time, if the source has no timestamp** or there is no source (a decision taken in this conversation, a finding you just made). Leave `time` out and the server stamps the moment of recording in UTC. Never send the date from the conversation as a time, and never send a time of day you did not read from a source.
 
 A time must not be in the future and must not be earlier than the time of any event the new one links to: the server rejects such an event. Then fix the time or the link; do not work around it.
 
