@@ -94,6 +94,10 @@ func TestMappingsDecisionStage(t *testing.T) {
 		mustContain(t, name+".decision framing", s.Framing,
 			"do not draft a decision", "/techlog:proposal first",
 			"already decides", "idempotency_key")
+		// The model has no clock: the decision leaves its time out and the draft
+		// says the server sets it.
+		mustContain(t, name+".decision framing", s.Framing,
+			"Leave its time out", "time: set by the server when recorded")
 	}
 	if got := m["superpowers"].Stages["decision"].Before; !slices.Equal(got, []string{"superpowers:writing-plans"}) {
 		t.Errorf("superpowers.decision.before = %v, want [superpowers:writing-plans]", got)

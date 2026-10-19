@@ -59,7 +59,8 @@ superpowers:
            server stamps the moment of recording.
            Its idempotency_key is decision-<system>-<spec file name without
            .md>, so the server rejects a second decision for the same spec.
-        3. Show the draft and ask whether to record it.
+        3. Show the draft, with the line `time: set by the server when recorded`,
+           and ask whether to record it.
            Record nothing until the user says yes.
            If the user says skip, say that nothing was recorded and carry on.
            Record at most once per spec.
