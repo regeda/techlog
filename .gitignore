@@ -20,3 +20,6 @@ bin/
 .env
 
 .wrangler/
+
+# release build output
+dist/

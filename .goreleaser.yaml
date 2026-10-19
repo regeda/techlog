@@ -1,0 +1,28 @@
+version: 2
+
+builds:
+  - id: techlog
+    main: ./cmd/techlog
+    binary: techlog
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin]
+    goarch: [amd64, arm64]
+    flags: [-trimpath]
+    ldflags: ["-s -w"]
+
+archives:
+  - formats: [tar.gz]
+    name_template: "techlog_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  filters:
+    exclude:
+      - "^docs:"
+      - "^chore:"
