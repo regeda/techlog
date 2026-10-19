@@ -3,6 +3,9 @@
 ## What this is
 A static website for Techlog: a three-block landing page (headline with a scattered-to-lifecycle animation, how it works, connectors), a "coming soon" Welcome page, eleven documentation pages (including Getting Started in five languages). The site itself has no backend. Its pages describe two things and mark which is which: the Techlog server in this repository (implemented, basic, local, with no authentication or signatures) and the proposed standard and platform around it.
 
+## Related
+The Techlog server, its releases and the root README are in <https://github.com/regeda/techlog>. The built site is hosted at <https://techlog-e7k.pages.dev/>; the root README links to it and to these docs, and the site links back to the repository from its header, its footer and Getting Started.
+
 ## Quick start
 Run these from the `website/` folder of the repository.
 ```sh
@@ -47,8 +50,8 @@ To add a docs page, create `src/pages/docs/<name>.html` with front matter (`layo
 | Home-page walkthrough | Simulated example |
 | Hosted platform | Not available |
 
-- There is no hosted service. The Getting Started code targets an illustrative API at a reserved, unresolvable name and is never run against anything.
-- Only the Python and bash samples were syntax-checked and the Go sample compiled; the Java and TypeScript samples were not compiled (no toolchain here).
+- There is no hosted Techlog service. The Getting Started samples call the local Techlog server (`http://localhost:8080`, or `TECHLOG_URL`), which you install with the released binary as the page describes.
+- The test suite does not compile or run the quickstart samples; it validates the example events and the site build.
 - The design-partner contact is not yet published.
 - Mermaid diagrams need network access in the browser.
 - There are no committed browser or end-to-end tests.

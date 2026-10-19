@@ -1,4 +1,4 @@
-// Record events in a local Techlog server. Start it first: make seed && make run.
+// Record events in a local Techlog server. Start it first: techlog seed && techlog serve.
 const BASE = process.env.TECHLOG_URL ?? "http://localhost:8080";
 
 async function call<T>(method: string, path: string, body?: unknown): Promise<T> {

@@ -51,7 +51,11 @@ func TestClaudePluginPageCoversThePlugin(t *testing.T) {
 	// The events the journey records, and the honest limits.
 	mustContain(t, "claude-plugin page", page,
 		"problem.reported", "proposal.recorded", "decision.made", "change.implemented",
-		"not enforced", "make plugin")
+		"not enforced")
+
+	// A website reader installs from the GitHub repo, not from a checkout.
+	mustContain(t, "claude-plugin page", page, "https://github.com/regeda/techlog")
+	mustNotContain(t, "claude-plugin page", page, "make plugin", "from a checkout")
 }
 
 // Skills are typed with a slash everywhere on the page, as a reader types them.

@@ -14,7 +14,7 @@ nav: Claude plugin
 <p>A development plugin, such as <code>superpowers</code>, runs the engineering workflow: it asks the questions, designs the change and writes the plan. The techlog plugin sits on top of it. Each Techlog skill hands the thinking to a skill of the development plugin, adds context from Techlog and the repository, asks you to confirm, and records the event. Nothing is recorded that you have not seen and confirmed.</p>
 
 <h2 id="install">Install</h2>
-<p>Connect the server first (see <a href="mcp.html">MCP integration</a>), then install the plugin from a checkout of this repository, either with the two commands in Claude Code or with <code>make plugin</code>. <code>/techlog:welcome</code> explains the rest and answers questions about the setup.</p>
+<p>Connect the server first (see <a href="mcp.html">MCP integration</a>), then install the plugin straight from the <a href="https://github.com/regeda/techlog">GitHub repository</a> with the two commands in Claude Code. <code>/techlog:welcome</code> explains the rest and answers questions about the setup.</p>
 {{code bash claude-plugin-install.sh}}
 
 <h2 id="skills">The skills</h2>
@@ -55,4 +55,4 @@ nav: Claude plugin
     <tr><td>Skills for implementation, verification, release and the reliability stages</td><td><span class="badge badge-future">Not implemented</span></td></tr>
   </tbody>
 </table></div>
-<nav class="pager" aria-label="Pager"><a href="mcp.html">← MCP integration</a><a href="policy.html">Workflow and policy →</a></nav>
+<nav class="pager" aria-label="Pager"><a href="mcp.html">← MCP integration</a><a href="http-api.html">HTTP API →</a></nav>

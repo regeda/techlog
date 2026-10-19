@@ -57,3 +57,16 @@ test('auditContent flags forbidden claims unless marked audit-ok', () => {
   assert.equal(problems.length, 4, problems.join('\n'));
   assert.ok(problems.every((p) => p.includes('a.html')));
 });
+
+test('checkLinks allows the project repo on GitHub and nothing else on that host', () => {
+  const dir = site({
+    'index.html':
+      '<a href="https://github.com/regeda/techlog">repo</a>' +
+      '<a href="https://github.com/regeda/techlog/blob/main/README.md">readme</a>' +
+      '<a href="https://github.com/regeda/techlog-evil">other</a>' +
+      '<a href="https://github.com/someone/else">else</a>',
+  });
+  const problems = checkLinks(dir);
+  assert.equal(problems.length, 2, problems.join('\n'));
+  assert.ok(problems.some((p) => /techlog-evil/.test(p)) && problems.some((p) => /someone\/else/.test(p)));
+});

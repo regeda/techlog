@@ -1,7 +1,3 @@
-# In Claude Code, from a checkout of this repository
-/plugin marketplace add /path/to/techlog
+# In Claude Code: add the Techlog marketplace from GitHub, then install the plugin
+/plugin marketplace add regeda/techlog
 /plugin install techlog@techlog
-
-# Or from the checkout's shell
-make plugin
-make plugin-remove   # to uninstall it again

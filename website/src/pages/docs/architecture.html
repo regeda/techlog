@@ -41,7 +41,7 @@ nav: Architecture
   <li><strong>MCP server</strong> at <code>/mcp</code>: five tools over streamable HTTP. See <a href="mcp.html">MCP integration</a>.</li>
   <li><strong>Web UI</strong> at <code>/</code>: read-only event list, event pages, system timelines, and story walkthroughs.</li>
 </ul>
-<p>The service validates every event against the JSON Schema (see <a href="event-model.html#server-behavior">what the server adds to the schema</a>), then writes it through a small storage interface. The interface has one implementation, SQLite, and a contract test suite that any further backend must pass. Events are immutable; links added later are stored beside them. See <a href="server.html">Run the server</a>.</p>
+<p>The service validates every event against the JSON Schema (see <a href="event-model.html#server-behavior">what the server adds to the schema</a>), then writes it through a small storage interface. The interface has one implementation, SQLite, and a contract test suite that any further backend must pass. Events are immutable; links added later are stored beside them. See <a href="getting-started.html">Getting started</a>.</p>
 <p>Not part of that core yet: collectors for git, CI, deployment, and alerting; the workflow engine; policy evaluation; event signatures; authentication and authorization.</p>
 
 <h2 id="ingestion">Event ingestion</h2>

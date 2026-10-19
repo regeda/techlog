@@ -23,19 +23,13 @@ test('highlightJson escapes markup and round-trips the text', () => {
 
 const welcome = readFileSync('.test-out/landing/welcome.html', 'utf8');
 
-test('welcome: explains how to run the server and connect Claude', () => {
-  assert.match(welcome, /Run the server on your machine/);
-  assert.match(welcome, /make seed/);
-  assert.match(welcome, /make run/);
-  assert.match(plain(welcome), /claude mcp add --transport http techlog http:\/\/localhost:8080\/mcp/);
-  assert.match(welcome, /localhost:8080/);
-  assert.match(welcome, /href="docs\/server\.html"/, 'links to the Run the server page');
+test('welcome: says the platform is coming soon and sends local testers to the repo', () => {
+  const text = plain(welcome);
+  assert.match(text, /platform[^.]*coming soon|coming soon[^.]*platform/i);
+  assert.match(welcome, /href="https:\/\/github\.com\/regeda\/techlog"/, 'links to the GitHub repo');
+  assert.match(welcome, /href="docs\/getting-started\.html"/, 'falls back to Getting Started');
+  assert.doesNotMatch(text, /make run|make seed|Run the server|server\.html/);
   assert.match(welcome, /no authentication/i, 'says plainly what the server does not do');
-});
-
-test('welcome: the commands come from the same file as Getting Started', () => {
-  const gs = readFileSync('src/examples/getting-started/run-server.sh', 'utf8').trim();
-  assert.ok(plain(welcome).includes(gs), 'run-server.sh is embedded verbatim');
 });
 
 // plain turns highlighted markup back into the text a reader would copy.
