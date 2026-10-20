@@ -37,16 +37,15 @@ function plain(html) {
   return html.replace(/<[^>]+>/g, '').replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
 }
 
-test('getting started: every sample language is highlighted and keeps its source text', () => {
+test('getting started: the sample is highlighted and keeps its source text', () => {
   const gs = readFileSync('.test-out/landing/docs/getting-started.html', 'utf8');
-  const samples = { bash: 'quickstart.sh', python: 'quickstart.py', typescript: 'quickstart.ts', go: 'quickstart.go', java: 'Quickstart.java' };
+  const samples = { bash: 'first-event.sh' };
   for (const [lang, file] of Object.entries(samples)) {
     const src = readFileSync(`src/examples/getting-started/${file}`, 'utf8').trim();
     const blocks = [...gs.matchAll(new RegExp(`<code class="language-${lang}">([\\s\\S]*?)</code>`, 'g'))].map((m) => m[1]);
     const block = blocks.find((b) => plain(b) === src) ?? '';
     assert.match(block, /class="tk-com"/, `${lang}: comments`);
     assert.match(block, /class="tk-str"/, `${lang}: strings`);
-    assert.match(block, /class="tk-kw"/, `${lang}: keywords`);
     assert.equal(plain(block), src, `${lang}: text is unchanged`);
   }
 });

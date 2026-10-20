@@ -1,6 +1,6 @@
 ---
 title: Getting Started
-description: Run the Techlog server locally, then record a proposal, record verification evidence, and read system history, in Python, TypeScript, Go, Java, and curl.
+description: Install and run the Techlog server locally, then send your first event with curl.
 layout: docs
 section: Start
 order: 2
@@ -27,64 +27,20 @@ nav: Getting started
 </ul>
 <p>The server has no authentication, so keep it on <code>localhost</code> or a trusted network.</p>
 
-<h2 id="what">What you will do</h2>
-<ol>
-  <li>Record a proposal that is linked to the problem that motivated it.</li>
-  <li>Record the verification result, with the test report as evidence.</li>
-  <li>Read the recent history of the system.</li>
-</ol>
-<p>The samples use the Spring Spin story: a service called <code>promo-api</code> and a discount game for new clients. <code>techlog seed</code> loads that story, so the problem report the proposal links to already exists.</p>
-
 <h2 id="first-event">A first event</h2>
 <p>This is the smallest valid event. Every field here is required. The <code>idempotency_key</code> is yours to choose: reuse it when you retry, and the server rejects the repeat. The <a href="event-model.html#required">event model</a> explains each one. When you submit an event, leave out the <code>id</code>: the server assigns it, and ignores one you send. <code>time</code> and <code>schema_version</code> may also be left out; the server fills them in.</p>
 {{code json event-minimal.json}}
 
-<h2 id="language">Choose your language</h2>
-<div class="tabs" data-tabs>
-<div role="tablist" aria-label="Language"><button role="tab" id="tab-python" aria-controls="panel-python" aria-selected="true" type="button">Python</button><button role="tab" id="tab-typescript" aria-controls="panel-typescript" aria-selected="false" type="button">TypeScript</button><button role="tab" id="tab-go" aria-controls="panel-go" aria-selected="false" type="button">Go</button><button role="tab" id="tab-java" aria-controls="panel-java" aria-selected="false" type="button">Java</button><button role="tab" id="tab-curl" aria-controls="panel-curl" aria-selected="false" type="button">curl</button></div>
-<div role="tabpanel" id="panel-python" aria-labelledby="tab-python">
-<p class="muted">Python 3.9+, standard library only.</p>
-{{code python getting-started/quickstart.py}}
-</div>
-<div role="tabpanel" id="panel-typescript" aria-labelledby="tab-typescript" hidden>
-<p class="muted">Node 18+ with the built-in <code>fetch</code>, run as an ES module.</p>
-{{code typescript getting-started/quickstart.ts}}
-</div>
-<div role="tabpanel" id="panel-go" aria-labelledby="tab-go" hidden>
-<p class="muted">Go 1.21+, standard library only.</p>
-{{code go getting-started/quickstart.go}}
-</div>
-<div role="tabpanel" id="panel-java" aria-labelledby="tab-java" hidden>
-<p class="muted">Java 17+, JDK only. Prints the raw JSON responses.</p>
-{{code java getting-started/Quickstart.java}}
-</div>
-<div role="tabpanel" id="panel-curl" aria-labelledby="tab-curl" hidden>
-<p class="muted">curl and bash.</p>
-{{code bash getting-started/quickstart.sh}}
-</div>
-</div>
+{{code bash getting-started/first-event.sh}}
 
-<h2 id="calls">What the calls do</h2>
+<h2 id="calls">What the call does</h2>
 <div class="table-wrap"><table>
   <thead><tr><th>Method</th><th>Path</th><th>Purpose</th></tr></thead>
   <tbody>
     <tr><td><code>POST</code></td><td><code>/api/v1/events</code></td><td>Record an event. The server validates it, assigns the <code>id</code>, and returns the stored event as <code>{"event": {...}}</code> with status 201.</td></tr>
-    <tr><td><code>GET</code></td><td><code>/api/v1/systems/{system}/history</code></td><td>Read the latest events of one system, oldest first.</td></tr>
   </tbody>
 </table></div>
 <p>An invalid event gets status 422 and a list of problems, each with the JSON Pointer path of the field to fix. Evidence is recorded inside the event, as references; there is no separate evidence endpoint. The full list of routes is on <a href="http-api.html#routes">HTTP API</a>.</p>
-
-<h2 id="today-vs-proposed">What runs today and what is proposed</h2>
-<div class="table-wrap"><table>
-  <thead><tr><th>Runs today (this repository)</th><th>Proposed</th></tr></thead>
-  <tbody>
-    <tr><td>One Go binary with the event API, an MCP server, a storage layer with a SQLite backend, a read-only web UI, and a Claude skill. Events are validated against the draft 0.1 schema.</td><td>Collectors for git, CI, deploy, and alerting systems; policy evaluation; event signatures and authentication; further storage backends.</td></tr>
-  </tbody>
-</table></div>
-
-<h2 id="run-site">Run this site locally</h2>
-<p>The documentation site is a separate, static build in the <code>website/</code> directory:</p>
-{{code bash getting-started/run-site.sh}}
 
 <h2 id="next">Next steps</h2>
 <ul>

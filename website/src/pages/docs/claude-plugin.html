@@ -8,10 +8,8 @@ nav: Claude plugin
 ---
 <h1>Claude plugin</h1>
 <div class="page-meta"><span class="badge badge-exists">Implemented · basic</span><span class="badge badge-proposed">Draft 0.1</span></div>
-<div class="callout callout-note"><p><strong>Runs today, with limits.</strong> The plugin covers the first three stages of the <a href="lifecycle.html#chain">lifecycle chain</a>: problem, proposal and decision. It records events through the <a href="mcp.html">MCP tools</a>, so the server must be connected first. The decision step is advice to Claude and is not enforced. The skills have not been run end to end in an interactive session; the repository tests check their structure and wording.</p></div>
-
 <h2 id="what">What it does</h2>
-<p>A development plugin, such as <code>superpowers</code>, runs the engineering workflow: it asks the questions, designs the change and writes the plan. The techlog plugin sits on top of it. Each Techlog skill hands the thinking to a skill of the development plugin, adds context from Techlog and the repository, asks you to confirm, and records the event. Nothing is recorded that you have not seen and confirmed.</p>
+<p>A development plugin, such as <a href="https://claude.com/marketplace/plugins/superpowers"><code>superpowers</code></a>, runs the engineering workflow: it asks the questions, designs the change and writes the plan. The techlog plugin sits on top of it. Each Techlog skill hands the thinking to a skill of the development plugin, adds context from Techlog and the repository, asks you to confirm, and records the event. Nothing is recorded that you have not seen and confirmed.</p>
 
 <h2 id="install">Install</h2>
 <p>Connect the server first (see <a href="mcp.html">MCP integration</a>), then install the plugin straight from the <a href="https://github.com/regeda/techlog">GitHub repository</a> with the two commands in Claude Code. <code>/techlog:welcome</code> explains the rest and answers questions about the setup.</p>
@@ -38,21 +36,4 @@ nav: Claude plugin
 </ol>
 <p>Each event links back to the one before it, so anyone can walk the story from the problem to its follow-up.</p>
 
-<h2 id="limits">Limits</h2>
-<ul>
-  <li>The decision rule is advice to Claude and is not enforced. It does not apply in a session that did not start from <code>/techlog:problem</code> or <code>/techlog:proposal</code>, it can be lost when the conversation is compacted, and a <code>/superpowers:writing-plans</code> you type yourself does not trigger it.</li>
-  <li>Only <code>superpowers</code> has a mapping block. The mechanism supports others; none is written.</li>
-  <li>Implementation, verification, release and the reliability stages have no skill yet.</li>
-</ul>
-
-<h2 id="status">Status</h2>
-<div class="table-wrap"><table>
-  <thead><tr><th>Part</th><th>Status</th></tr></thead>
-  <tbody>
-    <tr><td>Skills <code>/techlog:problem</code>, <code>/techlog:proposal</code>, <code>/techlog:welcome</code>, <code>/techlog:record</code></td><td><span class="badge badge-exists">Implemented (basic)</span></td></tr>
-    <tr><td>Mapping for <code>superpowers</code>, with the decision rule</td><td><span class="badge badge-exists">Implemented (advisory)</span></td></tr>
-    <tr><td>A mapping block for another development plugin</td><td><span class="badge badge-proposed">Supported by the format, not written</span></td></tr>
-    <tr><td>Skills for implementation, verification, release and the reliability stages</td><td><span class="badge badge-future">Not implemented</span></td></tr>
-  </tbody>
-</table></div>
 <nav class="pager" aria-label="Pager"><a href="mcp.html">← MCP integration</a><a href="http-api.html">HTTP API →</a></nav>

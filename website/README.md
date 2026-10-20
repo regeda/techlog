@@ -50,8 +50,8 @@ To add a docs page, create `src/pages/docs/<name>.html` with front matter (`layo
 | Home-page walkthrough | Simulated example |
 | Hosted platform | Not available |
 
-- There is no hosted Techlog service. The Getting Started samples call the local Techlog server (`http://localhost:8080`, or `TECHLOG_URL`), which you install with the released binary as the page describes.
-- The test suite does not compile or run the quickstart samples; it validates the example events and the site build.
+- There is no hosted Techlog service. The Getting Started sample calls the local Techlog server (`http://localhost:8080`, or `TECHLOG_URL`), which you install with the released binary as the page describes.
+- The test suite does not run the Getting Started sample; it validates the example events and the site build.
 - The design-partner contact is not yet published.
 - Mermaid diagrams need network access in the browser.
 - There are no committed browser or end-to-end tests.

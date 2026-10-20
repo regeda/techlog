@@ -10,8 +10,8 @@ test('preview: npm run serve listens on its own port', () => {
   assert.match(pkg.scripts.serve, new RegExp(`http\\.server ${PORT}\\b`));
 });
 
-test('preview: the README and the run-site example name the same URL', () => {
-  for (const f of ['README.md', 'src/examples/getting-started/run-site.sh']) {
+test('preview: the README names the preview URL', () => {
+  for (const f of ['README.md']) {
     const text = readFileSync(f, 'utf8');
     const line = text.split('\n').find((l) => l.includes('npm run serve'));
     assert.ok(line, `${f} mentions npm run serve`);
