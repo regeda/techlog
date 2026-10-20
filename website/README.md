@@ -47,7 +47,7 @@ To add a docs page, create `src/pages/docs/<name>.html` with front matter (`layo
 | Website and documentation | Exists |
 | Event model and schema, event API, MCP server (five tools), storage layer with a SQLite backend, read-only web UI, Claude skill | Implemented in the Go server at the repository root: basic, local, no authentication or signatures |
 | Rollback-plan and evidence MCP tools, MCP resources and prompts, collectors, policy evaluation, signatures, authentication | Proposed (draft 0.1) |
-| Home-page walkthrough | Simulated example |
+| Home-page comparison | Illustrative example with fictional data |
 | Hosted platform | Not available |
 
 - There is no hosted Techlog service. The Getting Started sample calls the local Techlog server (`http://localhost:8080`, or `TECHLOG_URL`), which you install with the released binary as the page describes.
