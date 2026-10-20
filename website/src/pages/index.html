@@ -42,53 +42,37 @@ description: Let AI write the code and keep the progress in Techlog. Reviews sto
   <div class="container">
     <div class="section-head">
       <p class="eyebrow">How it works</p>
-      <h2>One history. Every agent.</h2>
       <p class="lead">Techlog connects the context scattered across agents, sessions, and engineering tools, so people and AI can understand how problems, decisions, changes, and incidents relate.</p>
     </div>
     <figure class="shell cs" id="shell" aria-labelledby="sh-cap">
-      <figcaption><span id="sh-cap">One session, before and after Techlog.</span></figcaption>
-      <div class="cmp-log">
-        <p class="cmp-hint" id="cmp-hint">Press Run to watch an agent session.</p>
-        <div class="cmp-msg cmp-user">
-          <p class="cmp-who">You</p>
-          <p class="cmp-t cmp-send">Why do we enforce a 20% discount cap? I need to change the pricing logic.</p>
-        </div>
-        <div class="cmp-msg">
+      <figcaption><span id="sh-cap">One question, before and after Techlog.</span></figcaption>
+      <div class="cmp-ask">
+        <p class="cmp-who">You</p>
+        <p class="cmp-t">Why do we enforce a 20% discount cap? I need to change the pricing logic.</p>
+      </div>
+      <div class="cmp-panes">
+        <section class="cmp-pane" aria-labelledby="pane-without">
+          <h3 class="cmp-head" id="pane-without">Without Techlog</h3>
           <p class="cmp-who">AI Agent</p>
-          <p class="cmp-t">I don't have enough information about the original reasoning for the 20% discount cap.</p>
-          <p class="cmp-t">I can read the current code and tests, but not the design discussion or the business context. You might check:</p>
+          <p class="cmp-t">I don't have enough information about the reasoning behind the 20% cap.</p>
+          <p class="cmp-t">I can read the code and tests, but not the business context. You might check:</p>
           <ul class="cmp-list">
-            <li class="cmp-t">the original issue or requirement</li>
-            <li class="cmp-t">past design discussions</li>
+            <li class="cmp-t">the original issue</li>
+            <li class="cmp-t">design discussions</li>
             <li class="cmp-t">related pull requests</li>
-            <li class="cmp-t">any business rules or policies</li>
+            <li class="cmp-t">business rules</li>
           </ul>
-        </div>
-        <div class="cmp-msg cmp-user">
-          <p class="cmp-who">You</p>
-          <p class="cmp-t cmp-send">/techlog:welcome</p>
-        </div>
-        <div class="cmp-msg">
-          <p class="cmp-t cmp-status">✓ Techlog MCP connected</p>
-        </div>
-        <div class="cmp-msg">
+        </section>
+        <section class="cmp-pane cmp-pane-techlog" aria-labelledby="pane-with">
+          <h3 class="cmp-head" id="pane-with">With Techlog</h3>
           <p class="cmp-who">AI Agent <span class="cmp-using">(Techlog MCP)</span></p>
-          <p class="cmp-t">Here is the chain behind the 20% cap, oldest first:</p>
+          <p class="cmp-t cmp-close">The 20% cap is a business rule from an approved decision. Before changing the pricing logic, check the original problem and the tests that came with PR #482.</p>
           <ol class="cmp-events" aria-label="Events found in Techlog">
 {{demo-events demo-chain.json}}
           </ol>
-          <p class="cmp-t cmp-close">The 20% cap is a business rule from an approved decision. Before changing the pricing logic, check the original problem and the tests that came with PR #482.</p>
-        </div>
+        </section>
       </div>
-      <div class="cmp-input" id="cmp-input" aria-hidden="true" hidden><span class="cmp-prompt">›</span><span class="cmp-input-field"><span class="cmp-input-ghost" id="cmp-input-ghost"></span><span class="cmp-input-text" id="cmp-input-text"></span></span></div>
-      <div class="sh-ctl" id="sh-ctl" hidden>
-        <button type="button" class="sh-play" id="sh-play" aria-label="Run simulation">▶ Run simulation</button>
-        <input type="range" class="sh-seek" id="sh-seek" min="0" max="1000" step="1" value="0" aria-label="Playback position">
-        <span class="sh-time" id="sh-time" aria-hidden="true">0:00 / 0:00</span>
-      </div>
-      <p class="sh-foot">One session, one question. Without Techlog the agent has to send you looking; once Techlog is connected it finds the connected events, so the reasons behind the work are one answer away.</p>
     </figure>
-    <script src="{{root}}assets/js/shell.js"></script>
   </div>
 </section>
 

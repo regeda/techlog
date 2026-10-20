@@ -164,7 +164,7 @@
     root.style.setProperty('--tint', smooth(0.5, 1, p).toFixed(3));
     var phase = p >= 0.9 ? 'lifecycle' : 'scattered';
     root.setAttribute('data-phase', phase);
-    caption.textContent = phase === 'lifecycle' ? 'Techlog: one lifecycle, looped' : 'Legacy Changelog';
+    caption.textContent = phase === 'lifecycle' ? 'Techlog: one lifecycle' : 'Legacy Changelog';
     replay.hidden = p < 0.9;
     // the robot never moves: it only turns from grey and unconnected to green and connected
     go.classList.toggle('is-on', ring);
