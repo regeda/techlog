@@ -2,7 +2,7 @@ import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, dirname, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ALLOWED_EXTERNAL_HOSTS = new Set(['cdn.jsdelivr.net']);
+const ALLOWED_EXTERNAL_HOSTS = new Set(['cdn.jsdelivr.net', 'claude.com']);
 const REPO_URL = 'https://github.com/regeda/techlog';
 
 function walk(dir) {
