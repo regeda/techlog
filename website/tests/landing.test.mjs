@@ -72,24 +72,22 @@ test('landing: the logo lives in the header bar, and the motto is big, in two li
 
 
 
-test('landing: how it works is one agent session: question, answer, /techlog:welcome, a better answer', () => {
-  assert.match(how, /<h2>One history\. Every agent\.<\/h2>/);
+test('landing: how it works is static: one question, two panes, the answer without Techlog and a summary with three Techlog events', () => {
+  assert.doesNotMatch(how, /One history\. Every agent\.|One session, one question/);
   assert.doesNotMatch(how, /Simulated example|badge-simulated/, 'no simulated badge');
   assert.equal((how.match(/Why do we enforce a 20% discount cap\? I need to change the pricing logic\./g) || []).length, 1, 'the question is asked once');
-  assert.doesNotMatch(how, /aria-label="With(out)? Techlog"|cmp-pane|cmp-head|Press Run to ask the same question twice/, 'no two panes any more');
-  const log = how.slice(how.indexOf('class="cmp-log"'), how.indexOf('id="sh-ctl"'));
-  const order = ['Why do we enforce', "I don't have enough information", '/techlog:welcome', 'Techlog MCP connected', '(Techlog MCP)', 'class="cmp-event"', 'cmp-close'].map((w) => log.indexOf(w));
-  assert.ok(order.every((i) => i > 0) && order.every((i, k) => k === 0 || i > order[k - 1]), 'one story, in order: ' + order);
-  const before = log.slice(0, log.indexOf('/techlog:welcome'));
-  assert.doesNotMatch(before.replace(/<\/?[^>]+>/g, ' '), /techlog/i, 'no sign of Techlog before the visitor calls /techlog:welcome');
-  assert.equal((log.match(/class="cmp-event"/g) || []).length, 3, 'three events in the better answer');
-  assert.equal((before.match(/<li class="cmp-t[ "]/g) || []).length, 4, 'four suggestions where to look, before Techlog');
-  assert.equal((log.match(/class="cmp-t cmp-send"/g) || []).length, 2, 'two prompts are typed in the input and sent');
-  assert.match(how, /class="cmp-t cmp-close"[^>]*>[^<]*PR #482/, 'the closing answer names the PR');
-  assert.match(how, /class="cmp-input"[^>]*\shidden/, 'the input at the bottom is drawn by the script only');
-  assert.doesNotMatch(how, /<[a-z]+[^>]*class="cmp-(t|msg|event|log)[^"]*"[^>]*\shidden/, 'without JavaScript nothing of the story is hidden');
-  assert.doesNotMatch(how, /sh-step|sh-rule|sh-typed|rec-card|rec-list|Show JSON|data-tab|data-trace|resolved|<pre/, 'none of the old CLI demo, no JSON, no claim of resolution');
-  assert.match(how, /id="sh-play"[^>]*>▶ Run simulation/, 'starts idle with a call to run');
+  const left = how.slice(how.indexOf('id="pane-without"'), how.indexOf('cmp-pane-techlog"'));
+  const right = how.slice(how.indexOf('id="pane-with"'), how.indexOf('</figure>'));
+  assert.match(how, />Without Techlog</);
+  assert.match(how, />With Techlog</);
+  assert.match(left, /I don't have enough information/, 'the left pane is the answer without Techlog');
+  assert.equal((left.match(/<li class="cmp-t[ "]/g) || []).length, 4, 'four suggestions where to look');
+  assert.doesNotMatch(left.replace(/^[^<]*>.*?<\/h3>/s, '').replace(/<\/?[^>]+>/g, ' '), /techlog/i, 'no sign of Techlog on the left');
+  assert.match(right, /class="cmp-t cmp-close"[^>]*>[^<]*PR #482/, 'the right pane concludes with a summary that names the PR');
+  assert.equal((right.match(/class="cmp-event"/g) || []).length, 3, 'three Techlog events on the right');
+  assert.ok(right.indexOf('cmp-close') < right.indexOf('cmp-event'), 'the summary comes before its events');
+  assert.doesNotMatch(how, /cmp-input|cmp-loading|shell\.js|Run simulation|sh-ctl|sh-play/, 'no simulation, no controls');
+  assert.doesNotMatch(how, /sh-step|sh-rule|sh-typed|rec-card|rec-list|Show JSON|data-tab|data-trace|<pre/, 'none of the old CLI demo, no JSON');
 });
 
 test('landing: the layers follow how it works in their own section', () => {
@@ -336,31 +334,22 @@ test('every "Try Techlog" link on every page leads to the same URL, without a fr
 
 const chain = JSON.parse(readFileSync('src/examples/demo-chain.json', 'utf8'));
 
-test('renderDemoEvents: one card per event with its full details shown, nothing to click', () => {
+test('renderDemoEvents: one card per event with its date, type and short summary, nothing to click', () => {
   const out = renderDemoEvents(chain);
   assert.equal((out.match(/class="cmp-event"/g) || []).length, 3);
   assert.deepEqual([...out.matchAll(/data-type="([^"]+)"/g)].map((m) => m[1]), chain.map((e) => e.type), 'rows follow the data order');
   assert.doesNotMatch(out, /<details|<summary|<button|<a |tabindex|onclick/, 'a card is not interactive');
   assert.deepEqual([...out.matchAll(/class="cmp-edate">([^<]*)</g)].map((m) => m[1]), ['Mar 9', 'Mar 10', 'Mar 10']);
-  for (const e of chain) {
-    assert.ok(out.includes(e.summary.replace(/&/g, '&amp;')) || out.includes(e.summary), `${e.type} summary is on its card`);
-    assert.ok(out.includes(`${e.sources[0].kind}: ${e.sources[0].ref}`), `${e.type} source is shown`);
-  }
-  const words = out.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
-  assert.match(words, /relates_to → problem\.reported confirmed/, 'the decision names the event it relates to, by type');
-  assert.match(words, /implements → decision\.made confirmed/);
-  assert.equal((out.match(/class="cmp-elink"/g) || []).length, 2, 'the problem has no link');
-  assert.doesNotMatch(out, /<pre|Show JSON|rec-json|evt_/, 'no JSON and no ids');
+  assert.deepEqual([...out.matchAll(/class="cmp-etype">([^<]*)</g)].map((m) => m[1]), chain.map((e) => e.type));
+  for (const e of chain) assert.ok(out.includes(e.summary), `${e.type} summary is on its card`);
+  assert.doesNotMatch(out, /cmp-elink|cmp-esrc|cmp-edetail|<pre|Show JSON|rec-json|evt_/, 'only date, type and summary: no links, sources, JSON or ids');
 });
 
-test('renderDemoEvents: escapes event text and copes with an event that has no sources', () => {
-  const evil = { ...chain[0], summary: '<b>x</b> & "y"', sources: [{ kind: '<i>h</i>', ref: 'r' }] };
-  const out = renderDemoEvents([evil]);
+test('renderDemoEvents: escapes event text', () => {
+  const out = renderDemoEvents([{ ...chain[0], summary: '<b>x</b> & "y"', type: '<i>h</i>' }]);
   assert.doesNotMatch(out, /<b>x|<i>h/);
   assert.match(out, /&lt;b&gt;x&lt;\/b&gt; &amp; &quot;y&quot;/);
   assert.match(out, /&lt;i&gt;h&lt;\/i&gt;/);
-  assert.match(out, /class="cmp-event"/);
-  assert.doesNotMatch(renderDemoEvents([{ ...chain[0], sources: undefined }]), /cmp-esrc/, 'no source, no source line');
 });
 
 test('the {{demo-events}} directive is expanded in the built landing page', () => {
@@ -368,50 +357,23 @@ test('the {{demo-events}} directive is expanded in the built landing page', () =
   assert.match(html, /class="cmp-event"/);
 });
 
-test('comparison styles: the log is a fixed-height scroll area, items take room only once they show', () => {
-  for (const rule of [/\.sh-js \.cmp-t:not\(\.sh-on\) \{ display: none; \}/, /\.sh-js \.cmp-event:not\(\.sh-on\) \{ display: none; \}/, /\.sh-js \.cmp-msg:not\(\.sh-on\)[^{]*\{ display: none; \}/, /\.cmp-off \{ display: none; \}/]) {
-    assert.match(css, rule, `${rule} shows an item only when it is needed`);
-  }
-  const hiding = css.split('\n').filter((l) => /display: none/.test(l) && /\.cmp-(t|event|msg)\b/.test(l));
-  for (const l of hiding) assert.match(l, /^\.sh-js /, `without .sh-js the story would hide in a no-JS browser: ${l}`);
-  const log = css.match(/\.sh-js \.cmp-log \{[^}]*\}/)[0];
-  assert.match(log, /height: 22rem/, 'the demo is about 1.5 times lower than the full story');
-  assert.match(log, /overflow-y: auto/, 'the output scrolls');
-  assert.match(css, /\n\.cmp-input \{/, 'the input sits below the story');
-  assert.match(css, /\.cmp-edetail \{[^}]*overflow-wrap: anywhere/);
+test('comparison styles: two panes side by side, one column on a phone, nothing hidden', () => {
+  assert.match(css, /\.cmp-panes \{[^}]*grid-template-columns: 1fr 1fr/, 'two panes');
+  assert.match(css, /@media \(max-width: 700px\)[^\n]*\.cmp-panes \{ grid-template-columns: 1fr; \}/, 'one column on a phone');
+  assert.doesNotMatch(css, /display: none[^\n]*\.cmp-|\.cmp-[^\n{]*\{[^}]*display: none/, 'nothing of the story is hidden');
+  assert.doesNotMatch(css, /overflow-y: auto[^}]*\}\s*\n?[^\n]*cmp-log|\.cmp-log/, 'no scrolling log');
+  assert.match(css, /\.cmp-esum \{[^}]*overflow-wrap: anywhere/);
   const colour = {};
   for (const m of css.matchAll(/\.cmp-event\[data-type="([^"]+)"\] \{ --ev: var\((--[a-z]+)\); \}/g)) colour[m[1]] = m[2];
   assert.deepEqual(colour, { 'problem.reported': '--warn', 'decision.made': '--info', 'change.implemented': '--ok' });
-  assert.doesNotMatch(css, /\.(rec-|sh-body|sh-step|sh-l\b|sh-user|sh-rule|sh-input|sh-panes|sh-pane)/, 'the old CLI demo styles are gone');
+  assert.doesNotMatch(css, /\.(rec-|sh-|cmp-loading|cmp-input|cmp-log)/, 'no styles of the old demos or of the simulation');
 });
 
-const shellJs = readFileSync('src/assets/js/shell.js', 'utf8');
-
-test('shell.js: plays the comparison out on Run in 45 seconds without pauses, starts by itself never, and is a pure function of time', () => {
-  assert.match(shellJs, /TARGET_MS = 45000/);
-  assert.doesNotMatch(shellJs, /PAUSE_MS|data-pause/, 'no fixed pauses between the steps');
-  assert.match(shellJs, /cmp-input-text/, 'prompts are typed into the input at the bottom');
-  assert.match(shellJs, /scrollTop = [a-z.]*scrollHeight/, 'the log follows the newest output');
-  assert.match(shellJs, /\.cmp-t, \.cmp-event/, 'the timeline is the prompts, the answers and the event rows in document order');
-  assert.doesNotMatch(shellJs, /IntersectionObserver|autoplay/, 'does not start by itself');
-  assert.doesNotMatch(shellJs, /matchMedia|prefers-reduced-motion/, 'typing is the point of the demo, so it is never skipped');
-  assert.match(shellJs, /function render\(\)/);
-  assert.match(shellJs, /addEventListener\('input'/, 'the seek bar scrubs');
-  assert.match(shellJs, /sh-idle/, 'starts idle with a call to run');
+test('the simulation is gone: no shell.js, and the build does not ship it', () => {
+  assert.ok(!existsSync('src/assets/js/shell.js'), 'shell.js is deleted');
 });
 
-test('shell.js: typed text keeps its place (the untyped tail is not shown), and rows are the visitor\'s to open', () => {
-  assert.match(shellJs, /cmp-on/);
-  assert.match(shellJs, /cmp-off/);
-  assert.match(shellJs, /sh-typing/);
-  assert.doesNotMatch(shellJs, /pointer-events|\.remove\(\)|display\s*=|\.open\s*=|setAttribute\('open'/, 'a row is never disabled, removed or opened or closed by the script');
-  assert.doesNotMatch(shellJs, /sh-step|data-trace|tablist|sh-view/, 'nothing of the old CLI demo');
-  assert.match(css, /\.sh-typing \.cmp-on::after \{/, 'the caret follows the typed text, not the hidden tail');
-  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[^\n]*\.sh-typing \.cmp-on::after/, 'only the caret blink stops under reduced motion');
-});
-
-test('review fixes: a card is not a row to open, and the caret takes no inline space so a line never wraps while it types', () => {
+test('review fixes: a card is not a row to open', () => {
   assert.doesNotMatch(css, /cmp-details|summary/, 'cards are not rows to open');
   assert.match(css, /\.cmp-card \{/);
-  assert.match(css, /\.sh-typing \.cmp-on::after \{[^}]*margin: 0 -\.6em 0 0/, 'the caret overlaps the hidden tail instead of pushing it');
 });

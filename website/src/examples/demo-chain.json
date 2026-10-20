@@ -22,7 +22,7 @@
     "subject": { "system": "promo-api", "component": "spin-service" },
     "status": "recorded",
     "summary": "Approved spin-to-win: one spin per new account, discount capped at 20%.",
-    "sources": [{ "kind": "spec", "ref": "docs/specs/spin-to-win.md" }],
+    "sources": [{ "kind": "spec-repo", "ref": "spin-to-win.md" }],
     "links": [{ "rel": "relates_to", "target": "evt_01J9K2D00001", "basis": "confirmed" }],
     "provenance": { "recorded_by": "agent:claude-code", "method": "agent_submitted" }
   },
