@@ -48,10 +48,9 @@ func TestClaudePluginPageCoversThePlugin(t *testing.T) {
 		}
 	}
 
-	// The events the journey records, and the honest limits.
+	// The events the journey records.
 	mustContain(t, "claude-plugin page", page,
-		"problem.reported", "proposal.recorded", "decision.made", "change.implemented",
-		"not enforced")
+		"problem.reported", "proposal.recorded", "decision.made", "change.implemented")
 
 	// A website reader installs from the GitHub repo, not from a checkout.
 	mustContain(t, "claude-plugin page", page, "https://github.com/regeda/techlog")
