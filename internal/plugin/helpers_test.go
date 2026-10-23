@@ -13,7 +13,7 @@ const pluginDir = "../../plugin"
 
 func readPlugin(t *testing.T, rel string) string {
 	t.Helper()
-	b, err := os.ReadFile(filepath.Join(pluginDir, rel))
+	b, err := os.ReadFile(filepath.Join(pluginDir, rel)) //nolint:gosec // G304: a fixed test fixture directory
 	if err != nil {
 		t.Fatal(err)
 	}

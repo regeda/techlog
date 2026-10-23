@@ -110,6 +110,14 @@ func TestSkillPrioritisesTheTimeOfTheSource(t *testing.T) {
 			t.Errorf("the time section should mention %q", want)
 		}
 	}
+}
+
+func TestSkillDoesNotGiveTheModelAClock(t *testing.T) {
+	b, err := os.ReadFile(skillPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := string(b)
 	if strings.Contains(s, "send the current time yourself") {
 		t.Error("the model has no clock: it must not be told to send the current time")
 	}

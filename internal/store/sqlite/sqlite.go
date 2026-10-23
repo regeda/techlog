@@ -15,10 +15,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	_ "modernc.org/sqlite"
-
 	"github.com/regeda/techlog/internal/event"
 	"github.com/regeda/techlog/internal/store"
+	_ "modernc.org/sqlite"
 )
 
 //go:embed migrations/*.sql
@@ -44,7 +43,7 @@ var _ store.Store = (*Store)(nil)
 
 // Open opens (creating it, and its directory, if needed) the database at path.
 func Open(path string) (*Store, error) {
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
 		return nil, fmt.Errorf("create database directory: %w", err)
 	}
 	return open("file:" + path + "?" + pragmas)
@@ -63,8 +62,7 @@ func open(dsn string) (*Store, error) {
 	}
 	db.SetMaxOpenConns(1)
 	if err := migrate(db); err != nil {
-		_ = db.Close()
-		return nil, fmt.Errorf("migrate: %w", err)
+		return nil, errors.Join(fmt.Errorf("migrate: %w", err), db.Close())
 	}
 	return &Store{db: db}, nil
 }
@@ -94,12 +92,10 @@ func migrate(db *sql.DB) error {
 			return err
 		}
 		if _, err := tx.Exec(string(script)); err != nil {
-			_ = tx.Rollback()
-			return fmt.Errorf("%s: %w", e.Name(), err)
+			return errors.Join(fmt.Errorf("%s: %w", e.Name(), err), tx.Rollback())
 		}
 		if _, err := tx.Exec(fmt.Sprintf("PRAGMA user_version = %d", version)); err != nil {
-			_ = tx.Rollback()
-			return err
+			return errors.Join(err, tx.Rollback())
 		}
 		if err := tx.Commit(); err != nil {
 			return err
@@ -109,6 +105,14 @@ func migrate(db *sql.DB) error {
 }
 
 func (s *Store) Close() error { return s.db.Close() }
+
+// rollbackInto rolls tx back unless it already finished, joining a failure
+// into *err. Defer it right after beginning the transaction.
+func rollbackInto(err *error, tx *sql.Tx) {
+	if rerr := tx.Rollback(); rerr != nil && !errors.Is(rerr, sql.ErrTxDone) {
+		*err = errors.Join(*err, rerr)
+	}
+}
 
 // querier is satisfied by *sql.DB and *sql.Tx.
 type querier interface {
@@ -137,7 +141,7 @@ func insertLink(ctx context.Context, q querier, source, target, rel, basis, rati
 	return err
 }
 
-func (s *Store) Insert(ctx context.Context, e event.Event) error {
+func (s *Store) Insert(ctx context.Context, e event.Event) (err error) {
 	t, err := e.ParsedTime()
 	if err != nil {
 		return fmt.Errorf("event time: %w", err)
@@ -150,8 +154,15 @@ func (s *Store) Insert(ctx context.Context, e event.Event) error {
 	if err != nil {
 		return err
 	}
-	defer func() { _ = tx.Rollback() }()
+	defer rollbackInto(&err, tx)
+	if err := writeEvent(ctx, tx, e, t, body); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
 
+// writeEvent stores the event row, its search entry and its links in tx.
+func writeEvent(ctx context.Context, tx *sql.Tx, e event.Event, t time.Time, body []byte) error {
 	targets := make([]string, len(e.Links))
 	for i, l := range e.Links {
 		targets[i] = l.Target
@@ -159,19 +170,13 @@ func (s *Store) Insert(ctx context.Context, e event.Event) error {
 	if err := ensureEvents(ctx, tx, targets...); err != nil {
 		return err
 	}
-	_, err = tx.ExecContext(ctx,
+	_, err := tx.ExecContext(ctx,
 		`INSERT INTO events (id, type, time, system, component, actor_kind, actor_id, idempotency_key, summary, body)
 		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		e.ID, e.Type, t.UTC().Format(timeLayout), e.Subject.System, e.Subject.Component,
 		e.Actor.Kind, e.Actor.ID, e.IdempotencyKey, e.Summary, string(body))
 	if err != nil {
-		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
-			if strings.Contains(err.Error(), "events.idempotency_key") {
-				return duplicateOf(ctx, tx, e)
-			}
-			return store.ErrConflict
-		}
-		return err
+		return insertError(ctx, tx, e, err)
 	}
 	if _, err := tx.ExecContext(ctx,
 		`INSERT INTO events_fts (id, summary, system, component, type) VALUES (?, ?, ?, ?, ?)`,
@@ -183,7 +188,19 @@ func (s *Store) Insert(ctx context.Context, e event.Event) error {
 			return err
 		}
 	}
-	return tx.Commit()
+	return nil
+}
+
+// insertError maps a failed event insert onto the store's sentinel errors.
+func insertError(ctx context.Context, q querier, e event.Event, err error) error {
+	switch {
+	case !strings.Contains(err.Error(), "UNIQUE constraint failed"):
+		return err
+	case strings.Contains(err.Error(), "events.idempotency_key"):
+		return duplicateOf(ctx, q, e)
+	default:
+		return store.ErrConflict
+	}
 }
 
 // duplicateOf looks up the event that already holds e's (actor, key) pair.
@@ -198,12 +215,12 @@ func duplicateOf(ctx context.Context, q querier, e event.Event) error {
 	return &store.DuplicateError{ExistingID: id}
 }
 
-func (s *Store) AddLink(ctx context.Context, l event.Link) error {
+func (s *Store) AddLink(ctx context.Context, l event.Link) (err error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
-	defer func() { _ = tx.Rollback() }()
+	defer rollbackInto(&err, tx)
 	if err := ensureEvents(ctx, tx, l.Source, l.Target); err != nil {
 		return err
 	}
@@ -227,7 +244,7 @@ func (s *Store) Get(ctx context.Context, id string) (event.Event, error) {
 
 // hydrate decodes a stored body and replaces its links with the current
 // outgoing rows from the links table (so links added later are included).
-func (s *Store) hydrate(ctx context.Context, body string) (event.Event, error) {
+func (s *Store) hydrate(ctx context.Context, body string) (_ event.Event, err error) {
 	var e event.Event
 	if err := json.Unmarshal([]byte(body), &e); err != nil {
 		return event.Event{}, fmt.Errorf("decode stored event: %w", err)
@@ -237,7 +254,7 @@ func (s *Store) hydrate(ctx context.Context, body string) (event.Event, error) {
 	if err != nil {
 		return event.Event{}, err
 	}
-	defer func() { _ = rows.Close() }()
+	defer func() { err = errors.Join(err, rows.Close()) }()
 	var links []event.LinkRef
 	for rows.Next() {
 		var l event.LinkRef
@@ -253,11 +270,8 @@ func (s *Store) hydrate(ctx context.Context, body string) (event.Event, error) {
 	return e, nil
 }
 
-func (s *Store) Search(ctx context.Context, f store.Filter) ([]event.Event, error) {
-	var (
-		where []string
-		args  []any
-	)
+// filterClauses turns the filter's criteria into WHERE conditions and their arguments.
+func filterClauses(f store.Filter) (where []string, args []any) {
 	if q := ftsQuery(f.Text); q != "" {
 		where = append(where, "e.id IN (SELECT id FROM events_fts WHERE events_fts MATCH ?)")
 		args = append(args, q)
@@ -280,6 +294,11 @@ func (s *Store) Search(ctx context.Context, f store.Filter) ([]event.Event, erro
 		where = append(where, "e.time <= ?")
 		args = append(args, f.Until.UTC().Format(timeLayout))
 	}
+	return where, args
+}
+
+func (s *Store) Search(ctx context.Context, f store.Filter) ([]event.Event, error) {
+	where, args := filterClauses(f)
 	dir := "DESC"
 	if f.Ascending {
 		dir = "ASC"
@@ -310,13 +329,13 @@ func (s *Store) Search(ctx context.Context, f store.Filter) ([]event.Event, erro
 	return events, nil
 }
 
-func (s *Store) Links(ctx context.Context, id string) ([]event.Link, error) {
+func (s *Store) Links(ctx context.Context, id string) (_ []event.Link, err error) {
 	rows, err := s.db.QueryContext(ctx,
 		`SELECT source, target, rel, basis, rationale FROM links WHERE source = ? OR target = ? ORDER BY rowid`, id, id)
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = rows.Close() }()
+	defer func() { err = errors.Join(err, rows.Close()) }()
 	var links []event.Link
 	for rows.Next() {
 		var l event.Link
@@ -334,12 +353,12 @@ func (s *Store) Systems(ctx context.Context) ([]string, error) {
 
 // queryStrings runs a single-column text query and closes the result set
 // before returning, so the single connection is free for the next query.
-func (s *Store) queryStrings(ctx context.Context, query string, args ...any) ([]string, error) {
+func (s *Store) queryStrings(ctx context.Context, query string, args ...any) (_ []string, err error) {
 	rows, err := s.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = rows.Close() }()
+	defer func() { err = errors.Join(err, rows.Close()) }()
 	var out []string
 	for rows.Next() {
 		var v string

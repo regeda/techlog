@@ -33,7 +33,10 @@ func do(h http.Handler, method, target string, body any) *httptest.ResponseRecor
 	case string:
 		rdr = strings.NewReader(b)
 	default:
-		raw, _ := json.Marshal(b)
+		raw, err := json.Marshal(b)
+		if err != nil {
+			panic(err) // the test passed a body that is not JSON
+		}
 		rdr = bytes.NewReader(raw)
 	}
 	rec := httptest.NewRecorder()
@@ -50,17 +53,23 @@ func decode(t *testing.T, rec *httptest.ResponseRecorder) map[string]any {
 	return out
 }
 
+// obj, list and str assert the JSON type of a decoded value.
+func obj(t *testing.T, v any) map[string]any { t.Helper(); return testutil.As[map[string]any](t, v) }
+func list(t *testing.T, v any) []any         { t.Helper(); return testutil.As[[]any](t, v) }
+func str(t *testing.T, v any) string         { t.Helper(); return testutil.As[string](t, v) }
+
 func errorOf(t *testing.T, rec *httptest.ResponseRecorder) (code string, paths []string) {
 	t.Helper()
 	e, ok := decode(t, rec)["error"].(map[string]any)
 	if !ok {
 		t.Fatalf("no error object in %s", rec.Body)
 	}
-	details, _ := e["details"].([]any)
-	for _, d := range details {
-		paths = append(paths, d.(map[string]any)["path"].(string))
+	if details, ok := e["details"].([]any); ok {
+		for _, d := range details {
+			paths = append(paths, str(t, obj(t, d)["path"]))
+		}
 	}
-	return e["code"].(string), paths
+	return str(t, e["code"]), paths
 }
 
 func record(t *testing.T, svc *service.Service, doc map[string]any) string {
@@ -83,7 +92,7 @@ func summaries(t *testing.T, rec *httptest.ResponseRecorder) []string {
 	}
 	out := make([]string, len(events))
 	for i, e := range events {
-		out[i], _ = e.(map[string]any)["summary"].(string)
+		out[i] = str(t, obj(t, e)["summary"])
 	}
 	return out
 }
@@ -94,12 +103,12 @@ func TestRecordEvent(t *testing.T) {
 	if rec.Code != http.StatusCreated {
 		t.Fatalf("status %d: %s", rec.Code, rec.Body)
 	}
-	ev := decode(t, rec)["event"].(map[string]any)
-	id := ev["id"].(string)
+	ev := obj(t, decode(t, rec)["event"])
+	id := str(t, ev["id"])
 	if !regexp.MustCompile(`^evt_[0-9A-Z]{12}$`).MatchString(id) {
 		t.Errorf("id = %q", id)
 	}
-	if m := ev["provenance"].(map[string]any)["method"]; m != "human_entered" {
+	if m := obj(t, ev["provenance"])["method"]; m != "human_entered" {
 		t.Errorf("provenance.method = %v, want human_entered", m)
 	}
 	if loc := rec.Header().Get("Location"); loc != "/api/v1/events/"+id {
@@ -115,7 +124,7 @@ func TestRecordIgnoresClientID(t *testing.T) {
 	if rec.Code != http.StatusCreated {
 		t.Fatalf("status %d: %s", rec.Code, rec.Body)
 	}
-	if id := decode(t, rec)["event"].(map[string]any)["id"]; id == "evt_AAAAAAAAAAAA" {
+	if id := obj(t, decode(t, rec)["event"])["id"]; id == "evt_AAAAAAAAAAAA" {
 		t.Error("the client-supplied id must be ignored")
 	}
 }
@@ -172,11 +181,11 @@ func TestGetEvent(t *testing.T) {
 	b := record(t, svc, testutil.Doc("alpha", "proposal.recorded", "b", testutil.Link("motivated_by", a)))
 
 	rb := decode(t, do(h, "GET", "/api/v1/events/"+b, nil))
-	if len(rb["outgoing"].([]any)) != 1 || len(rb["incoming"].([]any)) != 0 {
+	if len(list(t, rb["outgoing"])) != 1 || len(list(t, rb["incoming"])) != 0 {
 		t.Errorf("b = %v", rb)
 	}
 	ra := decode(t, do(h, "GET", "/api/v1/events/"+a, nil))
-	if len(ra["incoming"].([]any)) != 1 || len(ra["outgoing"].([]any)) != 0 {
+	if len(list(t, ra["incoming"])) != 1 || len(list(t, ra["outgoing"])) != 0 {
 		t.Errorf("a = %v", ra)
 	}
 
@@ -271,7 +280,7 @@ func TestSystems(t *testing.T) {
 	h, svc := setup(t)
 	record(t, svc, testutil.Doc("beta", "problem.reported", "x"))
 	record(t, svc, testutil.Doc("alpha", "problem.reported", "y"))
-	got := decode(t, do(h, "GET", "/api/v1/systems", nil))["systems"].([]any)
+	got := list(t, decode(t, do(h, "GET", "/api/v1/systems", nil))["systems"])
 	if len(got) != 2 || got[0] != "alpha" || got[1] != "beta" {
 		t.Errorf("systems = %v", got)
 	}
@@ -286,7 +295,7 @@ func TestLinks(t *testing.T) {
 	if rec.Code != http.StatusCreated {
 		t.Fatalf("status %d: %s", rec.Code, rec.Body)
 	}
-	if out := decode(t, do(h, "GET", "/api/v1/events/"+a, nil)); len(out["incoming"].([]any)) != 1 {
+	if out := decode(t, do(h, "GET", "/api/v1/events/"+a, nil)); len(list(t, out["incoming"])) != 1 {
 		t.Errorf("a = %v", out)
 	}
 
@@ -320,17 +329,17 @@ func TestRecordDuplicateKeyIs409(t *testing.T) {
 	if first.Code != http.StatusCreated {
 		t.Fatalf("first: status %d: %s", first.Code, first.Body)
 	}
-	firstID := decode(t, first)["event"].(map[string]any)["id"].(string)
+	firstID := str(t, obj(t, decode(t, first)["event"])["id"])
 
 	rec := do(h, "POST", "/api/v1/events", d)
 	if rec.Code != http.StatusConflict {
 		t.Fatalf("status %d: %s", rec.Code, rec.Body)
 	}
-	e := decode(t, rec)["error"].(map[string]any)
+	e := obj(t, decode(t, rec)["error"])
 	if e["code"] != "duplicate_event" || e["existing_id"] != firstID {
 		t.Errorf("error = %v, want code duplicate_event and existing_id %s", e, firstID)
 	}
-	if msg, _ := e["message"].(string); !strings.Contains(msg, `"deploy-4411"`) || !strings.Contains(msg, firstID) {
+	if msg := str(t, e["message"]); !strings.Contains(msg, `"deploy-4411"`) || !strings.Contains(msg, firstID) {
 		t.Errorf("message = %q", msg)
 	}
 	if _, has := decode(t, do(h, "POST", "/api/v1/events", testutil.Doc("alpha", "problem.reported", "x")))["error"]; has {
@@ -383,11 +392,10 @@ func TestRecordRejectsUnknownField(t *testing.T) {
 	if rec.Code != http.StatusUnprocessableEntity {
 		t.Fatalf("status %d: %s", rec.Code, rec.Body)
 	}
-	e, _ := decode(t, rec)["error"].(map[string]any)
+	e := obj(t, decode(t, rec)["error"])
 	named := strings.Contains(fmt.Sprint(e["message"]), "foo")
-	details, _ := e["details"].([]any)
-	for _, p := range details {
-		pm := p.(map[string]any)
+	for _, p := range list(t, e["details"]) {
+		pm := obj(t, p)
 		if strings.Contains(fmt.Sprint(pm["path"]), "foo") || strings.Contains(fmt.Sprint(pm["message"]), "foo") {
 			named = true
 		}

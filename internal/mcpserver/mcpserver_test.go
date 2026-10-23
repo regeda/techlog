@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
-
 	"github.com/regeda/techlog/internal/event"
 	"github.com/regeda/techlog/internal/mcpserver"
 	"github.com/regeda/techlog/internal/service"
@@ -25,12 +24,12 @@ func connect(t *testing.T) *mcp.ClientSession {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { _ = ss.Close() })
+	testutil.CloseOnCleanup(t, ss)
 	cs, err := mcp.NewClient(&mcp.Implementation{Name: "test", Version: "0"}, nil).Connect(ctx, clientT, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { _ = cs.Close() })
+	testutil.CloseOnCleanup(t, cs)
 	return cs
 }
 

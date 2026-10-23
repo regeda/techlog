@@ -58,7 +58,7 @@ func TestValidate(t *testing.T) {
 		{"integer extension values are valid", func(d map[string]any) {
 			d["extensions"] = map[string]any{"org.techlog.code": map[string]any{"files_changed": 5}}
 		}, ""},
-		{"bad actor kind", func(d map[string]any) { d["actor"].(map[string]any)["kind"] = "robot" }, "/actor/kind"},
+		{"bad actor kind", func(d map[string]any) { d["actor"] = map[string]any{"kind": "robot", "id": "user:t.nguyen"} }, "/actor/kind"},
 		{"missing subject", func(d map[string]any) { delete(d, "subject") }, "/"},
 		{"time without zone", func(d map[string]any) { d["time"] = "2026-03-11T10:12:00" }, "/time"},
 		{"summary too long", func(d map[string]any) { d["summary"] = strings.Repeat("x", 281) }, "/summary"},

@@ -34,11 +34,11 @@ func (e *DuplicateError) Is(target error) bool { return target == ErrDuplicate }
 // a value <= 0 means 100, and Offset, where a value <= 0 means 0. Results are
 // newest first unless Ascending is set; Offset skips that many from the start.
 type Filter struct {
+	Since     time.Time
+	Until     time.Time
 	Text      string
 	System    string
 	Types     []string
-	Since     time.Time // inclusive
-	Until     time.Time // inclusive
 	Limit     int
 	Offset    int
 	Ascending bool

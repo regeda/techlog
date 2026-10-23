@@ -4,6 +4,7 @@ import (
 	"context"
 	"slices"
 	"sort"
+	"time"
 
 	"github.com/regeda/techlog/internal/event"
 	"github.com/regeda/techlog/internal/store"
@@ -14,9 +15,9 @@ import (
 type fakeStore struct {
 	events          map[string]event.Event
 	links           []event.Link
-	insertConflicts int // fail this many Inserts with ErrConflict
-	inserts         int
 	lastFilter      store.Filter
+	insertConflicts int
+	inserts         int
 }
 
 func newFakeStore() *fakeStore { return &fakeStore{events: map[string]event.Event{}} }
@@ -89,24 +90,12 @@ func (f *fakeStore) Search(_ context.Context, flt store.Filter) ([]event.Event, 
 	f.lastFilter = flt
 	var out []event.Event
 	for _, e := range f.events {
-		if flt.System != "" && e.Subject.System != flt.System {
-			continue
+		if matches(flt, e) {
+			out = append(out, f.merged(e))
 		}
-		if len(flt.Types) > 0 && !slices.Contains(flt.Types, e.Type) {
-			continue
-		}
-		t, _ := e.ParsedTime()
-		if !flt.Since.IsZero() && t.Before(flt.Since) {
-			continue
-		}
-		if !flt.Until.IsZero() && t.After(flt.Until) {
-			continue
-		}
-		out = append(out, f.merged(e))
 	}
 	sort.Slice(out, func(i, j int) bool {
-		ti, _ := out[i].ParsedTime()
-		tj, _ := out[j].ParsedTime()
+		ti, tj := timeOf(out[i]), timeOf(out[j])
 		if !ti.Equal(tj) {
 			return ti.Before(tj) == flt.Ascending
 		}
@@ -116,6 +105,31 @@ func (f *fakeStore) Search(_ context.Context, flt store.Filter) ([]event.Event, 
 		out = out[:flt.Limit]
 	}
 	return out, nil
+}
+
+// matches reports whether e passes the system, type and time criteria of flt.
+func matches(flt store.Filter, e event.Event) bool {
+	if flt.System != "" && e.Subject.System != flt.System {
+		return false
+	}
+	if len(flt.Types) > 0 && !slices.Contains(flt.Types, e.Type) {
+		return false
+	}
+	t := timeOf(e)
+	if !flt.Since.IsZero() && t.Before(flt.Since) {
+		return false
+	}
+	return flt.Until.IsZero() || !t.After(flt.Until)
+}
+
+// timeOf is the parsed time of e; the fixtures are valid, so a parse failure
+// leaves the zero time.
+func timeOf(e event.Event) time.Time {
+	t, err := e.ParsedTime()
+	if err != nil {
+		return time.Time{}
+	}
+	return t
 }
 
 func (f *fakeStore) Systems(_ context.Context) ([]string, error) {

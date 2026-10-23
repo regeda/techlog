@@ -139,16 +139,16 @@ type option struct {
 type node struct {
 	Ask      string   `yaml:"ask"`
 	SkipIf   string   `yaml:"skip_if"`
-	Optional bool     `yaml:"optional"`
-	Sets     []string `yaml:"sets"`
 	Next     string   `yaml:"next"`
+	Sets     []string `yaml:"sets"`
 	Options  []option `yaml:"options"`
+	Optional bool     `yaml:"optional"`
 	Confirm  bool     `yaml:"confirm"`
 }
 
 type tree struct {
-	Start string          `yaml:"start"`
 	Nodes map[string]node `yaml:"nodes"`
+	Start string          `yaml:"start"`
 }
 
 func (n node) successors() []string {
@@ -178,44 +178,56 @@ func TestTreeShape(t *testing.T) {
 	}
 	confirms := 0
 	for id, n := range tr.Nodes {
-		if strings.TrimSpace(n.Ask) == "" {
-			t.Errorf("node %s: ask is empty", id)
-		}
-		kinds := 0
-		if len(n.Options) > 0 {
-			kinds++
-		}
-		if n.Next != "" {
-			kinds++
-		}
+		checkNode(t, tr, id, n)
 		if n.Confirm {
-			kinds++
 			confirms++
-		}
-		if kinds != 1 {
-			t.Errorf("node %s must have exactly one of options, next, confirm; has %d", id, kinds)
-		}
-		if len(n.Options) == 1 {
-			t.Errorf("node %s: a choice needs at least two options", id)
-		}
-		for _, o := range n.Options {
-			if strings.TrimSpace(o.Label) == "" {
-				t.Errorf("node %s: an option has no label", id)
-			}
-		}
-		for _, next := range n.successors() {
-			if _, ok := tr.Nodes[next]; !ok {
-				t.Errorf("node %s points at %q, which does not exist", id, next)
-			}
-		}
-		for _, s := range n.Sets {
-			if !slices.Contains(allowedSets, s) {
-				t.Errorf("node %s sets %q; allowed: %v", id, s, allowedSets)
-			}
 		}
 	}
 	if confirms != 1 {
 		t.Errorf("the tree needs exactly one confirm node, has %d", confirms)
+	}
+}
+
+// kinds counts how many of options, next and confirm the node has.
+func (n node) kinds() int {
+	kinds := 0
+	if len(n.Options) > 0 {
+		kinds++
+	}
+	if n.Next != "" {
+		kinds++
+	}
+	if n.Confirm {
+		kinds++
+	}
+	return kinds
+}
+
+func checkNode(t *testing.T, tr tree, id string, n node) {
+	t.Helper()
+	if strings.TrimSpace(n.Ask) == "" {
+		t.Errorf("node %s: ask is empty", id)
+	}
+	if kinds := n.kinds(); kinds != 1 {
+		t.Errorf("node %s must have exactly one of options, next, confirm; has %d", id, kinds)
+	}
+	if len(n.Options) == 1 {
+		t.Errorf("node %s: a choice needs at least two options", id)
+	}
+	for _, o := range n.Options {
+		if strings.TrimSpace(o.Label) == "" {
+			t.Errorf("node %s: an option has no label", id)
+		}
+	}
+	for _, next := range n.successors() {
+		if _, ok := tr.Nodes[next]; !ok {
+			t.Errorf("node %s points at %q, which does not exist", id, next)
+		}
+	}
+	for _, s := range n.Sets {
+		if !slices.Contains(allowedSets, s) {
+			t.Errorf("node %s sets %q; allowed: %v", id, s, allowedSets)
+		}
 	}
 }
 

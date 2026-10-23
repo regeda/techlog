@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -10,7 +11,7 @@ import (
 	"github.com/regeda/techlog/internal/service"
 )
 
-func runSeed(ctx context.Context, args []string, out io.Writer) error {
+func runSeed(ctx context.Context, args []string, out io.Writer) (err error) {
 	fs := flag.NewFlagSet("seed", flag.ContinueOnError)
 	sf := addStoreFlags(fs)
 	if err := fs.Parse(args); err != nil {
@@ -20,7 +21,7 @@ func runSeed(ctx context.Context, args []string, out io.Writer) error {
 	if err != nil {
 		return err
 	}
-	defer func() { _ = st.Close() }()
+	defer func() { err = errors.Join(err, st.Close()) }()
 	svc, err := service.New(st)
 	if err != nil {
 		return err

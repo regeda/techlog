@@ -22,13 +22,13 @@ const (
 
 // SearchParams selects events. Zero values mean "no constraint".
 type SearchParams struct {
+	Since  time.Time
+	Until  time.Time
 	Query  string
 	System string
 	Types  []string
-	Since  time.Time
-	Until  time.Time
 	Limit  int
-	Offset int // events to skip, for paging; values below 0 count as 0
+	Offset int
 }
 
 // ParseTime accepts an RFC 3339 timestamp or a YYYY-MM-DD date. A bare date is
@@ -78,12 +78,12 @@ func SearchParamsFromQuery(v url.Values) (SearchParams, error) {
 	return p, nil
 }
 
-func clamp(n, def, max int) int {
+func clamp(n, def, hi int) int {
 	switch {
 	case n <= 0:
 		return def
-	case n > max:
-		return max
+	case n > hi:
+		return hi
 	}
 	return n
 }
