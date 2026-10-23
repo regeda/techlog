@@ -72,7 +72,6 @@ type Event struct {
 	Time           string         `json:"time"`
 	Actor          Actor          `json:"actor"`
 	Subject        Subject        `json:"subject"`
-	Status         string         `json:"status"`
 	Summary        string         `json:"summary,omitempty"`
 	Sources        []Source       `json:"sources,omitempty"`
 	Evidence       []Evidence     `json:"evidence,omitempty"`

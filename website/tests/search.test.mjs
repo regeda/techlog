@@ -10,7 +10,7 @@ vm.runInNewContext(readFileSync('src/assets/js/search.js', 'utf8'), sandbox);
 const search = (...args) => Array.from(sandbox.window.TechlogSearch.search(...args));
 
 const index = [
-  { url: 'docs/event-model.html', title: 'Event Model', headings: ['Required fields'], text: 'actor subject status' },
+  { url: 'docs/event-model.html', title: 'Event Model', headings: ['Required fields'], text: 'actor subject provenance' },
   { url: 'docs/mcp.html', title: 'MCP Integration', headings: ['Tools'], text: 'record an event with techlog_record_event' },
   { url: 'docs/security.html', title: 'Security', headings: ['Trust'], text: 'identity and permissions' },
 ];
@@ -22,7 +22,7 @@ test('ranks title matches above text matches', () => {
 
 test('requires every term to match', () => {
   assert.deepEqual(search(index, 'event identity').map((d) => d.url), []);
-  assert.deepEqual(search(index, 'actor status').map((d) => d.url), ['docs/event-model.html']);
+  assert.deepEqual(search(index, 'actor provenance').map((d) => d.url), ['docs/event-model.html']);
 });
 
 test('special, empty, whitespace and very long input never throw and return nothing', () => {

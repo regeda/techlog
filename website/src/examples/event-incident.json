@@ -13,7 +13,6 @@
     "component": "spin-service",
     "environment": "production"
   },
-  "status": "open",
   "summary": "5xx ratio on the spin endpoint reached 6.2% on the canary, above the 1.0% rollback threshold for 3 minutes",
   "evidence": [
     {

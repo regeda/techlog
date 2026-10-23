@@ -57,7 +57,6 @@ func mk(id, typ, system, ts, summary string, links ...event.LinkRef) event.Event
 		Actor:          event.Actor{Kind: "human", ID: "user:a"},
 		IdempotencyKey: "key-" + id,
 		Subject:        event.Subject{System: system},
-		Status:         "recorded",
 		Summary:        summary,
 		Links:          links,
 		Provenance:     event.Provenance{RecordedBy: "user:a", Method: "human_entered"},

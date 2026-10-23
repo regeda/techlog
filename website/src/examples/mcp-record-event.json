@@ -17,7 +17,6 @@
             "on_behalf_of": "user:a.novak"
           },
           "subject": { "system": "promo-api", "component": "spin-service" },
-          "status": "proposed",
           "summary": "Spin-to-win: one spin per new account, server-side draw, discount capped at 20%, never stacked with other promotions",
           "links": [
             {
@@ -58,10 +57,9 @@
     "jsonrpc": "2.0",
     "id": 7,
     "result": {
-      "content": [{ "type": "text", "text": "Recorded evt_01J9K2A0P004 (proposed)" }],
+      "content": [{ "type": "text", "text": "Recorded evt_01J9K2A0P004" }],
       "structuredContent": {
         "id": "evt_01J9K2A0P004",
-        "status": "proposed",
         "event": {
           "schema_version": "0.1-draft",
           "id": "evt_01J9K2A0P004",
@@ -74,7 +72,6 @@
             "on_behalf_of": "user:a.novak"
           },
           "subject": { "system": "promo-api", "component": "spin-service" },
-          "status": "proposed",
           "summary": "Spin-to-win: one spin per new account, server-side draw, discount capped at 20%, never stacked with other promotions",
           "links": [
             {

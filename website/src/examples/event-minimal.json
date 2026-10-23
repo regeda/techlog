@@ -6,6 +6,5 @@
   "time": "2026-03-12T08:14:00Z",
   "actor": { "kind": "human", "id": "user:m.okafor" },
   "subject": { "system": "promo-api" },
-  "status": "recorded",
   "provenance": { "recorded_by": "user:m.okafor", "method": "human_entered" }
 }

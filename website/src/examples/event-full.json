@@ -13,7 +13,6 @@
     "system": "promo-api",
     "component": "spin-service"
   },
-  "status": "recorded",
   "summary": "Spin endpoint with server-side draw, 20% cap, and one spin per new account; reviewed and merged",
   "sources": [
     {

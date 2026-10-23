@@ -9,6 +9,5 @@ curl -fsS -X POST "${TECHLOG_URL:-http://localhost:8080}/api/v1/events" \
     "type": "problem.reported",
     "actor": { "kind": "human", "id": "user:m.okafor" },
     "subject": { "system": "promo-api" },
-    "status": "recorded",
     "provenance": { "recorded_by": "user:m.okafor", "method": "human_entered" }
   }'

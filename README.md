@@ -15,7 +15,7 @@ go run ./cmd/techlog serve    # http://localhost:8080
 - API: `/api/v1`. For example `curl 'localhost:8080/api/v1/events?q=canary'`.
 - MCP: `/mcp` (streamable HTTP).
 
-Data lives in `share/techlog.db` (git-ignored). Events require an `idempotency_key`, unique per actor. When upgrading from a version without it, delete the old database first (`make flush`): the schema changed in place and there is no migration. Flags: `--addr` (default `localhost:8080`; use `:8080` to listen on all interfaces), `--db`, `--store` (only `sqlite` so far). There is no authentication and nothing is signed, so keep it on localhost or a trusted network.
+Data lives in `share/techlog.db` (git-ignored). Events require an `idempotency_key`, unique per actor. When upgrading from a version without it, or from one that still had the event `status` field, delete the old database first (`make flush`): the schema changed in place and there is no migration, and the old `status NOT NULL` column rejects every insert. Flags: `--addr` (default `localhost:8080`; use `:8080` to listen on all interfaces), `--db`, `--store` (only `sqlite` so far). There is no authentication and nothing is signed, so keep it on localhost or a trusted network.
 
 ## Use it from Claude
 

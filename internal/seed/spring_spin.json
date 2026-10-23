@@ -13,7 +13,6 @@
       "system": "support-desk",
       "component": "inbox"
     },
-    "status": "recorded",
     "summary": "New visitors keep asking support for a first-order offer; seven tickets this week",
     "sources": [
       {
@@ -46,7 +45,6 @@
       "system": "spring-spin",
       "component": "campaign"
     },
-    "status": "recorded",
     "summary": "New-client sign-ups have been flat for three weeks; request a seasonal offer that turns first visits into registrations",
     "sources": [
       {
@@ -87,7 +85,6 @@
       "system": "promo-api",
       "component": "discounts"
     },
-    "status": "recorded",
     "summary": "A discount game is feasible on the existing checkout; risks are code stacking with current promotions and repeated spins by one person",
     "evidence": [
       {
@@ -127,7 +124,6 @@
       "system": "promo-api",
       "component": "spin-service"
     },
-    "status": "proposed",
     "summary": "Spin-to-win: one spin per new account, server-side draw, discount capped at 20%, never stacked with other promotions",
     "links": [
       {
@@ -175,7 +171,6 @@
       "system": "spring-spin",
       "component": "campaign"
     },
-    "status": "recorded",
     "summary": "Approved with finance: 20% cap, two-week window, new accounts only",
     "evidence": [
       {
@@ -210,7 +205,6 @@
       "system": "promo-api",
       "component": "spin-service"
     },
-    "status": "recorded",
     "summary": "Spin endpoint with server-side draw, 20% cap, and one spin per new account; reviewed and merged",
     "sources": [
       {
@@ -253,7 +247,6 @@
       "system": "promo-api",
       "component": "spin-service"
     },
-    "status": "verified",
     "summary": "Unit, integration, and abuse tests passed: repeat spins are rejected and the cap is enforced",
     "evidence": [
       {
@@ -288,7 +281,6 @@
       "system": "promo-api",
       "environment": "staging"
     },
-    "status": "verified",
     "summary": "Load test at three times the expected spin volume: checkout latency stayed within budget",
     "evidence": [
       {
@@ -323,7 +315,6 @@
       "system": "support-desk",
       "component": "inbox"
     },
-    "status": "recorded",
     "summary": "Support briefed on the offer: answer macros are ready and the escalation path to on-call is agreed",
     "links": [
       {
@@ -351,7 +342,6 @@
       "system": "promo-api",
       "environment": "production"
     },
-    "status": "in_progress",
     "summary": "Version 3.8.0 released as a canary to 5% of traffic",
     "sources": [
       {
@@ -386,7 +376,6 @@
       "component": "spin-service",
       "environment": "production"
     },
-    "status": "open",
     "summary": "5xx ratio on the spin endpoint reached 6.2% on the canary, above the 1.0% rollback threshold for 3 minutes",
     "evidence": [
       {
@@ -436,7 +425,6 @@
       "system": "promo-api",
       "environment": "production"
     },
-    "status": "recorded",
     "summary": "Canary traffic returned to 3.7.2",
     "evidence": [
       {
@@ -476,7 +464,6 @@
       "component": "spin-service",
       "environment": "production"
     },
-    "status": "verified",
     "summary": "5xx ratio back under 0.2% for 10 minutes; checkout was not affected",
     "evidence": [
       {
@@ -511,7 +498,6 @@
       "system": "spring-spin",
       "component": "campaign"
     },
-    "status": "recorded",
     "summary": "Hold the campaign go-live until the release passes its gates again",
     "links": [
       {
@@ -541,7 +527,6 @@
       "component": "spin-service",
       "environment": "production"
     },
-    "status": "recorded",
     "summary": "Root cause confirmed: retries from mobile clients sent duplicate spins that contended for the draw lock; spin requests need an idempotency key",
     "evidence": [
       {
@@ -586,7 +571,6 @@
       "system": "promo-api",
       "component": "spin-service"
     },
-    "status": "recorded",
     "summary": "Idempotency key added to spin requests; retries no longer contend for the draw lock",
     "sources": [
       {
@@ -625,7 +609,6 @@
       "system": "promo-api",
       "component": "spin-service"
     },
-    "status": "verified",
     "summary": "Recorded canary traffic replayed: no duplicate draws, error rate flat",
     "evidence": [
       {
@@ -660,7 +643,6 @@
       "system": "promo-api",
       "environment": "production"
     },
-    "status": "verified",
     "summary": "Version 3.8.1 passed the canary gates and was promoted to 100% of traffic",
     "sources": [
       {
@@ -694,7 +676,6 @@
       "system": "spring-spin",
       "component": "campaign"
     },
-    "status": "in_progress",
     "summary": "Spring Spin went live with email, an app banner, and social posts",
     "links": [
       {
@@ -727,7 +708,6 @@
       "system": "support-desk",
       "component": "spin-tickets"
     },
-    "status": "recorded",
     "summary": "Several new clients report that the spin result is not shown on older mobile browsers, so they never see their code",
     "sources": [
       {
@@ -778,7 +758,6 @@
       "component": "spin-service",
       "environment": "production"
     },
-    "status": "recorded",
     "summary": "The result panel needs a clipboard API that older browsers lack; draws and discounts are stored correctly and only the display is affected",
     "evidence": [
       {
@@ -823,7 +802,6 @@
       "component": "spin-service",
       "environment": "production"
     },
-    "status": "mitigated",
     "summary": "Feature flag switched the old result panel back on for older browsers; codes are shown again",
     "evidence": [
       {
@@ -857,7 +835,6 @@
       "system": "support-desk",
       "component": "spin-tickets"
     },
-    "status": "verified",
     "summary": "No new tickets in 60 minutes; affected clients were sent their codes by email",
     "links": [
       {
@@ -885,7 +862,6 @@
       "system": "spring-spin",
       "component": "campaign"
     },
-    "status": "in_progress",
     "summary": "Follow-ups: fix the result panel for older browsers, add a browser check before go-live, and send an apology code to affected clients",
     "links": [
       {
@@ -936,7 +912,6 @@
       "system": "promo-api",
       "component": "spin-service"
     },
-    "status": "recorded",
     "summary": "Result panel no longer needs the clipboard API; the fallback flag is retired",
     "sources": [
       {

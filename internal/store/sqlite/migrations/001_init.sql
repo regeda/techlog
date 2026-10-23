@@ -2,7 +2,6 @@ CREATE TABLE events (
     id         TEXT PRIMARY KEY,
     type       TEXT NOT NULL,
     time       TEXT NOT NULL,            -- normalised UTC, fixed width: sorts as text
-    status     TEXT NOT NULL,
     system     TEXT NOT NULL,
     component  TEXT NOT NULL DEFAULT '',
     actor_kind TEXT NOT NULL,

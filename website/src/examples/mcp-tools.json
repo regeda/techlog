@@ -96,7 +96,7 @@
       "properties": {
         "event": {
           "additionalProperties": true,
-          "description": "the event without an id: type, time, actor, subject, status, provenance, idempotency_key, and optionally summary, sources, evidence, links, extensions",
+          "description": "the event without an id: type, time, actor, subject, provenance, idempotency_key, and optionally summary, sources, evidence, links, extensions",
           "type": "object"
         }
       },

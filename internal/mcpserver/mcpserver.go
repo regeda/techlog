@@ -76,7 +76,7 @@ type getIn struct {
 }
 
 type recordIn struct {
-	Event map[string]any `json:"event" jsonschema:"the event without an id: type, time, actor, subject, status, provenance, idempotency_key, and optionally summary, sources, evidence, links, extensions"`
+	Event map[string]any `json:"event" jsonschema:"the event without an id: type, time, actor, subject, provenance, idempotency_key, and optionally summary, sources, evidence, links, extensions"`
 }
 
 type linkIn struct {
@@ -93,9 +93,8 @@ type eventsOut struct {
 }
 
 type recordOut struct {
-	ID     string      `json:"id"`
-	Status string      `json:"status"`
-	Event  event.Event `json:"event"`
+	ID    string      `json:"id"`
+	Event event.Event `json:"event"`
 }
 
 type linkOut struct {
@@ -155,7 +154,7 @@ func (t *tools) recordEvent(ctx context.Context, _ *mcp.CallToolRequest, in reco
 	if err != nil {
 		return errorResult(err), recordOut{}, nil
 	}
-	return textResult(fmt.Sprintf("Recorded %s (%s)", ev.ID, ev.Status)), recordOut{ID: ev.ID, Status: ev.Status, Event: ev}, nil
+	return textResult(fmt.Sprintf("Recorded %s", ev.ID)), recordOut{ID: ev.ID, Event: ev}, nil
 }
 
 func (t *tools) linkEvents(ctx context.Context, _ *mcp.CallToolRequest, in linkIn) (*mcp.CallToolResult, linkOut, error) {
@@ -226,7 +225,7 @@ func formatEvents(events []event.Event) string {
 }
 
 func formatLine(e event.Event) string {
-	line := fmt.Sprintf("%s  %s  %s [%s]  %s", e.ID, e.Time, e.Type, e.Status, e.Subject.System)
+	line := fmt.Sprintf("%s  %s  %s  %s", e.ID, e.Time, e.Type, e.Subject.System)
 	if e.Summary != "" {
 		line += ": " + e.Summary
 	}

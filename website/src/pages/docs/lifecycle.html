@@ -55,7 +55,7 @@ nav: Lifecycle model
 
 <h2 id="rules">Rules of thumb</h2>
 <ul>
-  <li>Events are append-only. A correction is a new event, and the old one may be given the status <code>superseded</code>.</li>
+  <li>Events are append-only. A correction is a new event; link it to the earlier one with <code>relates_to</code>.</li>
   <li>Links point backward in time, from the later event to the earlier one.</li>
   <li>Prefer a hypothesis you can later confirm over a confident claim you cannot support.</li>
   <li>Record evidence as references. The artifact stays in the tool that owns it.</li>
