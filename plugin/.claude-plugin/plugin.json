@@ -1,7 +1,7 @@
 {
   "name": "techlog",
   "description": "Techlog lifecycle skills: report problems and record proposals as events, on top of your development plugin",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": { "name": "Anton Regeda" },
   "homepage": "https://techlog.dadev.nl",
   "repository": "https://github.com/regeda/techlog",
