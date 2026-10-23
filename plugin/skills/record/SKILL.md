@@ -27,23 +27,21 @@ then to reconnect with `/mcp` or restart Claude Code. Say plainly that you canno
 
 ## Choose the event type
 
-| What happened | `type` | usual `status` | usual link `rel` to an earlier event |
-|---|---|---|---|
-| A need, defect or request was raised | `problem.reported` | `recorded` | `relates_to` a similar report |
-| Someone examined a problem or failure and has findings | `investigation.completed` | `recorded` | `investigates`, `caused_by` |
-| A solution was proposed | `proposal.recorded` | `proposed` | `motivated_by` |
-| A decision was taken | `decision.made` | `recorded` | `decides` |
-| A change was built and merged | `change.implemented` | `recorded` | `implements` |
-| Tests or checks ran | `verification.completed` | `verified` or `failed` | `verifies` |
-| A version reached an environment | `release.deployed` | `recorded` or `in_progress` | `releases` |
-| Something broke in production | `incident.opened` | `open` | `observed_after`, `caused_by` |
-| A temporary measure reduced impact | `mitigation.applied` | `mitigated` | `mitigates` |
-| A release was reverted | `rollback.executed` | `recorded` | `reverts`, `mitigates` |
-| Health was confirmed after a fix | `recovery.verified` | `verified` | `verifies` |
-| An incident review was written | `postmortem.published` | `recorded` | `follows_up` |
-| A follow-up action was agreed or finished | `action.tracked` | `open`, `in_progress` or `resolved` | `follows_up` |
-
-Statuses: `proposed`, `recorded`, `in_progress`, `verified`, `failed`, `open`, `mitigated`, `resolved`, `superseded`. A status describes the thing at the moment you record it. When the situation changes, record a new event; never try to change an old one.
+| What happened | `type` | usual link `rel` to an earlier event |
+|---|---|---|
+| A need, defect or request was raised | `problem.reported` | `relates_to` a similar report |
+| Someone examined a problem or failure and has findings | `investigation.completed` | `investigates`, `caused_by` |
+| A solution was proposed | `proposal.recorded` | `motivated_by` |
+| A decision was taken | `decision.made` | `decides` |
+| A change was built and merged | `change.implemented` | `implements` |
+| Tests or checks ran | `verification.completed` | `verifies` |
+| A version reached an environment | `release.deployed` | `releases` |
+| Something broke in production | `incident.opened` | `observed_after`, `caused_by` |
+| A temporary measure reduced impact | `mitigation.applied` | `mitigates` |
+| A release was reverted | `rollback.executed` | `reverts`, `mitigates` |
+| Health was confirmed after a fix | `recovery.verified` | `verifies` |
+| An incident review was written | `postmortem.published` | `follows_up` |
+| A follow-up action was agreed or finished | `action.tracked` | `follows_up` |
 
 ## Fill in the event
 
@@ -51,7 +49,7 @@ Call `techlog_record_event` with `event` set to an object with these fields. Do 
 
 - `schema_version`: `"0.1-draft"`
 - `idempotency_key`: required. A stable string you choose, unique per actor, up to 128 characters. See "Retries and idempotency keys" below.
-- `type`, `status`: from the table above
+- `type`: from the table above
 - `time`: when it happened, RFC 3339 with a zone, for example `2026-03-12T13:38:00Z`. Take it from the source of the change when it has one, and otherwise leave it out. See "Which time to use" below.
 - `actor`: `{"kind": "ai_agent", "id": "agent:claude-code", "on_behalf_of": "user:<who asked>"}`. Leave `on_behalf_of` out if you do not know who it is.
 - `subject`: `{"system": "...", "component": "..."}`; `component` and `environment` are optional
@@ -59,6 +57,8 @@ Call `techlog_record_event` with `event` set to an object with these fields. Do 
 - `links`: `[{"rel": "...", "target": "evt_...", "basis": "confirmed"}]`
 - `sources` (where it came from) and `evidence` (supporting artifacts), each `{"kind": "...", "ref": "..."}`, when you have them. Evidence is a reference: the artifact stays in the tool that owns it.
 - `provenance`: `{"recorded_by": "agent:claude-code", "method": "agent_submitted"}`
+
+The result of a check or the state of an action goes in the `summary`, for example "Checks failed: 3 of 40 tests". When the situation changes, record a new event; never try to change an old one.
 
 The result carries the new `id` in its structured result. Use it to link later events.
 
@@ -94,7 +94,6 @@ A decision, linked to the proposal it decides:
   "time": "2026-03-10T14:05:00Z",
   "actor": {"kind": "ai_agent", "id": "agent:claude-code", "on_behalf_of": "user:a.novak"},
   "subject": {"system": "promo-api", "component": "spin-service"},
-  "status": "recorded",
   "summary": "Approved the spin-to-win proposal: one spin per new account, discount capped at 20%",
   "links": [{"rel": "decides", "target": "evt_01J9K2A0P004", "basis": "confirmed"}],
   "provenance": {"recorded_by": "agent:claude-code", "method": "agent_submitted"}
@@ -111,7 +110,6 @@ An incident, with a suspected cause recorded as a hypothesis:
   "time": "2026-03-12T13:38:00Z",
   "actor": {"kind": "ai_agent", "id": "agent:claude-code", "on_behalf_of": "user:a.novak"},
   "subject": {"system": "promo-api", "component": "spin-service", "environment": "production"},
-  "status": "open",
   "summary": "5xx ratio on the spin endpoint is 6.2% on the 3.8.0 canary, above the 1.0% rollback threshold",
   "evidence": [{"kind": "alert", "ref": "alert://promo-api/high-error-rate/a-5521"}],
   "links": [

@@ -21,7 +21,6 @@ func validDoc() map[string]any {
 		"time":            "2026-03-09T14:00:00Z",
 		"actor":           map[string]any{"kind": "human", "id": "user:t.nguyen"},
 		"subject":         map[string]any{"system": "support-desk"},
-		"status":          "recorded",
 		"provenance":      map[string]any{"recorded_by": "user:t.nguyen", "method": "human_entered"},
 	}
 }

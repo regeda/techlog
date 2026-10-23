@@ -119,7 +119,6 @@ func TestDecisionDraftIsValid(t *testing.T) {
 		"time":            "2026-10-14T12:36:11Z",
 		"actor":           map[string]any{"kind": "ai_agent", "id": "agent:claude-code", "on_behalf_of": "user:a.novak"},
 		"subject":         map[string]any{"system": "techlog-plugin", "component": "mappings.yaml"},
-		"status":          "recorded",
 		"summary":         "Approved the spec to record decision.made before writing-plans through a standing rule in the mapping",
 		"links":           []any{map[string]any{"rel": "decides", "target": "evt_MV83D3FGXJF7", "basis": "confirmed"}},
 		"evidence":        []any{map[string]any{"kind": "spec", "ref": "docs/superpowers/specs/2026-10-14-decision-gate-design.md"}},
@@ -284,7 +283,6 @@ func draftEvent(sets map[string]bool) map[string]any {
 		"time":            "2026-03-09T14:00:00Z",
 		"actor":           map[string]any{"kind": "ai_agent", "id": "agent:claude-code", "on_behalf_of": "user:a.novak"},
 		"subject":         subject,
-		"status":          "recorded",
 		"summary":         "Spin endpoint returns 500 for new accounts, blocking sign-up promotions",
 		"provenance":      map[string]any{"recorded_by": "agent:claude-code", "method": "agent_submitted"},
 	}

@@ -7,7 +7,6 @@
     "time": "2026-03-09T10:00:00Z",
     "actor": { "kind": "ai_agent", "id": "agent:claude-code", "on_behalf_of": "user:a.novak" },
     "subject": { "system": "promo-api", "component": "spin-service" },
-    "status": "recorded",
     "summary": "New visitors keep asking for a first-order offer and retention is flat; the promo-api has nothing to give them.",
     "sources": [{ "kind": "ticket", "ref": "support-desk#1182" }],
     "provenance": { "recorded_by": "agent:claude-code", "method": "agent_submitted" }
@@ -20,7 +19,6 @@
     "time": "2026-03-10T14:05:00Z",
     "actor": { "kind": "ai_agent", "id": "agent:claude-code", "on_behalf_of": "user:a.novak" },
     "subject": { "system": "promo-api", "component": "spin-service" },
-    "status": "recorded",
     "summary": "Approved spin-to-win: one spin per new account, discount capped at 20%.",
     "sources": [{ "kind": "spec-repo", "ref": "spin-to-win.md" }],
     "links": [{ "rel": "relates_to", "target": "evt_01J9K2D00001", "basis": "confirmed" }],
@@ -34,7 +32,6 @@
     "time": "2026-03-10T16:40:00Z",
     "actor": { "kind": "ai_agent", "id": "agent:claude-code", "on_behalf_of": "user:a.novak" },
     "subject": { "system": "promo-api", "component": "spin-service" },
-    "status": "recorded",
     "summary": "PR #482 merged: spin-to-win with the 20% cap.",
     "sources": [{ "kind": "git.pr", "ref": "promo-api#482" }],
     "links": [{ "rel": "implements", "target": "evt_01J9K2D00002", "basis": "confirmed" }],

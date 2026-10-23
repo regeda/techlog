@@ -160,9 +160,9 @@ func (s *Store) Insert(ctx context.Context, e event.Event) error {
 		return err
 	}
 	_, err = tx.ExecContext(ctx,
-		`INSERT INTO events (id, type, time, status, system, component, actor_kind, actor_id, idempotency_key, summary, body)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		e.ID, e.Type, t.UTC().Format(timeLayout), e.Status, e.Subject.System, e.Subject.Component,
+		`INSERT INTO events (id, type, time, system, component, actor_kind, actor_id, idempotency_key, summary, body)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		e.ID, e.Type, t.UTC().Format(timeLayout), e.Subject.System, e.Subject.Component,
 		e.Actor.Kind, e.Actor.ID, e.IdempotencyKey, e.Summary, string(body))
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {

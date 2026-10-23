@@ -8,7 +8,6 @@
     <div class="when">{{fmtTime .Event.Time}}</div>
     <div class="what">
       <span class="badge t-{{typeClass .Event.Type}}">{{.Event.Type}}</span>
-      <span class="status">{{.Event.Status}}</span>
       <span class="muted">{{.Event.Subject.System}}</span>
       <p class="lead"><a href="/events/{{.Event.ID}}">{{if .Event.Summary}}{{.Event.Summary}}{{else}}{{.Event.ID}}{{end}}</a></p>
       {{range .Edges}}<div class="rel {{.Basis}}">{{.Rel}} <a href="#{{.Target}}">{{.Target}}</a> <span class="muted">({{.Basis}})</span></div>{{end}}

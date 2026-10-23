@@ -38,7 +38,6 @@ func Doc(system, typ, summary string, links ...map[string]any) map[string]any {
 		"idempotency_key": fmt.Sprintf("test-key-%d", keySeq.Add(1)),
 		"actor":           map[string]any{"kind": "human", "id": "user:test"},
 		"subject":         map[string]any{"system": system},
-		"status":          "recorded",
 		"summary":         summary,
 	}
 	if len(links) > 0 {

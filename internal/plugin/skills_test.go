@@ -141,3 +141,9 @@ func TestRecordSkillRecordsTheDecisionAtSpecApproval(t *testing.T) {
 	mustContain(t, "record skill", d.Body, "user approves the written spec, before `writing-plans`")
 	mustNotContain(t, "record skill", d.Body, "user approves the design")
 }
+
+// A check's result or an action's state has no field of its own: the record
+// skill tells the model to put it in the summary.
+func TestRecordSkillSaysResultsGoInSummary(t *testing.T) {
+	mustContain(t, "record skill", readSkill(t, "record").Body, "goes in the `summary`")
+}

@@ -13,7 +13,6 @@
           "time": "2026-03-11T11:05:00Z",
           "actor": { "kind": "system", "id": "ci:pipeline" },
           "subject": { "system": "promo-api", "component": "spin-service" },
-          "status": "verified",
           "summary": "Unit, integration, and abuse tests passed: repeat spins are rejected and the cap is enforced",
           "evidence": [
             {
@@ -38,10 +37,9 @@
     "jsonrpc": "2.0",
     "id": 12,
     "result": {
-      "content": [{ "type": "text", "text": "Recorded evt_01J9K2A0P007 (verified)" }],
+      "content": [{ "type": "text", "text": "Recorded evt_01J9K2A0P007" }],
       "structuredContent": {
         "id": "evt_01J9K2A0P007",
-        "status": "verified",
         "event": {
           "schema_version": "0.1-draft",
           "id": "evt_01J9K2A0P007",
@@ -50,7 +48,6 @@
           "time": "2026-03-11T11:05:00Z",
           "actor": { "kind": "system", "id": "ci:pipeline" },
           "subject": { "system": "promo-api", "component": "spin-service" },
-          "status": "verified",
           "summary": "Unit, integration, and abuse tests passed: repeat spins are rejected and the cap is enforced",
           "evidence": [
             {

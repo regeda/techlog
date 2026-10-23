@@ -33,7 +33,7 @@ func TestOpenCreatesDirectoryAndPersists(t *testing.T) {
 	e := event.Event{
 		SchemaVersion: event.SchemaVersion, ID: "evt_00000000000A", Type: "problem.reported",
 		Time: "2026-03-10T09:00:00Z", Actor: event.Actor{Kind: "human", ID: "user:a"},
-		Subject: event.Subject{System: "alpha"}, Status: "recorded",
+		Subject:    event.Subject{System: "alpha"},
 		Provenance: event.Provenance{RecordedBy: "user:a", Method: "human_entered"},
 	}
 	if err := s.Insert(t.Context(), e); err != nil {
@@ -78,7 +78,7 @@ func TestTwoHandlesOnOneFileDoNotLockEachOther(t *testing.T) {
 		return event.Event{
 			SchemaVersion: event.SchemaVersion, ID: id, IdempotencyKey: "key-" + id, Type: "problem.reported",
 			Time: "2026-03-10T09:00:00Z", Actor: event.Actor{Kind: "human", ID: "user:a"},
-			Subject: event.Subject{System: "alpha"}, Status: "recorded", Links: links,
+			Subject: event.Subject{System: "alpha"}, Links: links,
 			Provenance: event.Provenance{RecordedBy: "user:a", Method: "human_entered"},
 		}
 	}

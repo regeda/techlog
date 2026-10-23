@@ -19,13 +19,12 @@
 {{if not .Error}}<p class="muted">{{if .Events}}events {{.From}}–{{.To}}, newest first · {{end}}Page {{.Page}}</p>{{end}}
 {{if .Events}}
 <table>
-  <thead><tr><th>Time (UTC)</th><th>Type</th><th>Status</th><th>System</th><th>Actor</th><th>Summary</th></tr></thead>
+  <thead><tr><th>Time (UTC)</th><th>Type</th><th>System</th><th>Actor</th><th>Summary</th></tr></thead>
   <tbody>
   {{range .Events}}
     <tr>
       <td class="nowrap">{{fmtTime .Time}}</td>
       <td><span class="badge t-{{typeClass .Type}}">{{.Type}}</span></td>
-      <td>{{.Status}}</td>
       <td><a href="/systems/{{pathEscape .Subject.System}}">{{.Subject.System}}</a></td>
       <td>{{.Actor.ID}}</td>
       <td><a href="/events/{{.ID}}">{{if .Summary}}{{.Summary}}{{else}}{{.ID}}{{end}}</a></td>

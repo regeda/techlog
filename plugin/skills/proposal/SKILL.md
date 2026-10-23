@@ -41,7 +41,7 @@ Invoke the mapped skill with the Skill tool. Pass it, as its arguments: the `fra
 
 Build the event:
 
-- `type` `proposal.recorded`, `status` `proposed`, the same `subject` as the problem.
+- `type` `proposal.recorded`, the same `subject` as the problem.
 - `summary`: one plain sentence, at most 280 characters: the approach chosen and the main option turned down.
 - `links`: `[{"rel": "motivated_by", "target": "<problem id>", "basis": "confirmed"}]`.
 - `evidence`: `[{"kind": "spec", "ref": "<path of the spec>"}]`. The rejected options stay in the spec.

@@ -260,3 +260,9 @@ func TestEventPageShowsKey(t *testing.T) {
 	id := record(t, svc, d)
 	mustContain(t, get(h, "/events/"+id), "Idempotency key", "<code>deploy-4411</code>")
 }
+
+func TestEventsTableColumns(t *testing.T) {
+	h, svc := setup(t)
+	record(t, svc, testutil.Doc("alpha", "problem.reported", "flat signups"))
+	mustContain(t, get(h, "/"), "<th>Time (UTC)</th><th>Type</th><th>System</th><th>Actor</th><th>Summary</th>")
+}

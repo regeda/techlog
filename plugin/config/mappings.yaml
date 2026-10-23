@@ -50,7 +50,7 @@ superpowers:
            already decides the proposal, say so and do not draft another. If
            there is still no proposal, link relates_to the problem if it is
            known, otherwise leave out the link, and say so in the draft.
-        2. Build a decision.made event: status recorded, the proposal's subject,
+        2. Build a decision.made event with the proposal's subject,
            and a summary of one plain sentence, at most 280 characters, that
            names the approved approach. Its evidence is
            [{"kind": "spec", "ref": "<spec path>"}]. Its links are

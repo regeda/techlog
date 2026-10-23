@@ -17,8 +17,8 @@ test('standalone example events validate against the schema', () => {
 });
 
 test('validator rejects a missing required field and an unknown top-level key', () => {
-  const { status, ...noStatus } = load('event-minimal.json');
-  assert.ok(validate(schema, noStatus).some((e) => /status: required/.test(e)));
+  const { type, ...noType } = load('event-minimal.json');
+  assert.ok(validate(schema, noType).some((e) => /type: required/.test(e)));
   assert.ok(validate(schema, { ...load('event-minimal.json'), surprise: 1 }).some((e) => /surprise: not allowed/.test(e)));
   assert.ok(validate(schema, { ...load('event-minimal.json'), extensions: { BadKey: 1 } }).some((e) => /invalid key/.test(e)));
 });

@@ -1,6 +1,6 @@
 ---
 title: Techlog Event Model
-description: The Techlog event schema, draft 0.1: required and optional fields, event types, statuses, links, extensions, and examples.
+description: The Techlog event schema, draft 0.1: required and optional fields, event types, links, extensions, and examples.
 layout: docs
 section: Concepts
 order: 3
@@ -23,7 +23,6 @@ nav: Event model
     <tr><td><code>time</code></td><td>When the event happened, as an RFC 3339 UTC timestamp.</td></tr>
     <tr><td><code>actor</code></td><td><code>kind</code> (<code>human</code>, <code>ai_agent</code>, or <code>system</code>), <code>id</code>, and an optional <code>on_behalf_of</code>.</td></tr>
     <tr><td><code>subject</code></td><td><code>system</code>, with optional <code>component</code> and <code>environment</code>.</td></tr>
-    <tr><td><code>status</code></td><td>One of the statuses below.</td></tr>
     <tr><td><code>provenance</code></td><td><code>recorded_by</code> and <code>method</code>, with an optional <code>confidence</code>.</td></tr>
   </tbody>
 </table></div>
@@ -32,7 +31,7 @@ nav: Event model
 <div class="table-wrap"><table>
   <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
   <tbody>
-    <tr><td><code>summary</code></td><td>A short human-readable description, at most 280 characters.</td></tr>
+    <tr><td><code>summary</code></td><td>A short human-readable description, at most 280 characters. The result of a check or the state of an action goes here, for example "Checks failed: 3 of 40 tests".</td></tr>
     <tr><td><code>sources</code></td><td>Where the event came from: a <code>kind</code> and a <code>ref</code>, such as <code>git.pr</code> and <code>promo-api#412</code>.</td></tr>
     <tr><td><code>evidence</code></td><td>References to supporting artifacts: <code>kind</code>, <code>ref</code>, and an optional <code>sha256</code> digest.</td></tr>
     <tr><td><code>links</code></td><td>Typed relationships to other events: <code>rel</code>, <code>target</code>, and <code>basis</code>.</td></tr>
@@ -59,9 +58,7 @@ nav: Event model
     <tr><td><code>action.tracked</code></td><td>A follow-up action was agreed or completed.</td></tr>
   </tbody>
 </table></div>
-
-<h2 id="statuses">Statuses</h2>
-<p>There are nine: <code>proposed</code>, <code>recorded</code>, <code>in_progress</code>, <code>verified</code>, <code>failed</code>, <code>open</code>, <code>mitigated</code>, <code>resolved</code>, and <code>superseded</code>. A status describes the thing the event records <em>at the moment it was recorded</em>. When the situation changes, a new event is recorded; the old one keeps its status.</p>
+<p>An event describes the thing at the moment it was recorded. When the situation changes, a new event is recorded; the old one stays as it was.</p>
 
 <h2 id="links">Links</h2>
 <p>The <code>rel</code> values are <code>motivated_by</code>, <code>investigates</code>, <code>decides</code>, <code>implements</code>, <code>verifies</code>, <code>releases</code>, <code>observed_after</code>, <code>mitigates</code>, <code>reverts</code>, <code>resolves</code>, <code>follows_up</code>, <code>caused_by</code>, and <code>relates_to</code>. Each link has a <code>basis</code>: <code>confirmed</code> or <code>hypothesis</code>.</p>

@@ -27,7 +27,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/config/problem-tree.yaml`. Invoke the mapped skill w
 
 Build the draft event from the answers, following each node's `sets`:
 
-- `type`: `problem.reported`; `status`: `recorded`.
+- `type`: `problem.reported`.
 - `subject.system`, and `subject.component` if given. Reuse the system name Techlog already uses: check `techlog_get_system_history` for it.
 - `summary`: one plain sentence, at most 280 characters, that makes sense without context: what is wrong or needed, for whom, and the impact. Fold the answers into it and shorten it if it is too long.
 - `evidence`: the references the user gave (logs, traces, alerts, tickets). A Jira key `KEY-123` becomes `{"kind": "ticket", "ref": "jira://KEY-123"}`.

@@ -9,7 +9,6 @@
     <div class="when">{{fmtTime .Time}}</div>
     <div class="what">
       <span class="badge t-{{typeClass .Type}}">{{.Type}}</span>
-      <span class="status">{{.Status}}</span>
       <a href="/events/{{.ID}}">{{if .Summary}}{{.Summary}}{{else}}{{.ID}}{{end}}</a>
       {{range .Links}}<span class="chip {{.Basis}}">{{.Rel}} <a href="/events/{{.Target}}">{{.Target}}</a></span>{{end}}
       <a class="walk" href="/story/{{.ID}}">walk through →</a>

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -371,5 +372,30 @@ func TestRecordKeyValidation(t *testing.T) {
 				t.Errorf("code=%q paths=%v, want a problem at %q", code, paths, tc.path)
 			}
 		})
+	}
+}
+
+func TestRecordRejectsUnknownField(t *testing.T) {
+	h, _ := setup(t)
+	d := testutil.Doc("alpha", "problem.reported", "hello")
+	d["foo"] = "bar"
+	rec := do(h, "POST", "/api/v1/events", d)
+	if rec.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("status %d: %s", rec.Code, rec.Body)
+	}
+	e, _ := decode(t, rec)["error"].(map[string]any)
+	named := strings.Contains(fmt.Sprint(e["message"]), "foo")
+	details, _ := e["details"].([]any)
+	for _, p := range details {
+		pm := p.(map[string]any)
+		if strings.Contains(fmt.Sprint(pm["path"]), "foo") || strings.Contains(fmt.Sprint(pm["message"]), "foo") {
+			named = true
+		}
+	}
+	if !named {
+		t.Errorf("the problem must name the unknown field: %s", rec.Body)
+	}
+	if got := summaries(t, do(h, "GET", "/api/v1/events", nil)); len(got) != 0 {
+		t.Errorf("a rejected event must not be stored, got %v", got)
 	}
 }

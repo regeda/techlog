@@ -98,12 +98,12 @@ func TestRecordAndGet(t *testing.T) {
 	if res.IsError {
 		t.Fatalf("record failed: %s", text(res))
 	}
-	var rec struct{ ID, Status string }
+	var rec struct{ ID string }
 	structured(t, res, &rec)
-	if !strings.HasPrefix(rec.ID, "evt_") || rec.Status != "recorded" {
+	if !strings.HasPrefix(rec.ID, "evt_") {
 		t.Errorf("record result = %+v", rec)
 	}
-	if want := "Recorded " + rec.ID + " (recorded)"; text(res) != want {
+	if want := "Recorded " + rec.ID; text(res) != want {
 		t.Errorf("text = %q, want %q", text(res), want)
 	}
 
@@ -133,6 +133,31 @@ func TestRecordInvalidIsActionable(t *testing.T) {
 	}
 	if !strings.Contains(text(res), "/actor/kind") {
 		t.Errorf("text should name the failing field path, got %q", text(res))
+	}
+}
+
+func TestRecordEventRejectsUnknownField(t *testing.T) {
+	cs := connect(t)
+	d := testutil.Doc("alpha", "problem.reported", "x")
+	d["foo"] = "bar"
+	res := call(t, cs, "techlog_record_event", map[string]any{"event": d})
+	if !res.IsError {
+		t.Fatal("expected isError for an event carrying an unknown field")
+	}
+	if !strings.Contains(text(res), "additional properties 'foo'") {
+		t.Errorf("text should name the unknown field, got %q", text(res))
+	}
+	search := call(t, cs, "techlog_search_events", map[string]any{})
+	if search.IsError {
+		t.Fatalf("search failed: %s", text(search))
+	}
+	var out struct {
+		Events []event.Event
+		Count  int
+	}
+	structured(t, search, &out)
+	if out.Count != 0 || len(out.Events) != 0 {
+		t.Errorf("rejected event was stored: %+v", out)
 	}
 }
 
