@@ -338,7 +338,7 @@ func TestRecordValidationBeatsDuplicate(t *testing.T) {
 	d := testutil.Doc("alpha", "problem.reported", "first")
 	d["idempotency_key"] = "k"
 	record(t, svc, d)
-	d["actor"].(map[string]any)["kind"] = "robot" // now invalid AND a duplicate
+	testutil.As[map[string]any](t, d["actor"])["kind"] = "robot" // now invalid AND a duplicate
 	_, err := svc.Record(ctx, d, service.MethodHuman)
 	if !slices.Contains(problemPaths(err), "/actor/kind") {
 		t.Fatalf("got %v, want a validation error, not a duplicate", err)

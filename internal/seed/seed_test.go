@@ -8,6 +8,27 @@ import (
 	"github.com/regeda/techlog/internal/testutil"
 )
 
+// linksPointBackwards checks that every link points at an event listed
+// earlier, so Import can insert in order.
+func linksPointBackwards(t *testing.T, docs []map[string]any) {
+	t.Helper()
+	seen := map[string]bool{}
+	for _, d := range docs {
+		id := testutil.As[string](t, d["id"])
+		if id == "" || seen[id] {
+			t.Fatalf("missing or duplicate id %q", id)
+		}
+		if links, ok := d["links"]; ok {
+			for _, l := range testutil.As[[]any](t, links) {
+				if target := testutil.As[string](t, testutil.As[map[string]any](t, l)["target"]); !seen[target] {
+					t.Errorf("%s links to %s, which is not listed before it", id, target)
+				}
+			}
+		}
+		seen[id] = true
+	}
+}
+
 func TestSpringSpin(t *testing.T) {
 	docs, err := seed.SpringSpin()
 	if err != nil {
@@ -16,21 +37,7 @@ func TestSpringSpin(t *testing.T) {
 	if len(docs) != 25 {
 		t.Fatalf("got %d events, want 25", len(docs))
 	}
-	// Every link must point at an event listed earlier, so Import can insert in order.
-	seen := map[string]bool{}
-	for _, d := range docs {
-		id, _ := d["id"].(string)
-		if id == "" || seen[id] {
-			t.Fatalf("missing or duplicate id %q", id)
-		}
-		links, _ := d["links"].([]any)
-		for _, l := range links {
-			if target := l.(map[string]any)["target"].(string); !seen[target] {
-				t.Errorf("%s links to %s, which is not listed before it", id, target)
-			}
-		}
-		seen[id] = true
-	}
+	linksPointBackwards(t, docs)
 
 	// The whole story must be valid against the schema and importable.
 	svc := testutil.NewService(t)

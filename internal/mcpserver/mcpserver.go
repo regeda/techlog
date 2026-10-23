@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
-
 	"github.com/regeda/techlog/internal/event"
 	"github.com/regeda/techlog/internal/service"
 	"github.com/regeda/techlog/internal/store"
@@ -58,17 +57,17 @@ type tools struct{ svc *service.Service }
 type searchIn struct {
 	Query  string   `json:"query,omitempty" jsonschema:"free text matched against summary, system, component and type; words are ANDed and punctuation is plain text"`
 	System string   `json:"system,omitempty" jsonschema:"only events about this system"`
-	Types  []string `json:"types,omitempty" jsonschema:"only these event types, for example incident.opened"`
 	Since  string   `json:"since,omitempty" jsonschema:"RFC 3339 timestamp or YYYY-MM-DD; events at or after it"`
 	Until  string   `json:"until,omitempty" jsonschema:"RFC 3339 timestamp or YYYY-MM-DD; events at or before it"`
+	Types  []string `json:"types,omitempty" jsonschema:"only these event types, for example incident.opened"`
 	Limit  int      `json:"limit,omitempty" jsonschema:"1 to 100, default 20"`
 }
 
 type historyIn struct {
+	IncludeLinks *bool  `json:"include_links,omitempty" jsonschema:"include each event's links, default true"`
 	System       string `json:"system" jsonschema:"the system whose history to read"`
 	Since        string `json:"since,omitempty" jsonschema:"RFC 3339 timestamp or YYYY-MM-DD; events at or after it"`
 	Limit        int    `json:"limit,omitempty" jsonschema:"1 to 200, default 50; the latest events are returned"`
-	IncludeLinks *bool  `json:"include_links,omitempty" jsonschema:"include each event's links, default true"`
 }
 
 type getIn struct {

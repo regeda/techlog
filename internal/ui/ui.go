@@ -77,17 +77,23 @@ func Handler(svc *service.Service) http.Handler {
 }
 
 type eventsPage struct {
-	Title                         string
-	Q, System, Type, Since, Until string
-	Systems, Types                []string
-	Events                        []event.Event
-	Error                         string
-
-	// Paging. From and To number the events shown (1-based); the URLs keep
-	// every filter and change only the page.
-	Page, From, To   int
-	HasPrev, HasNext bool
-	PrevURL, NextURL string
+	Error   string
+	Q       string
+	System  string
+	Type    string
+	Since   string
+	Until   string
+	NextURL string
+	PrevURL string
+	Title   string
+	Events  []event.Event
+	Types   []string
+	Systems []string
+	Page    int
+	From    int
+	To      int
+	HasPrev bool
+	HasNext bool
 }
 
 func (s *server) events(w http.ResponseWriter, r *http.Request) {
@@ -229,9 +235,18 @@ type storyPage struct {
 	Items       []storyItem
 }
 
+// intParam reads an integer query parameter. A missing or invalid value is 0,
+// which the service reads as its default.
+func intParam(r *http.Request, name string) int {
+	n, err := strconv.Atoi(r.URL.Query().Get(name))
+	if err != nil {
+		return 0
+	}
+	return n
+}
+
 func (s *server) story(w http.ResponseWriter, r *http.Request) {
-	depth, _ := strconv.Atoi(r.URL.Query().Get("depth")) // invalid or missing: the service default
-	st, err := s.svc.Story(r.Context(), r.PathValue("id"), depth)
+	st, err := s.svc.Story(r.Context(), r.PathValue("id"), intParam(r, "depth"))
 	if err != nil {
 		s.fail(w, r, err)
 		return

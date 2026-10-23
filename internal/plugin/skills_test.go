@@ -39,13 +39,13 @@ func TestSkillsReferenceExistingPluginFiles(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, p := range paths {
-		b, err := os.ReadFile(p)
+		b, err := os.ReadFile(p) //nolint:gosec // G304: p comes from a glob of the plugin directory
 		if err != nil {
 			t.Fatal(err)
 		}
 		for _, m := range ref.FindAllStringSubmatch(string(b), -1) {
 			rel := strings.TrimRight(m[1], ".,")
-			if _, err := os.Stat(filepath.Join(pluginDir, rel)); err != nil {
+			if _, err := os.Stat(filepath.Join(pluginDir, rel)); err != nil { //nolint:gosec // G703: rel is read from the plugin's own skill files
 				t.Errorf("%s references ${CLAUDE_PLUGIN_ROOT}/%s, which does not exist", p, rel)
 			}
 		}

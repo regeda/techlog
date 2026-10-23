@@ -199,7 +199,27 @@ func addLink(t *testing.T, s store.Store) {
 		t.Fatal(err)
 	}
 
-	links, err := s.Links(ctx, a.ID)
+	expectBothLinks(t, s, a.ID)
+
+	got, err := s.Get(ctx, b.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Links) != 2 {
+		t.Fatalf("Get(b).Links = %+v, want both added links merged in", got.Links)
+	}
+
+	missing := event.Link{Source: b.ID, Target: "evt_DOESNOTEXIST", Rel: "relates_to", Basis: "confirmed"}
+	if err := s.AddLink(ctx, missing); !errors.Is(err, store.ErrNotFound) {
+		t.Fatalf("got %v, want ErrNotFound", err)
+	}
+}
+
+// expectBothLinks checks that the two links added in addLink are stored on
+// the target event, with their rationale.
+func expectBothLinks(t *testing.T, s store.Store, id string) {
+	t.Helper()
+	links, err := s.Links(ctx, id)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -214,19 +234,6 @@ func addLink(t *testing.T, s store.Store) {
 		if l.Basis == "hypothesis" && l.Rationale != "maybe" {
 			t.Errorf("rationale lost: %+v", l)
 		}
-	}
-
-	got, err := s.Get(ctx, b.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(got.Links) != 2 {
-		t.Fatalf("Get(b).Links = %+v, want both added links merged in", got.Links)
-	}
-
-	missing := event.Link{Source: b.ID, Target: "evt_DOESNOTEXIST", Rel: "relates_to", Basis: "confirmed"}
-	if err := s.AddLink(ctx, missing); !errors.Is(err, store.ErrNotFound) {
-		t.Fatalf("got %v, want ErrNotFound", err)
 	}
 }
 

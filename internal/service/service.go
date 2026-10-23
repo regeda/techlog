@@ -29,10 +29,10 @@ const DefaultClockSkew = 5 * time.Second
 
 type Service struct {
 	store     store.Store
+	entropy   io.Reader
 	validator *event.Validator
 	now       func() time.Time
 	skew      time.Duration
-	entropy   io.Reader
 }
 
 type Option func(*Service)
@@ -107,32 +107,45 @@ func (s *Service) Record(ctx context.Context, doc map[string]any, method string)
 // caused_by link: that must be stated.
 func applyDefaults(doc map[string]any, method string, now time.Time) {
 	delete(doc, "id")
-	if isBlank(doc["schema_version"]) {
-		doc["schema_version"] = event.SchemaVersion
-	}
-	if isBlank(doc["time"]) {
-		doc["time"] = now.UTC().Format(time.RFC3339)
-	}
+	setIfBlank(doc, "schema_version", event.SchemaVersion)
+	setIfBlank(doc, "time", now.UTC().Format(time.RFC3339))
 	if doc["provenance"] == nil {
 		doc["provenance"] = map[string]any{}
 	}
 	if prov, ok := doc["provenance"].(map[string]any); ok {
-		if isBlank(prov["method"]) {
-			prov["method"] = method
-		}
-		if isBlank(prov["recorded_by"]) {
-			if actor, ok := doc["actor"].(map[string]any); ok {
-				if id, ok := actor["id"].(string); ok && id != "" {
-					prov["recorded_by"] = id
-				}
-			}
+		defaultProvenance(prov, doc, method)
+	}
+	defaultLinkBasis(doc)
+}
+
+func setIfBlank(m map[string]any, key string, value any) {
+	if isBlank(m[key]) {
+		m[key] = value
+	}
+}
+
+// defaultProvenance fills the method and, when the actor has an id, the recorder.
+func defaultProvenance(prov, doc map[string]any, method string) {
+	setIfBlank(prov, "method", method)
+	if !isBlank(prov["recorded_by"]) {
+		return
+	}
+	if actor, ok := doc["actor"].(map[string]any); ok {
+		if id, ok := actor["id"].(string); ok && id != "" {
+			prov["recorded_by"] = id
 		}
 	}
-	if links, ok := doc["links"].([]any); ok {
-		for _, raw := range links {
-			if l, ok := raw.(map[string]any); ok && isBlank(l["basis"]) && l["rel"] != "caused_by" {
-				l["basis"] = "confirmed"
-			}
+}
+
+// defaultLinkBasis marks links without a basis as confirmed, except caused_by.
+func defaultLinkBasis(doc map[string]any) {
+	links, ok := doc["links"].([]any)
+	if !ok {
+		return
+	}
+	for _, raw := range links {
+		if l, ok := raw.(map[string]any); ok && isBlank(l["basis"]) && l["rel"] != "caused_by" {
+			l["basis"] = "confirmed"
 		}
 	}
 }
@@ -148,6 +161,39 @@ func isBlank(v any) bool {
 // prepare validates doc (which already has an id) and decodes it. It reports
 // schema problems and unresolvable link targets together.
 func (s *Service) prepare(ctx context.Context, doc map[string]any, now time.Time, stamped bool) (event.Event, error) {
+	ev, err := s.decode(doc)
+	if err != nil {
+		return event.Event{}, err
+	}
+	var problems []event.Problem
+	evTime, evErr := ev.ParsedTime()
+	if evErr != nil {
+		problems = append(problems, event.Problem{Path: "/time", Message: evErr.Error()})
+	} else {
+		if !stamped && evTime.After(now.Add(s.skew)) {
+			problems = append(problems, event.Problem{
+				Path:    "/time",
+				Message: fmt.Sprintf("time %s is in the future, beyond the allowed clock skew of %s", ev.Time, s.skew),
+			})
+		}
+		ev.Time = evTime.UTC().Format(time.RFC3339Nano)
+	}
+	scan, err := s.scanLinks(ctx, ev, evTime, evErr, stamped)
+	if err != nil {
+		return event.Event{}, err
+	}
+	problems = append(problems, scan.problems...)
+	if stamped && evErr == nil {
+		problems = append(problems, s.stampTime(&ev, scan, evTime, now)...)
+	}
+	if len(problems) > 0 {
+		return event.Event{}, &InvalidError{Problems: problems}
+	}
+	return ev, nil
+}
+
+// decode validates doc against the schema and decodes it into an event.
+func (s *Service) decode(doc map[string]any) (event.Event, error) {
 	if err := s.validator.Validate(doc); err != nil {
 		var ve *event.ValidationError
 		if errors.As(err, &ve) {
@@ -165,61 +211,63 @@ func (s *Service) prepare(ctx context.Context, doc map[string]any, now time.Time
 	if err := dec.Decode(&ev); err != nil {
 		return event.Event{}, fmt.Errorf("decode validated event: %w", err)
 	}
+	return ev, nil
+}
 
-	var problems []event.Problem
-	evTime, evErr := ev.ParsedTime()
-	if evErr != nil {
-		problems = append(problems, event.Problem{Path: "/time", Message: evErr.Error()})
-	} else {
-		if !stamped && evTime.After(now.Add(s.skew)) {
-			problems = append(problems, event.Problem{
-				Path:    "/time",
-				Message: fmt.Sprintf("time %s is in the future, beyond the allowed clock skew of %s", ev.Time, s.skew),
-			})
-		}
-		ev.Time = evTime.UTC().Format(time.RFC3339Nano)
-	}
-	var latestTarget time.Time
-	latestIdx := -1
+// linkScan is what a pass over an event's links found.
+type linkScan struct {
+	latest    time.Time // the latest time among the link targets
+	problems  []event.Problem
+	latestIdx int // the link holding the latest time, or -1
+}
+
+// scanLinks looks up each link target. It reports the ones that do not exist
+// and, for an event that carries its own time, the ones dated after it.
+func (s *Service) scanLinks(ctx context.Context, ev event.Event, evTime time.Time, evErr error, stamped bool) (linkScan, error) {
+	scan := linkScan{latestIdx: -1}
 	for i, l := range ev.Links {
 		target, err := s.store.Get(ctx, l.Target)
 		if errors.Is(err, store.ErrNotFound) {
-			problems = append(problems, event.Problem{
+			scan.problems = append(scan.problems, event.Problem{
 				Path:    fmt.Sprintf("/links/%d/target", i),
 				Message: fmt.Sprintf("event %s does not exist", l.Target),
 			})
 			continue
-		} else if err != nil {
-			return event.Event{}, err
+		}
+		if err != nil {
+			return linkScan{}, err
 		}
 		targetTime, terr := target.ParsedTime()
 		if terr != nil || evErr != nil {
 			continue
 		}
-		if targetTime.After(latestTarget) {
-			latestTarget, latestIdx = targetTime, i
+		if targetTime.After(scan.latest) {
+			scan.latest, scan.latestIdx = targetTime, i
 		}
 		if !stamped && evTime.Before(targetTime) {
-			problems = append(problems, event.Problem{
+			scan.problems = append(scan.problems, event.Problem{
 				Path:    fmt.Sprintf("/links/%d", i),
 				Message: fmt.Sprintf("time %s is earlier than %s, the time of linked event %s", ev.Time, target.Time, l.Target),
 			})
 		}
 	}
-	if stamped && evErr == nil && latestTarget.After(now.Add(s.skew)) {
-		// A stamp is never pushed past the clock plus the skew: the target is
-		// out of range and the event cannot follow it.
-		problems = append(problems, event.Problem{
-			Path:    fmt.Sprintf("/links/%d", latestIdx),
-			Message: fmt.Sprintf("linked event %s is dated %s, too far ahead of the clock for a server-stamped time", ev.Links[latestIdx].Target, latestTarget.UTC().Format(time.RFC3339Nano)),
-		})
-	} else if stamped && evErr == nil && latestTarget.After(evTime) {
-		ev.Time = latestTarget.UTC().Format(time.RFC3339Nano)
+	return scan, nil
+}
+
+// stampTime moves a server-stamped event after its latest link target. A
+// stamp is never pushed past the clock plus the skew: when the target is out
+// of range the event cannot follow it, and the result is a problem.
+func (s *Service) stampTime(ev *event.Event, scan linkScan, evTime, now time.Time) []event.Problem {
+	switch {
+	case scan.latest.After(now.Add(s.skew)):
+		return []event.Problem{{
+			Path:    fmt.Sprintf("/links/%d", scan.latestIdx),
+			Message: fmt.Sprintf("linked event %s is dated %s, too far ahead of the clock for a server-stamped time", ev.Links[scan.latestIdx].Target, scan.latest.UTC().Format(time.RFC3339Nano)),
+		}}
+	case scan.latest.After(evTime):
+		ev.Time = scan.latest.UTC().Format(time.RFC3339Nano)
 	}
-	if len(problems) > 0 {
-		return event.Event{}, &InvalidError{Problems: problems}
-	}
-	return ev, nil
+	return nil
 }
 
 // LinkInput describes a link to add between two existing events.
@@ -237,31 +285,13 @@ func (s *Service) Link(ctx context.Context, in LinkInput) (event.Link, error) {
 	if in.Basis == "" && in.Rel != "caused_by" {
 		in.Basis = "confirmed"
 	}
-	doc := map[string]any{"rel": in.Rel, "target": in.Target}
-	if in.Basis != "" {
-		doc["basis"] = in.Basis
-	}
-	var problems []event.Problem
-	if err := s.validator.ValidateLink(doc); err != nil {
-		var ve *event.ValidationError
-		if !errors.As(err, &ve) {
-			return event.Link{}, err
-		}
-		problems = append(problems, ve.Problems...)
-	}
-	switch in.Source {
-	case "":
-		problems = append(problems, event.Problem{Path: "/source", Message: "source is required"})
-	case in.Target:
-		problems = append(problems, event.Problem{Path: "/target", Message: "an event cannot link to itself"})
+	problems, err := s.linkProblems(in)
+	if err != nil {
+		return event.Link{}, err
 	}
 	if len(problems) == 0 {
-		for _, end := range []struct{ path, id string }{{"/source", in.Source}, {"/target", in.Target}} {
-			if _, err := s.store.Get(ctx, end.id); errors.Is(err, store.ErrNotFound) {
-				problems = append(problems, event.Problem{Path: end.path, Message: fmt.Sprintf("event %s does not exist", end.id)})
-			} else if err != nil {
-				return event.Link{}, err
-			}
+		if problems, err = s.missingEnds(ctx, in); err != nil {
+			return event.Link{}, err
 		}
 	}
 	if len(problems) > 0 {
@@ -272,6 +302,43 @@ func (s *Service) Link(ctx context.Context, in LinkInput) (event.Link, error) {
 		return event.Link{}, err
 	}
 	return l, nil
+}
+
+// linkProblems lists what is wrong with in without looking anything up.
+func (s *Service) linkProblems(in LinkInput) ([]event.Problem, error) {
+	doc := map[string]any{"rel": in.Rel, "target": in.Target}
+	if in.Basis != "" {
+		doc["basis"] = in.Basis
+	}
+	var problems []event.Problem
+	if err := s.validator.ValidateLink(doc); err != nil {
+		var ve *event.ValidationError
+		if !errors.As(err, &ve) {
+			return nil, err
+		}
+		problems = append(problems, ve.Problems...)
+	}
+	switch in.Source {
+	case "":
+		problems = append(problems, event.Problem{Path: "/source", Message: "source is required"})
+	case in.Target:
+		problems = append(problems, event.Problem{Path: "/target", Message: "an event cannot link to itself"})
+	}
+	return problems, nil
+}
+
+// missingEnds reports the ends of the link that are not recorded events.
+func (s *Service) missingEnds(ctx context.Context, in LinkInput) ([]event.Problem, error) {
+	var problems []event.Problem
+	for _, end := range []struct{ path, id string }{{"/source", in.Source}, {"/target", in.Target}} {
+		_, err := s.store.Get(ctx, end.id)
+		if errors.Is(err, store.ErrNotFound) {
+			problems = append(problems, event.Problem{Path: end.path, Message: fmt.Sprintf("event %s does not exist", end.id)})
+		} else if err != nil {
+			return nil, err
+		}
+	}
+	return problems, nil
 }
 
 // Detail is an event with the links on either side of it.

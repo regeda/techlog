@@ -243,7 +243,7 @@ func TestBranding(t *testing.T) {
 			t.Errorf("%s: status %d, content-type %q", name, rec.Code, rec.Header().Get("Content-Type"))
 		}
 		// The website owns the artwork; the embedded copy must not drift from it.
-		want, err := os.ReadFile("../../website/src/assets/img/" + name)
+		want, err := os.ReadFile("../../website/src/assets/img/" + name) //nolint:gosec // G304: name comes from a fixed list
 		if err != nil {
 			t.Fatal(err)
 		}

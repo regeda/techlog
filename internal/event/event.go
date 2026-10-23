@@ -65,19 +65,19 @@ type Provenance struct {
 // Event is one immutable engineering event. Time is kept as the submitted
 // RFC 3339 string; use ParsedTime for comparisons.
 type Event struct {
-	SchemaVersion  string         `json:"schema_version"`
-	ID             string         `json:"id"`
-	IdempotencyKey string         `json:"idempotency_key"`
+	Extensions     map[string]any `json:"extensions,omitempty"`
+	Actor          Actor          `json:"actor"`
+	Provenance     Provenance     `json:"provenance"`
+	Subject        Subject        `json:"subject"`
 	Type           string         `json:"type"`
 	Time           string         `json:"time"`
-	Actor          Actor          `json:"actor"`
-	Subject        Subject        `json:"subject"`
+	SchemaVersion  string         `json:"schema_version"`
 	Summary        string         `json:"summary,omitempty"`
+	IdempotencyKey string         `json:"idempotency_key"`
+	ID             string         `json:"id"`
 	Sources        []Source       `json:"sources,omitempty"`
 	Evidence       []Evidence     `json:"evidence,omitempty"`
 	Links          []LinkRef      `json:"links,omitempty"`
-	Provenance     Provenance     `json:"provenance"`
-	Extensions     map[string]any `json:"extensions,omitempty"`
 }
 
 // ParsedTime parses Time as RFC 3339.

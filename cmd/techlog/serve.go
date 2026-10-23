@@ -20,7 +20,7 @@ import (
 	"github.com/regeda/techlog/internal/ui"
 )
 
-func runServe(ctx context.Context, args []string, out io.Writer) error {
+func runServe(ctx context.Context, args []string, out io.Writer) (err error) {
 	fs := flag.NewFlagSet("serve", flag.ContinueOnError)
 	addr := fs.String("addr", "localhost:8080", "listen address; use :8080 to listen on all interfaces")
 	skew := fs.Duration("clock-skew", service.DefaultClockSkew, "how far ahead of the server clock an event time may be")
@@ -33,7 +33,7 @@ func runServe(ctx context.Context, args []string, out io.Writer) error {
 	if err != nil {
 		return err
 	}
-	defer func() { _ = st.Close() }()
+	defer func() { err = errors.Join(err, st.Close()) }()
 	svc, err := service.New(st, service.WithClockSkew(*skew))
 	if err != nil {
 		return err
@@ -50,24 +50,34 @@ func runServe(ctx context.Context, args []string, out io.Writer) error {
 
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	if _, err := fmt.Fprintf(out, "techlog listening on http://%s  (UI /, API /api/v1, MCP /mcp; db %s)\n", ln.Addr(), sf.db); err != nil {
+		return errors.Join(err, ln.Close())
+	}
 	errc := make(chan error, 1)
 	go func() { errc <- srv.Serve(ln) }()
-	_, _ = fmt.Fprintf(out, "techlog listening on http://%s  (UI /, API /api/v1, MCP /mcp; db %s)\n", ln.Addr(), sf.db)
 
 	select {
 	case err := <-errc:
 		return err
 	case <-ctx.Done():
 	}
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		_ = srv.Close() // an open MCP stream kept the server from draining in time
-	}
+	shutdown(srv, log)
 	if err := <-errc; err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
 	return nil
+}
+
+// shutdown drains srv for a few seconds, then closes it.
+func shutdown(srv *http.Server, log *slog.Logger) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		// an open MCP stream kept the server from draining in time
+		if err := srv.Close(); err != nil {
+			log.Error("close server", "error", err)
+		}
+	}
 }
 
 // newHandler mounts the three front doors on one mux. Specific routes come

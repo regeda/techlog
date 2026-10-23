@@ -4,6 +4,7 @@ import (
 	"context"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/regeda/techlog/internal/event"
 )
@@ -34,44 +35,69 @@ func (s *Service) Story(ctx context.Context, id string, depth int) (Story, error
 	if err != nil {
 		return Story{}, err
 	}
+	seen, edges, err := s.walk(ctx, id, root, depth)
+	if err != nil {
+		return Story{}, err
+	}
+	return buildStory(id, seen, edges), nil
+}
+
+// walk visits the events reachable from the root, up to depth hops. It returns
+// the events seen and every link met on the way.
+func (s *Service) walk(ctx context.Context, id string, root event.Event, depth int) (map[string]event.Event, map[event.Link]struct{}, error) {
 	seen := map[string]event.Event{id: root}
 	edges := map[event.Link]struct{}{}
 	frontier := []string{id}
 	for hop := 0; hop < depth && len(frontier) > 0; hop++ {
 		var next []string
 		for _, cur := range frontier {
-			links, err := s.store.Links(ctx, cur)
+			found, err := s.expand(ctx, cur, seen, edges)
 			if err != nil {
-				return Story{}, err
+				return nil, nil, err
 			}
-			for _, l := range links {
-				edges[l] = struct{}{}
-				other := l.Target
-				if other == cur {
-					other = l.Source
-				}
-				if _, ok := seen[other]; ok || len(seen) >= maxStoryNodes {
-					continue
-				}
-				ev, err := s.store.Get(ctx, other)
-				if err != nil {
-					return Story{}, err
-				}
-				seen[other] = ev
-				next = append(next, other)
-			}
+			next = append(next, found...)
 		}
 		frontier = next
 	}
+	return seen, edges, nil
+}
 
-	st := Story{Root: id, Events: make([]event.Event, 0, len(seen)), Edges: []event.Link{}}
+// expand records the links of cur and loads the events they lead to that are
+// not seen yet. It returns the ids it added to seen.
+func (s *Service) expand(ctx context.Context, cur string, seen map[string]event.Event, edges map[event.Link]struct{}) ([]string, error) {
+	links, err := s.store.Links(ctx, cur)
+	if err != nil {
+		return nil, err
+	}
+	var added []string
+	for _, l := range links {
+		edges[l] = struct{}{}
+		other := l.Target
+		if other == cur {
+			other = l.Source
+		}
+		if _, ok := seen[other]; ok || len(seen) >= maxStoryNodes {
+			continue
+		}
+		ev, err := s.store.Get(ctx, other)
+		if err != nil {
+			return nil, err
+		}
+		seen[other] = ev
+		added = append(added, other)
+	}
+	return added, nil
+}
+
+// buildStory orders the events oldest first and keeps the links whose two
+// ends were both seen.
+func buildStory(root string, seen map[string]event.Event, edges map[event.Link]struct{}) Story {
+	st := Story{Root: root, Events: make([]event.Event, 0, len(seen)), Edges: []event.Link{}}
 	for _, ev := range seen {
 		st.Events = append(st.Events, ev)
 	}
 	slices.SortFunc(st.Events, func(a, b event.Event) int {
-		ta, _ := a.ParsedTime()
-		tb, _ := b.ParsedTime()
-		if c := ta.Compare(tb); c != 0 {
+		if c := eventTime(a).Compare(eventTime(b)); c != 0 {
 			return c
 		}
 		return strings.Compare(a.ID, b.ID)
@@ -86,5 +112,15 @@ func (s *Service) Story(ctx context.Context, id string, depth int) (Story, error
 	slices.SortFunc(st.Edges, func(a, b event.Link) int {
 		return strings.Compare(a.Source+a.Target+a.Rel+a.Basis, b.Source+b.Target+b.Rel+b.Basis)
 	})
-	return st, nil
+	return st
+}
+
+// eventTime is the parsed time of e. Stored events were validated, so a parse
+// failure leaves the zero time, which sorts first.
+func eventTime(e event.Event) time.Time {
+	t, err := e.ParsedTime()
+	if err != nil {
+		return time.Time{}
+	}
+	return t
 }

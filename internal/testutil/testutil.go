@@ -3,6 +3,7 @@ package testutil
 
 import (
 	"fmt"
+	"io"
 	"sync/atomic"
 	"testing"
 
@@ -17,12 +18,32 @@ func NewService(t testing.TB) *service.Service {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { _ = st.Close() })
+	CloseOnCleanup(t, st)
 	svc, err := service.New(st)
 	if err != nil {
 		t.Fatal(err)
 	}
 	return svc
+}
+
+// CloseOnCleanup closes c when the test ends and fails the test if that fails.
+func CloseOnCleanup(t testing.TB, c io.Closer) {
+	t.Helper()
+	t.Cleanup(func() {
+		if err := c.Close(); err != nil {
+			t.Error(err)
+		}
+	})
+}
+
+// As returns v as a T and fails the test when v has another type.
+func As[T any](t testing.TB, v any) T {
+	t.Helper()
+	got, ok := v.(T)
+	if !ok {
+		t.Fatalf("got %T, want %T", v, got)
+	}
+	return got
 }
 
 var keySeq atomic.Int64

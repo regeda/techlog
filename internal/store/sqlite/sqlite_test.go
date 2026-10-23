@@ -11,6 +11,7 @@ import (
 	"github.com/regeda/techlog/internal/store"
 	"github.com/regeda/techlog/internal/store/sqlite"
 	"github.com/regeda/techlog/internal/store/storetest"
+	"github.com/regeda/techlog/internal/testutil"
 )
 
 func TestContract(t *testing.T) {
@@ -19,7 +20,7 @@ func TestContract(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		t.Cleanup(func() { _ = s.Close() })
+		testutil.CloseOnCleanup(t, s)
 		return s
 	})
 }
@@ -48,7 +49,7 @@ func TestOpenCreatesDirectoryAndPersists(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = s2.Close() }()
+	testutil.CloseOnCleanup(t, s2)
 	got, err := s2.Get(t.Context(), e.ID)
 	if err != nil {
 		t.Fatal(err)
@@ -67,12 +68,12 @@ func TestTwoHandlesOnOneFileDoNotLockEachOther(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = a.Close() }()
+	testutil.CloseOnCleanup(t, a)
 	b, err := sqlite.Open(path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = b.Close() }()
+	testutil.CloseOnCleanup(t, b)
 
 	mk := func(id string, links ...event.LinkRef) event.Event {
 		return event.Event{
