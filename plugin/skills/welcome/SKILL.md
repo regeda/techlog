@@ -25,7 +25,7 @@ Report four things:
 
 ## Anything else: a question
 
-Answer only from the help pages in `${CLAUDE_PLUGIN_ROOT}/docs/`: `connect-mcp.md`, `skills.md`, `configuration.md` and `lifecycle.md`. Read the pages that fit the question and answer in a few lines, quoting commands exactly. If the pages do not cover it, say so and point to https://techlog.dadev.nl/docs. Do not answer from memory about how Techlog works inside.
+Answer only from the help pages in `${CLAUDE_PLUGIN_ROOT}/docs/`: `connect-mcp.md`, `skills.md`, `configuration.md` and `lifecycle.md`. Read the pages that fit the question and answer in a few lines, quoting commands exactly. If the pages do not cover it, say so and point to https://techlog-e7k.pages.dev/docs. Do not answer from memory about how Techlog works inside.
 
 ## Rules
 
