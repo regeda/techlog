@@ -112,7 +112,7 @@ func TestWelcomeSkill(t *testing.T) {
 		"${CLAUDE_PLUGIN_ROOT}/config/mappings.yaml",
 		"${CLAUDE_PLUGIN_ROOT}/docs/",
 		".claude/techlog.json", "keep any other keys", "change nothing",
-		"techlog_search_events", "https://techlog.dadev.nl/docs",
+		"techlog_search_events", "https://techlog-e7k.pages.dev/docs",
 		"Never start, stop or repair the Techlog server")
 }
 
