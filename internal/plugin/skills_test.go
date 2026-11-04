@@ -34,7 +34,7 @@ func TestEverySkillIsWellFormed(t *testing.T) {
 // tokens. A skill left out of the table keeps the session model on purpose.
 func TestSkillModelPins(t *testing.T) {
 	for dir, want := range map[string]string{
-		"problem":  "sonnet",
+		"problem":  "haiku",
 		"welcome":  "haiku",
 		"proposal": "",
 		"record":   "",

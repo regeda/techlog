@@ -26,13 +26,13 @@ Each skill runs on a model that fits its job, whatever model the session started
 
 ## Decisions (the user's)
 
-- `problem` is pinned to Sonnet. This covers the questioning and the summary: the user did not want a
-  cheaper model writing the summary.
-- `welcome` is pinned to Haiku.
+- `problem` and `welcome` are both pinned to Haiku. The user first chose Sonnet for `problem`, so that a
+  cheaper model would not write the summary, then changed it to Haiku on 2026-11-04, after the design was
+  approved and recorded. The summary is therefore written by Haiku.
 
 ## Goals
 
-1. `/techlog:problem` runs on Sonnet.
+1. `/techlog:problem` runs on Haiku.
 2. `/techlog:welcome` runs on Haiku.
 3. The pin is set in one place per skill, in its frontmatter, with no new config or code.
 
@@ -63,7 +63,7 @@ https://code.claude.com/docs/en/sub-agents.md
   session model.
 - Not documented: whether a skill that another skill invokes through the Skill tool keeps the pin. `problem`
   invokes `superpowers:brainstorming` (through the mapping), so this decides whether the questioning really
-  runs on Sonnet. Treat it as unverified.
+  runs on Haiku. Treat it as unverified.
 - The docs disagree about `inherit`: the skills page accepts it, the model-config page does not list it.
   This design does not use it.
 
@@ -71,11 +71,11 @@ https://code.claude.com/docs/en/sub-agents.md
 
 Add one frontmatter line to each skill:
 
-- `plugin/skills/problem/SKILL.md`: `model: sonnet`
+- `plugin/skills/problem/SKILL.md`: `model: haiku`
 - `plugin/skills/welcome/SKILL.md`: `model: haiku`
 
-The aliases follow whatever model each alias currently names, so the pin does not go stale when a new Sonnet
-or Haiku ships (my call: aliases, not full model IDs).
+The aliases follow whatever model each alias currently names, so the pin does not go stale when a new Haiku
+ships (my call: aliases, not full model IDs).
 
 ## Rejected options
 
@@ -103,9 +103,10 @@ or Haiku ships (my call: aliases, not full model IDs).
 - Check by hand: run `/techlog:welcome` and `/techlog:problem` from a session on a different model and
   confirm each runs on its pinned model (the transcript or `--debug` output shows it).
 - Check by hand: during `/techlog:problem`, confirm that the questioning done by the nested
-  `superpowers:brainstorming` run is on Sonnet, not only the outer skill. If it is not, report that
+  `superpowers:brainstorming` run is on Haiku, not only the outer skill. If it is not, report that
   as a new problem rather than working around it in this change.
-- My call: aliases (`sonnet`, `haiku`) rather than full model IDs.
+- My call: aliases (`haiku`) rather than full model IDs.
 - My call: `proposal` and `record` are left as they are.
-- The user's own session on a model cheaper than Sonnet would be raised to Sonnet for `problem`. That is the
-  accepted outcome of the pin.
+- Haiku is the cheapest model, so the pin never raises the cost of a session. A weaker model may ask worse
+  questions or write a worse summary in `problem`; that risk is the user's choice. If it shows, the fix is
+  one frontmatter line.
