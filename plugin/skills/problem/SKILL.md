@@ -1,6 +1,7 @@
 ---
 name: problem
 description: Use when the user wants to report a problem, defect, request or piece of tech debt, and whenever they ask to create a Jira ticket, file a ticket or log a bug. Narrows the problem with a decision tree through the configured development plugin, then records it in Techlog as problem.reported once the user confirms. Never creates a Jira ticket.
+model: sonnet
 ---
 
 # Report a problem

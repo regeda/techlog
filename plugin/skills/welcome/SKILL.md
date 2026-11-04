@@ -1,6 +1,7 @@
 ---
 name: welcome
 description: Use when the user asks how Techlog or the techlog plugin works, how to connect or set up the Techlog MCP server, which development plugin is configured, or wants to switch it. A help desk for the plugin. Takes a free-text question, or use <plugin> to switch the development plugin, or nothing for a status report.
+model: haiku
 ---
 
 # Techlog help desk
