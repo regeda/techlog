@@ -24,6 +24,7 @@ func readPlugin(t *testing.T, rel string) string {
 type skillDoc struct {
 	Name        string `yaml:"name"`
 	Description string `yaml:"description"`
+	Model       string `yaml:"model"`
 	Body        string `yaml:"-"`
 }
 

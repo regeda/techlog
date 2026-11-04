@@ -30,6 +30,21 @@ func TestEverySkillIsWellFormed(t *testing.T) {
 	}
 }
 
+// Pinning a model keeps a simple skill from spending an expensive session model's
+// tokens. A skill left out of the table keeps the session model on purpose.
+func TestSkillModelPins(t *testing.T) {
+	for dir, want := range map[string]string{
+		"problem":  "haiku",
+		"welcome":  "haiku",
+		"proposal": "",
+		"record":   "",
+	} {
+		if got := readSkill(t, dir).Model; got != want {
+			t.Errorf("skills/%s: front matter model is %q, want %q", dir, got, want)
+		}
+	}
+}
+
 // A skill that names a plugin file that does not exist only fails when a user
 // runs it, so every ${CLAUDE_PLUGIN_ROOT}/... reference must resolve.
 func TestSkillsReferenceExistingPluginFiles(t *testing.T) {
