@@ -1,23 +1,17 @@
 ---
 name: record
-description: Use when work in this conversation reaches something worth remembering about a system (a problem found, a proposal, a decision, a merged change, a release, an incident, a rollback, a postmortem, a follow-up action) to record it as an event in Techlog, and when asked what happened to a system earlier. Records through the Techlog MCP tools and links each new event to the earlier events it follows from.
+description: Use when work in this conversation reaches something worth remembering about a system (a problem found, a proposal, a decision, a merged change, a release, an incident, a rollback, a postmortem, a follow-up action) to record it as an event in Techlog, and when asked what happened to a system earlier.
 ---
 
 # Recording events in Techlog
 
-Techlog is an append-only log of engineering events. Each event says what happened to a system and links back to the events that led to it, so a person can later walk the story from problem to follow-up. Record an event when something worth remembering has happened. Do not record chatter, plans you have not decided on, or every small edit.
+Techlog is an append-only log of engineering events. Each event says what happened to a system and links back to the events that led to it, so a person can later walk the story from problem to follow-up. Record an event when something worth remembering has happened, not chatter, undecided plans or small edits.
 
 ## Connect
 
 Use only the Techlog MCP tools: `techlog_search_events`, `techlog_get_system_history`, `techlog_get_event`, `techlog_record_event`, `techlog_link_events`. Assume a Techlog server is running and reachable through them. Do not reach it any other way, and never record events anywhere else.
 
-If the tools are not available, or a call fails with a connection error, the MCP connection is not configured. Stop and ask the user to configure it, for example:
-
-```bash
-claude mcp add --transport http techlog <techlog-server-url>/mcp
-```
-
-then to reconnect with `/mcp` or restart Claude Code. Say plainly that you cannot record until it works, and wait. Do not try to start, stop or repair the server yourself.
+If the tools are not available, or a call fails with a connection error, the MCP connection is not configured. Stop, point the user to `/techlog:welcome how to connect techlog mcp`, say plainly that you cannot record until it works, and wait. Do not try to start, stop or repair the server yourself.
 
 ## Before you record
 
@@ -58,22 +52,18 @@ Call `techlog_record_event` with `event` set to an object with these fields. Do 
 - `sources` (where it came from) and `evidence` (supporting artifacts), each `{"kind": "...", "ref": "..."}`, when you have them. Evidence is a reference: the artifact stays in the tool that owns it.
 - `provenance`: `{"recorded_by": "agent:claude-code", "method": "agent_submitted"}`
 
-The result of a check or the state of an action goes in the `summary`, for example "Checks failed: 3 of 40 tests". When the situation changes, record a new event; never try to change an old one.
+The result of a check or the state of an action goes in the `summary`, for example "Checks failed: 3 of 40 tests". The result carries the new `id`; use it to link later events.
 
-The result carries the new `id` in its structured result. Use it to link later events.
-
-To record several related events, such as the story of a piece of work, record the earliest first. A link needs its target to exist, so each event can link only to events that already have an id. Check the order against the table above (problem, proposal, decision, change, verification, release).
+To record several related events, record the earliest first: a link needs its target to exist. The order follows the table above (problem, proposal, decision, change, verification, release).
 
 ## Which time to use
 
 `time` says when the thing happened, not when you recorded it. Pick it in this order:
 
-1. **The time the source of the change records.** For a commit, read it from git: `git log -1 --format=%aI <sha>` (author time) or `%cI` (commit time, when the change was merged or rebased). For a pull request, its merge time. For a release, the deploy time. For an alert or incident, the time on the alert or the ticket. This holds even for something that has just happened: if a source has a timestamp, use it.
+1. **The time the source of the change records.** A commit: `git log -1 --format=%aI <sha>` (author time) or `%cI` (commit time, for a merge or rebase). A pull request: its merge time. A release: the deploy time. An alert or incident: the time on the alert or ticket. If a source has a timestamp, use it, even for something that just happened.
 2. **No time, if the source has no timestamp** or there is no source (a decision taken in this conversation, a finding you just made). Leave `time` out and the server stamps the moment of recording in UTC. Never send the date from the conversation as a time, and never send a time of day you did not read from a source.
 
-A time must not be in the future and must not be earlier than the time of any event the new one links to: the server rejects such an event. Then fix the time or the link; do not work around it.
-
-Never invent a time and never guess one from memory. If the source gives only a date or an approximate time, use what it gives and say so in the summary or when you report to the user.
+A time must not be in the future or earlier than any event the new one links to: the server rejects it. Fix the time or the link. Never invent a time and never guess one; if the source gives only a date or an approximate time, use it and say so in the summary.
 
 ## Links and honesty
 
@@ -82,23 +72,7 @@ Never invent a time and never guess one from memory. If the source gives only a 
 - To confirm a hypothesis later, record a new `investigation.completed` event with a `caused_by` link whose basis is `confirmed`. You can also add a link between two existing events with `techlog_link_events`.
 - Never record something you did not observe or were not told. If you are unsure, say so in the summary.
 
-## Examples
-
-A decision, linked to the proposal it decides:
-
-```json event
-{
-  "schema_version": "0.1-draft",
-  "idempotency_key": "promo-api-spin-proposal-approved",
-  "type": "decision.made",
-  "time": "2026-03-10T14:05:00Z",
-  "actor": {"kind": "ai_agent", "id": "agent:claude-code", "on_behalf_of": "user:a.novak"},
-  "subject": {"system": "promo-api", "component": "spin-service"},
-  "summary": "Approved the spin-to-win proposal: one spin per new account, discount capped at 20%",
-  "links": [{"rel": "decides", "target": "evt_01J9K2A0P004", "basis": "confirmed"}],
-  "provenance": {"recorded_by": "agent:claude-code", "method": "agent_submitted"}
-}
-```
+## Example
 
 An incident, with a suspected cause recorded as a hypothesis:
 
@@ -122,25 +96,9 @@ An incident, with a suspected cause recorded as a hypothesis:
 
 ## Retries and idempotency keys
 
-Every event needs an `idempotency_key`. The server stores one event per actor and key, and rejects a second one. This is what makes a retry safe.
+Every event needs an `idempotency_key`: a stable string built from the work item (`<repo>#<pr>-merged`, `<system>-<version>-deployed`), 1 to 128 characters, unique per fact. The server rejects a second event with the same actor and key, which makes a retry safe.
 
-- Build the key from the work item, so the same fact always gets the same key: `<repo>#<pr>-merged`, `incident-<ticket>-opened`, `<system>-<version>-deployed`. It is a string of 1 to 128 characters, compared exactly.
-- Make the key stable. Never use a random value, a timestamp of the attempt or a counter that restarts, or a retry will not be recognised.
-- Make the key specific to one fact. Two different events from the same actor must have different keys, or the second is rejected.
-- If the result says `Already recorded: idempotency_key ... is event evt_...`, the first attempt succeeded. Do not retry. Use that id for your links.
-
-## If the server rejects the event
-
-The result has `isError: true` and lists the problems as `- <JSON pointer path>: <message>`. Fix exactly those fields and call the tool again. Common ones:
-
-- `/actor/kind`: must be `human`, `ai_agent` or `system`.
-- `/time`: needs a time zone, `Z` or an offset.
-- `/summary`: over 280 characters; shorten it.
-- `/links/0/target`: that event id does not exist; search again for the right one.
-- `/links/0`: `missing property 'basis'`; `caused_by` links must say `confirmed` or `hypothesis`.
-- `/`: `missing property 'idempotency_key'`; add the key. `/idempotency_key`: empty or longer than 128 characters.
-
-Do not retry a rejected event unchanged, unless the error was a lost connection: then retry with the same key.
+If the result has `isError: true` or `Already recorded`, read `${CLAUDE_PLUGIN_ROOT}/skills/record/references/errors.md` before you retry. Do not retry a rejected event unchanged. For the shape of another event type, read `${CLAUDE_PLUGIN_ROOT}/skills/record/references/examples.md`.
 
 ## Rules
 
@@ -154,10 +112,8 @@ The superpowers skills run the engineering workflow; this skill records what com
 
 | Superpowers stage | Record | Evidence or source |
 |---|---|---|
-| `brainstorming`: design or spec written | `proposal.recorded` | `{"kind": "spec", "ref": "docs/superpowers/specs/<file>.md"}` |
-| `brainstorming`: user approves the written spec, before `writing-plans` | `decision.made`, linked `decides` to the proposal | the same spec |
 | `systematic-debugging`: root cause found | `investigation.completed` | log, trace or test that shows it |
 | `verification-before-completion`: checks ran | `verification.completed` (`verified` or `failed`) | the command run |
 | `finishing-a-development-branch`: merged | `change.implemented`, linked `implements` to the decision | `{"kind": "commit", "ref": "<sha>"}` |
 
-Plans and in-progress edits are not events. Search first, so the new event links to the proposal or decision already recorded.
+Proposals and decisions are owned by `/techlog:proposal` and the decision rule in `mappings.yaml`, so this skill does not record them on its own at a `brainstorming` stage. Plans and in-progress edits are not events. Search first, so the new event links to the proposal or decision already recorded.

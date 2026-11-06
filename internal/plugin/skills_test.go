@@ -119,6 +119,39 @@ func TestSkillsCarryTheDecisionRule(t *testing.T) {
 		"do not also record a decision")
 }
 
+// The mapped skill runs in the same conversation, so it already holds the framing,
+// the rule, the tree and the note. The args point at them instead of writing them out again.
+func TestSkillsPassPointersNotConfigText(t *testing.T) {
+	for _, name := range []string{"problem", "proposal"} {
+		d := readSkill(t, name)
+		mustContain(t, name+" skill", d.Body,
+			"the `framing` text", "stages.decision",
+			"Skills held back until the decision is recorded")
+		mustNotContain(t, name+" skill", d.Body, "the `decision` `framing`, followed by the line")
+	}
+	// The framing says the caller passes the tree or the note; the pointer has to say
+	// that what it read above is that tree or note, or a small model walks nothing.
+	mustContain(t, "problem skill", readSkill(t, "problem").Body,
+		"walk the tree you read above", "the tree the framing says the caller passes", "from its first node")
+	mustNotContain(t, "problem skill", readSkill(t, "problem").Body, "then the whole tree")
+	mustContain(t, "proposal skill", readSkill(t, "proposal").Body,
+		"the confirmed context note above", "the note the framing says the caller passes")
+}
+
+// A description that tells the model what the skill does invites it to follow the
+// description and skip the body, so each one only says when to use the skill.
+func TestDescriptionsStateWhenNotWhat(t *testing.T) {
+	for _, name := range []string{"problem", "proposal", "record", "welcome"} {
+		d := readSkill(t, name).Description
+		if !strings.HasPrefix(d, "Use when") {
+			t.Errorf("skills/%s: description must start with %q, got %q", name, "Use when", d)
+		}
+		mustNotContain(t, name+" description", d,
+			"then records", "Records through", "Narrows", "Collects context",
+			"runs the configured", "Takes a free-text", "Never creates a Jira ticket")
+	}
+}
+
 func TestWelcomeSkill(t *testing.T) {
 	d := readSkill(t, "welcome")
 	mustContain(t, "welcome description", d.Description, "help", "use <plugin>")
@@ -149,12 +182,32 @@ func TestHelpPagesExistAndAnswerTheBasics(t *testing.T) {
 		"decision.made", "writing-plans")
 }
 
-// The record skill's own advice must agree with the rule: the decision is the
-// approval of the written spec, taken before planning.
-func TestRecordSkillRecordsTheDecisionAtSpecApproval(t *testing.T) {
+// The proposal skill and the decision rule own proposal.recorded and decision.made.
+// If record also said when to write them, it could write either one on its own.
+func TestRecordSkillLeavesProposalAndDecisionToTheirOwners(t *testing.T) {
 	d := readSkill(t, "record")
-	mustContain(t, "record skill", d.Body, "user approves the written spec, before `writing-plans`")
-	mustNotContain(t, "record skill", d.Body, "user approves the design")
+	mustNotContain(t, "record skill", d.Body,
+		"`brainstorming`: design or spec written",
+		"`brainstorming`: user approves the written spec",
+		"user approves the design")
+	mustContain(t, "record skill", d.Body,
+		"systematic-debugging", "verification-before-completion", "finishing-a-development-branch",
+		"owned by")
+}
+
+// The record body loads on every record call. What a call rarely needs lives in
+// references/ and is read on demand, so the body must name each file it relies on.
+func TestRecordSkillBodyIsSmall(t *testing.T) {
+	const limit = 8704
+	d := readSkill(t, "record")
+	if len(d.Body) > limit {
+		t.Errorf("record skill body is %d bytes, want at most %d", len(d.Body), limit)
+	}
+	mustContain(t, "record skill", d.Body,
+		"skills/record/references/examples.md", "skills/record/references/errors.md",
+		"isError: true", "Already recorded", "idempotency_key",
+		"/techlog:welcome how to connect techlog mcp")
+	mustNotContain(t, "record skill", d.Body, "claude mcp add")
 }
 
 // A check's result or an action's state has no field of its own: the record

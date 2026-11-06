@@ -1,6 +1,6 @@
 ---
 name: proposal
-description: Use when the user wants to propose a solution to a recorded problem, or to design a change and keep the reasons and the rejected options. Collects context from Techlog and the repo for the user to confirm, runs the configured development plugin's design process, then records proposal.recorded in Techlog linked to the problem.
+description: Use when the user wants to propose a solution to a recorded problem (a proposal.recorded event), or to design a change and keep the reasons and the rejected options.
 ---
 
 # Propose a solution
@@ -35,7 +35,7 @@ Write a short context note with four parts: the problem (id and summary), the sy
 
 ## 5. Design
 
-Invoke the mapped skill with the Skill tool. Pass it, as its arguments: the `framing` text, then the decision rule if there is one (the `decision` `framing`, followed by the line `Skills held back until the decision is recorded: <the before list>`), then the confirmed context note. It runs the design process until the design is approved and the spec is written. Do not start `writing-plans` or any implementation skill afterwards.
+Invoke the mapped skill with the Skill tool. Pass it, as its arguments, three short parts: the `framing` text; if there is a decision rule, one line saying the rule from step 1b (`stages.decision`) applies, with the line `Skills held back until the decision is recorded: <the before list>`; and one line saying to start from the confirmed context note above (the note the framing says the caller passes). It runs in this conversation, so it does not need the note or the rule written out again. It runs the design process until the design is approved and the spec is written. Do not start `writing-plans` or any implementation skill afterwards.
 
 ## 6. Show the draft and get confirmation
 
