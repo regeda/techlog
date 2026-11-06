@@ -8,7 +8,10 @@ import (
 	"testing"
 )
 
-const skillPath = "../../plugin/skills/record/SKILL.md"
+const (
+	skillPath    = "../../plugin/skills/record/SKILL.md"
+	examplesPath = "../../plugin/skills/record/references/examples.md"
+)
 
 func TestSkillFrontMatter(t *testing.T) {
 	b, err := os.ReadFile(skillPath)
@@ -21,16 +24,20 @@ func TestSkillFrontMatter(t *testing.T) {
 	}
 }
 
-// Every ```json event block in the skill is an event as a model would send it
-// (without an id). Each must validate once the server's id is added.
+// Every ```json event block the skill ships, in SKILL.md and in its references, is
+// an event as a model would send it (without an id). Each must validate once the
+// server's id is added.
 func TestSkillExamplesAreValid(t *testing.T) {
-	b, err := os.ReadFile(skillPath)
-	if err != nil {
-		t.Fatal(err)
+	var blocks [][]string
+	for _, p := range []string{skillPath, examplesPath} {
+		b, err := os.ReadFile(p) //nolint:gosec // G304: p is one of two fixed plugin paths
+		if err != nil {
+			t.Fatal(err)
+		}
+		blocks = append(blocks, regexp.MustCompile("(?s)```json event\n(.*?)\n```").FindAllStringSubmatch(string(b), -1)...)
 	}
-	blocks := regexp.MustCompile("(?s)```json event\n(.*?)\n```").FindAllStringSubmatch(string(b), -1)
 	if len(blocks) < 2 {
-		t.Fatalf("expected at least two ```json event examples in SKILL.md, found %d", len(blocks))
+		t.Fatalf("expected at least two ```json event examples in the record skill, found %d", len(blocks))
 	}
 	v := newValidator(t)
 	for i, m := range blocks {
@@ -56,8 +63,8 @@ func TestSkillUsesMCPOnlyAndIgnoresServerLifecycle(t *testing.T) {
 		t.Fatal(err)
 	}
 	s := string(b)
-	if !strings.Contains(s, "claude mcp add --transport http techlog") {
-		t.Error("SKILL.md should tell the user how to configure the MCP server")
+	if !strings.Contains(s, "/techlog:welcome how to connect techlog mcp") {
+		t.Error("SKILL.md should point the user to how to configure the MCP server")
 	}
 	for _, banned := range []string{"curl", "/api/v1", "event.id", "localhost", "127.0.0.1", "lsof", "techlog serve", "make flush", "make reset"} {
 		if strings.Contains(s, banned) {

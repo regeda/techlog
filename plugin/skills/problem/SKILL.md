@@ -1,6 +1,6 @@
 ---
 name: problem
-description: Use when the user wants to report a problem, defect, request or piece of tech debt, and whenever they ask to create a Jira ticket, file a ticket or log a bug. Narrows the problem with a decision tree through the configured development plugin, then records it in Techlog as problem.reported once the user confirms. Never creates a Jira ticket.
+description: Use when the user wants to report a problem, defect, request or piece of tech debt (a problem.reported event), and whenever they ask to create a Jira ticket, file a ticket or log a bug.
 model: haiku
 ---
 
@@ -22,7 +22,7 @@ d. **Techlog connection.** Call `techlog_search_events` with `{"limit": 1}`. If 
 
 ## 2. Narrow the problem
 
-Read `${CLAUDE_PLUGIN_ROOT}/config/problem-tree.yaml`. Invoke the mapped skill with the Skill tool. Pass it, as its arguments: the `framing` text, then the decision rule if there is one (the `decision` `framing`, followed by the line `Skills held back until the decision is recorded: <the before list>`), then the whole tree, then everything the user has already said about the problem. It walks the tree one question at a time and stops at the `confirm` node. Answers the user already gave are not asked again.
+Read `${CLAUDE_PLUGIN_ROOT}/config/problem-tree.yaml`. Invoke the mapped skill with the Skill tool. Pass it, as its arguments, four short parts: the `framing` text; if there is a decision rule, one line saying the rule from step 1b (`stages.decision`) applies, with the line `Skills held back until the decision is recorded: <the before list>`; one line saying to walk the tree you read above (`problem-tree.yaml`, the tree the framing says the caller passes), from its first node; and everything the user has already said about the problem. It runs in this conversation, so it does not need the tree or the rule written out again. It walks the tree one question at a time and stops at the `confirm` node. Answers the user already gave are not asked again.
 
 ## 3. Show the draft and get confirmation
 
