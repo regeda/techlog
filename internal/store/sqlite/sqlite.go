@@ -307,15 +307,16 @@ func filterClauses(f store.Filter) (where []string, args []any) {
 	return where, args
 }
 
-// Search reads the page of events and their outgoing links in one query. The
-// page is picked in a subquery, so LIMIT counts events, not joined rows.
-func (s *Store) Search(ctx context.Context, f store.Filter) (_ []event.Event, err error) {
+// searchQuery builds the query for one page of events with their outgoing
+// links, and returns it with its arguments and the page size. The page is
+// picked in a subquery, so LIMIT counts events, not joined rows.
+func searchQuery(f store.Filter) (query string, args []any, limit int) {
 	where, args := filterClauses(f)
 	dir := "DESC"
 	if f.Ascending {
 		dir = "ASC"
 	}
-	limit := f.Limit
+	limit = f.Limit
 	if limit <= 0 {
 		limit = 100
 	}
@@ -325,9 +326,14 @@ func (s *Store) Search(ctx context.Context, f store.Filter) (_ []event.Event, er
 	}
 	page += " ORDER BY e.time " + dir + ", e.id " + dir + " LIMIT ? OFFSET ?"
 	args = append(args, limit, max(f.Offset, 0))
-	query := "SELECT p.id, p.body, l.target, l.rel, l.basis FROM (" + page + ") p" +
+	query = "SELECT p.id, p.body, l.target, l.rel, l.basis FROM (" + page + ") p" +
 		" LEFT JOIN links l ON l.source = p.id ORDER BY p.time " + dir + ", p.id " + dir + ", l.rowid"
+	return query, args, limit
+}
 
+// Search reads the page of events and their outgoing links in one query.
+func (s *Store) Search(ctx context.Context, f store.Filter) (_ []event.Event, err error) {
+	query, args, limit := searchQuery(f)
 	rows, err := s.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
