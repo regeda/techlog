@@ -39,8 +39,10 @@ func do(h http.Handler, method, target string, body any) *httptest.ResponseRecor
 		}
 		rdr = bytes.NewReader(raw)
 	}
+	req := httptest.NewRequest(method, target, rdr)
+	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
-	h.ServeHTTP(rec, httptest.NewRequest(method, target, rdr))
+	h.ServeHTTP(rec, req)
 	return rec
 }
 
@@ -172,6 +174,37 @@ func TestRecordMalformedBodies(t *testing.T) {
 				t.Fatalf("status %d code %q, want 400 bad_request", rec.Code, code)
 			}
 		})
+	}
+}
+
+// A page on another site can POST text/plain without a preflight. Writes must
+// refuse anything that is not declared as JSON, and store nothing.
+func TestWritesNeedJSONContentType(t *testing.T) {
+	h, svc := setup(t)
+	body := `{"type":"problem.reported","time":"2026-03-10T09:00:00Z","idempotency_key":"page-1","actor":{"kind":"human","id":"user:test"},"subject":{"system":"alpha"}}`
+	send := func(target, contentType string) int {
+		t.Helper()
+		req := httptest.NewRequest("POST", target, strings.NewReader(body))
+		if contentType != "" {
+			req.Header.Set("Content-Type", contentType)
+		}
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, req)
+		return rec.Code
+	}
+	for _, ct := range []string{"", "text/plain", "application/x-www-form-urlencoded"} {
+		if code := send("/api/v1/events", ct); code != http.StatusUnsupportedMediaType {
+			t.Errorf("events with Content-Type %q: status %d, want 415", ct, code)
+		}
+		if code := send("/api/v1/links", ct); code != http.StatusUnsupportedMediaType {
+			t.Errorf("links with Content-Type %q: status %d, want 415", ct, code)
+		}
+	}
+	if got, err := svc.Search(context.Background(), service.SearchParams{}); err != nil || len(got) != 0 {
+		t.Fatalf("refused writes stored %d events (err %v)", len(got), err)
+	}
+	if code := send("/api/v1/events", "application/json; charset=utf-8"); code != http.StatusCreated {
+		t.Errorf("JSON with a charset: status %d, want 201", code)
 	}
 }
 
