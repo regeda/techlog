@@ -38,6 +38,7 @@ func Run(t *testing.T, newStore func(t *testing.T) store.Store) {
 		"AddLink":                addLink,
 		"SearchFilters":          searchFilters,
 		"SearchOffset":           searchOffset,
+		"SearchCarriesLinks":     searchCarriesLinks,
 		"SearchTextPunctuation":  searchTextPunctuation,
 		"Systems":                systems,
 		"TimeOffsets":            timeOffsets,
@@ -271,6 +272,29 @@ func searchOffset(t *testing.T, s store.Store) {
 	expectIDs(t, "offset ascending", search(t, s, store.Filter{Offset: 2, Ascending: true}), e3.ID)
 	expectIDs(t, "offset past the end", search(t, s, store.Filter{Offset: 5}))
 	expectIDs(t, "negative offset is zero", search(t, s, store.Filter{Offset: -3, Limit: 1}), e3.ID)
+}
+
+// searchCarriesLinks checks that each result comes back with its own links, and
+// that the limit counts events rather than the joined link rows.
+func searchCarriesLinks(t *testing.T, s store.Store) {
+	a := mk("evt_LNKA", "problem.reported", "alpha", "2026-03-10T09:00:00Z", "a")
+	b := mk("evt_LNKB", "proposal.recorded", "alpha", "2026-03-10T10:00:00Z", "b",
+		ref("motivated_by", a.ID, "confirmed"), ref("relates_to", a.ID, "hypothesis"))
+	c := mk("evt_LNKC", "decision.made", "alpha", "2026-03-10T11:00:00Z", "c")
+	insert(t, s, a, b, c)
+
+	got, err := s.Search(ctx, store.Filter{Limit: 2})
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectIDs(t, "two newest", ids(got), c.ID, b.ID)
+	if got[0].Links != nil {
+		t.Errorf("c has no links, got %+v", got[0].Links)
+	}
+	want := []event.LinkRef{ref("motivated_by", a.ID, "confirmed"), ref("relates_to", a.ID, "hypothesis")}
+	if !reflect.DeepEqual(got[1].Links, want) {
+		t.Errorf("b.Links = %+v, want %+v", got[1].Links, want)
+	}
 }
 
 func searchTextPunctuation(t *testing.T, s store.Store) {

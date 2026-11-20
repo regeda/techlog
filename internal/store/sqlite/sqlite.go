@@ -242,12 +242,22 @@ func (s *Store) Get(ctx context.Context, id string) (event.Event, error) {
 	return s.hydrate(ctx, body)
 }
 
-// hydrate decodes a stored body and replaces its links with the current
-// outgoing rows from the links table (so links added later are included).
-func (s *Store) hydrate(ctx context.Context, body string) (_ event.Event, err error) {
+// decodeBody decodes a stored event body. Its links are not filled in: the
+// links table is the source for them.
+func decodeBody(body string) (event.Event, error) {
 	var e event.Event
 	if err := json.Unmarshal([]byte(body), &e); err != nil {
 		return event.Event{}, fmt.Errorf("decode stored event: %w", err)
+	}
+	return e, nil
+}
+
+// hydrate decodes a stored body and replaces its links with the current
+// outgoing rows from the links table (so links added later are included).
+func (s *Store) hydrate(ctx context.Context, body string) (_ event.Event, err error) {
+	e, err := decodeBody(body)
+	if err != nil {
+		return event.Event{}, err
 	}
 	rows, err := s.db.QueryContext(ctx,
 		`SELECT target, rel, basis FROM links WHERE source = ? ORDER BY rowid`, e.ID)
@@ -297,36 +307,59 @@ func filterClauses(f store.Filter) (where []string, args []any) {
 	return where, args
 }
 
-func (s *Store) Search(ctx context.Context, f store.Filter) ([]event.Event, error) {
+// searchQuery builds the query for one page of events with their outgoing
+// links, and returns it with its arguments and the page size. The page is
+// picked in a subquery, so LIMIT counts events, not joined rows.
+func searchQuery(f store.Filter) (query string, args []any, limit int) {
 	where, args := filterClauses(f)
 	dir := "DESC"
 	if f.Ascending {
 		dir = "ASC"
 	}
-	limit := f.Limit
+	limit = f.Limit
 	if limit <= 0 {
 		limit = 100
 	}
-	query := "SELECT e.body FROM events e"
+	page := "SELECT e.id, e.body, e.time FROM events e"
 	if len(where) > 0 {
-		query += " WHERE " + strings.Join(where, " AND ")
+		page += " WHERE " + strings.Join(where, " AND ")
 	}
-	query += " ORDER BY e.time " + dir + ", e.id " + dir + " LIMIT ? OFFSET ?"
+	page += " ORDER BY e.time " + dir + ", e.id " + dir + " LIMIT ? OFFSET ?"
 	args = append(args, limit, max(f.Offset, 0))
+	query = "SELECT p.id, p.body, l.target, l.rel, l.basis FROM (" + page + ") p" +
+		" LEFT JOIN links l ON l.source = p.id ORDER BY p.time " + dir + ", p.id " + dir + ", l.rowid"
+	return query, args, limit
+}
 
-	bodies, err := s.queryStrings(ctx, query, args...)
+// Search reads the page of events and their outgoing links in one query.
+func (s *Store) Search(ctx context.Context, f store.Filter) (_ []event.Event, err error) {
+	query, args, limit := searchQuery(f)
+	rows, err := s.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
-	events := make([]event.Event, 0, len(bodies))
-	for _, b := range bodies {
-		e, err := s.hydrate(ctx, b)
-		if err != nil {
+	defer func() { err = errors.Join(err, rows.Close()) }()
+	events := make([]event.Event, 0, limit) // a page holds at most limit events
+	for rows.Next() {
+		var id, body string
+		var target, rel, basis sql.NullString
+		if err := rows.Scan(&id, &body, &target, &rel, &basis); err != nil {
 			return nil, err
 		}
-		events = append(events, e)
+		if len(events) == 0 || events[len(events)-1].ID != id {
+			e, err := decodeBody(body)
+			if err != nil {
+				return nil, err
+			}
+			e.Links = nil // the joined rows below replace the submitted links
+			events = append(events, e)
+		}
+		if target.Valid {
+			last := &events[len(events)-1]
+			last.Links = append(last.Links, event.LinkRef{Target: target.String, Rel: rel.String, Basis: basis.String})
+		}
 	}
-	return events, nil
+	return events, rows.Err()
 }
 
 func (s *Store) Links(ctx context.Context, id string) (_ []event.Link, err error) {
