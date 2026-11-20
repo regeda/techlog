@@ -333,7 +333,7 @@ func (s *Store) Search(ctx context.Context, f store.Filter) (_ []event.Event, er
 		return nil, err
 	}
 	defer func() { err = errors.Join(err, rows.Close()) }()
-	events := []event.Event{}
+	events := make([]event.Event, 0, limit) // a page holds at most limit events
 	for rows.Next() {
 		var id, body string
 		var target, rel, basis sql.NullString
