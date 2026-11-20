@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"mime"
 	"net/http"
 
 	"github.com/regeda/techlog/internal/event"
@@ -30,7 +31,7 @@ func Handler(svc *service.Service) http.Handler {
 	mux.HandleFunc("/api/v1/", func(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "not_found", "no such endpoint: "+r.Method+" "+r.URL.Path, nil)
 	})
-	return mux
+	return requireJSON(mux)
 }
 
 func (h *handler) recordEvent(w http.ResponseWriter, r *http.Request) {
@@ -110,6 +111,21 @@ func (h *handler) addLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusCreated, map[string]any{"link": l})
+}
+
+// requireJSON answers 415 to a POST whose body is not declared as JSON. A browser
+// sends a cross-site POST as text/plain or form data without asking first, so
+// this stops a web page from writing to the log.
+func requireJSON(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			if mt, _, err := mime.ParseMediaType(r.Header.Get("Content-Type")); err != nil || mt != "application/json" {
+				writeError(w, http.StatusUnsupportedMediaType, "unsupported_media_type", "Content-Type must be application/json", nil)
+				return
+			}
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // decodeObject reads exactly one JSON object from the request body (at most
